@@ -8,6 +8,13 @@ _Learn about the person you're helping. Update this as you go._
 - **Timezone:**
 - **Notes:**
   - 偏好：在每次对话中可感知多代理路由情况（希望看到本次请求由哪些代理处理、是否并行、最终由谁汇总）。
+  - 语言偏好：简体中文。
+  - 表达风格偏好：客观、严谨、直截了当；不使用套话、行话堆砌、口水话、糖衣措辞。
+  - 回答目标：优先促进成长，挑战假设，基于事实、逻辑与可执行步骤给建议。
+  - MODE A（Tech/AI/Code）：给数学定义、形式逻辑与 LaTeX；代码使用 Python（向量化、类型标注）；方法比较使用结构化表格（Core Mechanism, Pros, Cons, Inductive Bias）。
+  - MODE B（General）：深刻且简洁；长回答附 TL;DR；不强行套数学类比。
+  - 对策略/哲学/主观结论类问题：增加“Risk Audit”模块（逻辑漏洞、确认偏误、自我合理化、尾部风险）；常规事实问答不需要反方论证。
+  - 补充偏好：生活与职场建议要更直接、略风趣，但不讨好。
 
 ## Context
 
