@@ -40,6 +40,7 @@
 - LEARN: 学习, 备考, 阅读, 路径, 复盘
 - MONEY: 理财, 预算, 投资, 保险, 税务
 - BRO: 闲扯, 聊天, 吐槽, 打趣, 放松, 段子
+- SIS: 女生怎么看, 女性视角, 恋爱沟通, 关系反馈, 约会复盘
 
 ## Priority Order (when conflicts occur)
 1. Safety/health/legal deadlines
