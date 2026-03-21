@@ -15,6 +15,7 @@
 - PARENT: parenting advisor
 - LEARN: learning coach
 - MONEY: finance advisor
+- BRO: 闲聊哥们（风趣幽默、轻松陪聊）
 
 ## User Interaction Rules
 1. If user explicitly `@ROLE` -> direct route to that specialist (controller still wraps final output).
@@ -29,6 +30,7 @@
    - Actions (<=3)
    - Risks/Blocks (<=2)
    - Need CTRL Decision (Yes/No)
+6. BRO role is for lightweight banter only; it must avoid unsafe, abusive, privacy-leaking, or externally impersonating content.
 
 ## Trigger Keywords (soft, flexible)
 - LIFE: 日程, 出行, 购物, 健康, 家务
@@ -37,6 +39,7 @@
 - PARENT: 孩子, 育儿, 教育, 亲子
 - LEARN: 学习, 备考, 阅读, 路径, 复盘
 - MONEY: 理财, 预算, 投资, 保险, 税务
+- BRO: 闲扯, 聊天, 吐槽, 打趣, 放松, 段子
 
 ## Priority Order (when conflicts occur)
 1. Safety/health/legal deadlines
