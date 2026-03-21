@@ -1,0 +1,93 @@
+a2a_pilot:
+  name: "JOB_PARENT_time_conflict_pilot"
+  version: "v1"
+  duration_days: 7
+  goal: "在可控前提下验证局部A2A是否提升冲突协调效率与一致性"
+
+  scope:
+    enabled_pairs:
+      - ["JOB", "PARENT"]
+    task_types:
+      - "time_conflict_coordination"
+    examples:
+      - "面试时间与接娃冲突"
+      - "投递截止与亲子就医冲突"
+
+  guardrails:
+    max_agents_per_session: 2
+    max_rounds: 2
+    timeout_seconds: 180
+    required_output_fields:
+      - consensus
+      - disagreements
+      - recommendation_for_CTRL
+    no_direct_user_output: true
+    ctrl_must_finalize: true
+
+  fuse_conditions:
+    any_trigger_stop_pilot: true
+    conditions:
+      - key: "daily_conflict_count"
+        op: ">"
+        value: 3
+      - key: "mislead_rate"
+        op: ">"
+        value: 0.10
+      - key: "user_reports_chaos"
+        op: "=="
+        value: true
+
+  fallback:
+    on_fuse: "force_single_agent_mode"
+    recovery: "manual_reenable_by_CTRL"
+
+  metrics:
+    - name: "conflict_resolution_time"
+      target: "decrease"
+    - name: "ctrl_rework_count"
+      target: "decrease"
+    - name: "decision_consistency"
+      target: "increase"
+    - name: "user_cognitive_load"
+      target: "decrease"
+
+  logging:
+    path: "multi-agent/pilot-logs/a2a-job-parent.log"
+    per_case_fields:
+      - task_id
+      - start_time
+      - end_time
+      - rounds_used
+      - consensus
+      - disagreements
+      - ctrl_final_decision
+      - outcome_label
+
+  review:
+    checkpoint_day: 7
+    required_summary:
+      - "what_improved"
+      - "what_failed"
+      - "keep_or_rollback"
+
+test_scenarios:
+  - id: "S1"
+    title: "终面冲突接娃"
+    input: "明天16:30终面，17:00必须接娃，伴侣临时出差"
+    expected:
+      - "JOB与PARENT在2轮内给出共识"
+      - "CTRL给出单一裁决+补救方案"
+
+  - id: "S2"
+    title: "投递截止冲突儿科就诊"
+    input: "今晚23:59投递截止，20:00孩子发烧需就诊"
+    expected:
+      - "P0/P1优先级规则生效"
+      - "输出改期与补救动作"
+
+  - id: "S3"
+    title: "多任务堆叠导致认知超载"
+    input: "同晚出现3个投递任务+家庭事务"
+    expected:
+      - "触发限流（1个P1+1个P2）"
+      - "其余任务自动顺延并记录"
