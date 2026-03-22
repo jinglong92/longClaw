@@ -21,6 +21,18 @@ paths:
       responses:
         "200": { description: OK }
 
+  /api/nodes:
+    get:
+      summary: List nodes
+      responses:
+        "200": { description: OK }
+
+  /api/audit:
+    get:
+      summary: List audit records
+      responses:
+        "200": { description: OK }
+
   /api/chat:
     post:
       summary: Send chat message
@@ -57,6 +69,28 @@ paths:
       parameters:
         - in: path
           name: runId
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+
+  /api/nodes/{nodeId}/retry:
+    post:
+      summary: Retry node
+      parameters:
+        - in: path
+          name: nodeId
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+
+  /api/nodes/{nodeId}/reroute:
+    post:
+      summary: Reroute node
+      parameters:
+        - in: path
+          name: nodeId
           required: true
           schema: { type: string }
       responses:

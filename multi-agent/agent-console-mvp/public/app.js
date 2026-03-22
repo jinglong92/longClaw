@@ -1,19 +1,22 @@
 const runListEl = document.getElementById('runList');
 const chatStreamEl = document.getElementById('chatStream');
 const logStreamEl = document.getElementById('logStream');
+const nodeListEl = document.getElementById('nodeList');
 const chatForm = document.getElementById('chatForm');
 const chatInput = document.getElementById('chatInput');
 
 let currentRunId = 'run_001';
 
 async function init() {
-  const [runsRes, msgRes, logsRes] = await Promise.all([
+  const [runsRes, msgRes, logsRes, nodesRes] = await Promise.all([
     fetch('/api/runs').then(r => r.json()),
     fetch('/api/messages').then(r => r.json()),
-    fetch('/api/logs').then(r => r.json())
+    fetch('/api/logs').then(r => r.json()),
+    fetch('/api/nodes').then(r => r.json())
   ]);
 
   renderRuns(runsRes.items || []);
+  renderNodes(nodesRes.items || []);
   (msgRes.items || []).forEach(pushMessage);
   (logsRes.items || []).forEach(pushLog);
 
@@ -34,6 +37,30 @@ function renderRuns(items) {
   }
 }
 
+function renderNodes(items) {
+  nodeListEl.innerHTML = '';
+  for (const node of items) {
+    const div = document.createElement('div');
+    div.className = 'node-item';
+    div.innerHTML = `
+      <div><strong>${node.id}</strong></div>
+      <div style="color:#9ca3af;margin-top:4px">${node.agentId} · ${node.status}</div>
+      <div class="actions">
+        <button data-retry="${node.id}">Retry</button>
+        <button data-reroute="${node.id}">Reroute</button>
+      </div>
+    `;
+    nodeListEl.appendChild(div);
+  }
+
+  nodeListEl.querySelectorAll('button[data-retry]').forEach(btn => {
+    btn.addEventListener('click', () => retryNode(btn.dataset.retry));
+  });
+  nodeListEl.querySelectorAll('button[data-reroute]').forEach(btn => {
+    btn.addEventListener('click', () => rerouteNode(btn.dataset.reroute));
+  });
+}
+
 function pushMessage(msg) {
   const div = document.createElement('div');
   const roleClass = ['user', 'assistant', 'system'].includes(msg.role) ? msg.role : 'system';
@@ -52,13 +79,43 @@ function pushLog(log) {
   logStreamEl.scrollTop = logStreamEl.scrollHeight;
 }
 
+async function refreshAll() {
+  const [runsRes, nodesRes] = await Promise.all([
+    fetch('/api/runs').then(r => r.json()),
+    fetch('/api/nodes').then(r => r.json())
+  ]);
+  renderRuns(runsRes.items || []);
+  renderNodes(nodesRes.items || []);
+}
+
 function bindToolbar() {
   document.querySelectorAll('.toolbar button').forEach(btn => {
     btn.addEventListener('click', async () => {
       const action = btn.dataset.action;
       await fetch(`/api/runs/${currentRunId}/${action}`, { method: 'POST' });
+      await refreshAll();
     });
   });
+}
+
+async function retryNode(nodeId) {
+  await fetch(`/api/nodes/${nodeId}/retry`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ strategy: 'from_input', reason: 'ui click retry' })
+  });
+  await refreshAll();
+}
+
+async function rerouteNode(nodeId) {
+  const target = prompt('输入目标 agentId', 'agent_research');
+  if (!target) return;
+  await fetch(`/api/nodes/${nodeId}/reroute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ targetAgentId: target, reason: 'ui click reroute' })
+  });
+  await refreshAll();
 }
 
 function bindChat() {
@@ -70,15 +127,34 @@ function bindChat() {
     if (text.startsWith('/pause')) {
       await fetch(`/api/runs/${currentRunId}/pause`, { method: 'POST' });
       chatInput.value = '';
-      return;
+      return refreshAll();
     }
     if (text.startsWith('/resume')) {
       await fetch(`/api/runs/${currentRunId}/resume`, { method: 'POST' });
       chatInput.value = '';
-      return;
+      return refreshAll();
     }
     if (text.startsWith('/cancel')) {
       await fetch(`/api/runs/${currentRunId}/cancel`, { method: 'POST' });
+      chatInput.value = '';
+      return refreshAll();
+    }
+    if (text.startsWith('/retry')) {
+      const [, nodeId] = text.split(/\s+/);
+      if (nodeId) await retryNode(nodeId);
+      chatInput.value = '';
+      return;
+    }
+    if (text.startsWith('/reroute')) {
+      const [, nodeId, targetAgentId] = text.split(/\s+/);
+      if (nodeId && targetAgentId) {
+        await fetch(`/api/nodes/${nodeId}/reroute`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ targetAgentId, reason: 'slash command' })
+        });
+        await refreshAll();
+      }
       chatInput.value = '';
       return;
     }
@@ -101,8 +177,18 @@ function connectWs() {
       return;
     }
     if (msg.type === 'run.updated') {
-      fetch('/api/runs').then(r => r.json()).then(d => renderRuns(d.items || []));
+      refreshAll();
       pushMessage({ role: 'system', text: `Run ${msg.data.id} -> ${msg.data.status}` });
+      return;
+    }
+    if (msg.type === 'node.retried') {
+      refreshAll();
+      pushMessage({ role: 'system', text: `Retried ${msg.data.from.id} -> ${msg.data.to.id}` });
+      return;
+    }
+    if (msg.type === 'node.rerouted') {
+      refreshAll();
+      pushMessage({ role: 'system', text: `Rerouted ${msg.data.id} -> ${msg.data.agentId}` });
       return;
     }
     if (msg.type === 'log.new') {
