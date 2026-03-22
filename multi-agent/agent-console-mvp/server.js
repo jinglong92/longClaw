@@ -28,6 +28,9 @@ const {
 } = require('../optimization/registry/registry');
 const safetyAgent = require('../hidden-agents/safety_agent');
 const { runHiddenOptimization } = require('../hidden-agents');
+const {
+  normalizeFeishuCallbackPayload
+} = require('../optimization/instrumentation/feishu-normalizer');
 
 const app = express();
 app.use(express.json());
@@ -49,6 +52,33 @@ const instrumentationJsonlPath = path.isAbsolute(jsonlPathFromConfig)
   ? jsonlPathFromConfig
   : path.join(workspaceRoot, jsonlPathFromConfig);
 
+const FEISHU_WEBHOOK_PATH = process.env.FEISHU_WEBHOOK_PATH || '/api/integrations/feishu/webhook';
+const FEISHU_WEBHOOK_ENABLED = process.env.FEISHU_WEBHOOK_ENABLED !== 'false';
+const FEISHU_VERIFICATION_TOKEN = process.env.FEISHU_VERIFICATION_TOKEN || '';
+
+const MULTI_AGENT_MODE = {
+  version: 'v2.1',
+  ctrl: {
+    id: 'CTRL',
+    contract: '跨域拆解、冲突仲裁、资源分配、统一汇总'
+  },
+  routing: {
+    default: 'User -> CTRL -> [SPECIALIST] -> CTRL -> User',
+    parallelLimit: 2,
+    riskAudit: '策略/主观结论强制触发'
+  },
+  specialists: [
+    { id: 'LIFE', domain: '生活与系统运维', style: 'SOP化、容灾优先' },
+    { id: 'JOB', domain: '求职与谈判', style: 'ROI与杠杆导向' },
+    { id: 'WORK', domain: '组织博弈与战略', style: '策略+护城河分析' },
+    { id: 'PARENT', domain: '育儿与里程碑', style: '循证、长期系统性' },
+    { id: 'LEARN', domain: '学习与论文深解', style: '结构化、深度拆解' },
+    { id: 'MONEY', domain: '资金配置与风控', style: '流动性优先' },
+    { id: 'BRO', domain: '证伪与反思', style: '先戳破，再修复' },
+    { id: 'SIS', domain: '关系与沟通', style: '边界+长期可持续' }
+  ]
+};
+
 const state = {
   runs: [
     {
@@ -61,18 +91,18 @@ const state = {
   ],
   nodes: [
     {
-      id: 'node_router_1',
+      id: 'node_life_1',
       runId: 'run_001',
       attempt: 1,
-      agentId: 'agent_router',
-      nodeType: 'router',
+      agentId: 'LIFE',
+      nodeType: 'agent',
       status: 'completed'
     },
     {
-      id: 'node_agent_ui',
+      id: 'node_work_1',
       runId: 'run_001',
       attempt: 1,
-      agentId: 'agent_ui',
+      agentId: 'WORK',
       nodeType: 'agent',
       status: 'running'
     }
@@ -108,6 +138,8 @@ const state = {
     comparisons: []
   }
 };
+
+const feishuSessionState = new Map();
 
 const memoryEventSink = new MemoryEventSink({ maxItems: 20_000 });
 const telemetrySinks = [memoryEventSink];
@@ -264,6 +296,197 @@ function trimList(list, maxSize = 100) {
   }
 }
 
+function sanitizeIdFragment(raw, fallback = 'unknown') {
+  const cleaned = String(raw || fallback).replace(/[^a-zA-Z0-9_-]/g, '_');
+  return cleaned || fallback;
+}
+
+function feishuRunIdForSession(sessionId) {
+  return `run_feishu_live_${sanitizeIdFragment(sessionId).slice(0, 48)}`;
+}
+
+function verifyFeishuToken(incomingToken) {
+  if (!FEISHU_VERIFICATION_TOKEN) return true;
+  return String(incomingToken || '') === FEISHU_VERIFICATION_TOKEN;
+}
+
+function pushExternalMessageToConsole({ role, text, ts, channel, sessionId }) {
+  const msg = {
+    id: `msg_${state.messages.length + 1}`,
+    role,
+    type: channel,
+    text: `[${channel}] ${text}`,
+    ts
+  };
+  state.messages.push(msg);
+  trimList(state.messages, 5000);
+  broadcast({ type: 'chat.new', data: [msg] });
+  appendLog('INFO', `ExternalMessage ${channel} ${role} session=${sessionId}`, {
+    runId: channel === 'feishu' ? feishuRunIdForSession(sessionId) : undefined
+  });
+}
+
+function ingestFeishuMessage(item) {
+  if (!item || !item.text) return 0;
+
+  const sessionId = String(item.sessionId || 'sess_feishu_live');
+  const runId = feishuRunIdForSession(sessionId);
+  ensureRun(runId, sessionId);
+  const run = state.runs.find(r => r.id === runId);
+  if (run) {
+    run.title = `飞书会话: ${sessionId}`;
+  }
+
+  const rawTs = Date.parse(item.timestamp || '');
+  const baseTs = Number.isFinite(rawTs) ? rawTs : Date.now();
+  const safeText = String(item.text || '').trim();
+  if (!safeText) return 0;
+
+  let emitted = 0;
+
+  if (item.role === 'assistant') {
+    const stateRecord = feishuSessionState.get(sessionId);
+    const requestId = stateRecord?.requestId || `req_feishu_orphan_${sanitizeIdFragment(item.messageId)}`;
+    const finalTs = item.hasExplicitTimestamp
+      ? new Date(baseTs).toISOString()
+      : new Date((stateRecord?.lastUserTsMs || baseTs) + 1500).toISOString();
+
+    const finalEvent = emitTelemetryEvent({
+      run_id: runId,
+      session_id: sessionId,
+      request_id: requestId,
+      timestamp: finalTs,
+      event_type: EVENT_TYPES.FINAL_RESPONSE_EMITTED,
+      actor_type: ACTOR_TYPES.CTRL,
+      actor_id: 'CTRL',
+      parent_event_id: null,
+      payload: {
+        channel: 'feishu',
+        summary: safeText.slice(0, 200),
+        text: safeText,
+        source_message_id: item.messageId || null
+      },
+      metrics: {
+        token_cost_proxy: Math.max(12, Math.ceil(safeText.length / 2))
+      }
+    });
+    if (finalEvent) emitted += 1;
+
+    pushExternalMessageToConsole({
+      role: 'assistant',
+      text: safeText,
+      ts: Date.parse(finalTs),
+      channel: 'feishu',
+      sessionId
+    });
+
+    return emitted;
+  }
+
+  const requestId = `req_feishu_live_${sanitizeIdFragment(item.messageId)}`;
+  feishuSessionState.set(sessionId, {
+    requestId,
+    lastUserTsMs: baseTs
+  });
+
+  const ingressEvent = emitTelemetryEvent({
+    run_id: runId,
+    session_id: sessionId,
+    request_id: requestId,
+    timestamp: new Date(baseTs).toISOString(),
+    event_type: EVENT_TYPES.MESSAGE_RECEIVED,
+    actor_type: ACTOR_TYPES.INGRESS,
+    actor_id: `feishu:${item.senderId || 'unknown_sender'}`,
+    parent_event_id: null,
+    payload: {
+      channel: 'feishu',
+      text: safeText,
+      role: 'user',
+      source_message_id: item.messageId || null
+    },
+    metrics: {
+      text_length: safeText.length
+    }
+  });
+  if (ingressEvent) emitted += 1;
+
+  const contextEvent = emitTelemetryEvent({
+    run_id: runId,
+    session_id: sessionId,
+    request_id: requestId,
+    timestamp: new Date(baseTs + 1).toISOString(),
+    event_type: EVENT_TYPES.CONTEXT_BUILT,
+    actor_type: ACTOR_TYPES.CTRL,
+    actor_id: 'CTRL',
+    parent_event_id: ingressEvent?.event_id || null,
+    payload: {
+      summary: `feishu realtime message imported; text_len=${safeText.length}`
+    },
+    metrics: {
+      context_items: 1
+    }
+  });
+  if (contextEvent) emitted += 1;
+
+  const routeDecision = selectVisibleRoute(safeText, { maxParallel: 2 });
+  const routeSafety = safetyAgent.validateVisibleRoute(routeDecision.visible_route);
+  if (!routeSafety.ok) {
+    routeDecision.visible_route = ['LIFE'];
+    routeDecision.confidence = 0.2;
+    routeDecision.rationale = `fallback due to safety violation: ${routeSafety.reason}`;
+  }
+
+  const routeEvent = emitTelemetryEvent({
+    run_id: runId,
+    session_id: sessionId,
+    request_id: requestId,
+    timestamp: new Date(baseTs + 2).toISOString(),
+    event_type: EVENT_TYPES.ROUTE_SELECTED,
+    actor_type: ACTOR_TYPES.CTRL,
+    actor_id: 'CTRL',
+    parent_event_id: contextEvent?.event_id || null,
+    payload: {
+      visible_route: routeDecision.visible_route,
+      rationale: `feishu_live: ${routeDecision.rationale}`
+    },
+    metrics: {
+      route_confidence: routeDecision.confidence
+    }
+  });
+  if (routeEvent) emitted += 1;
+
+  if (detectFollowupSignal(safeText)) {
+    const followEvent = emitTelemetryEvent({
+      run_id: runId,
+      session_id: sessionId,
+      request_id: requestId,
+      timestamp: new Date(baseTs + 3).toISOString(),
+      event_type: EVENT_TYPES.USER_FOLLOWUP_RECEIVED,
+      actor_type: ACTOR_TYPES.USER,
+      actor_id: `feishu:${item.senderId || 'unknown_sender'}`,
+      parent_event_id: ingressEvent?.event_id || null,
+      payload: {
+        signal: 'correction_or_retry',
+        text: safeText
+      },
+      metrics: {
+        dissatisfaction_signal: 1
+      }
+    });
+    if (followEvent) emitted += 1;
+  }
+
+  pushExternalMessageToConsole({
+    role: 'user',
+    text: safeText,
+    ts: baseTs,
+    channel: 'feishu',
+    sessionId
+  });
+
+  return emitted;
+}
+
 app.get('/api/runs', (req, res) => res.json({ items: state.runs }));
 app.get('/api/messages', (req, res) => res.json({ items: state.messages }));
 app.get('/api/logs', (req, res) => res.json({ items: state.logs.slice(-300) }));
@@ -300,6 +523,74 @@ app.get('/api/comparisons', (req, res) => {
     latest: state.optimization.comparisons[0] || null,
     items: state.optimization.comparisons.slice(0, 50)
   });
+});
+
+app.get('/api/integrations/feishu/status', (req, res) => {
+  res.json({
+    enabled: FEISHU_WEBHOOK_ENABLED,
+    webhook_path: FEISHU_WEBHOOK_PATH,
+    token_configured: Boolean(FEISHU_VERIFICATION_TOKEN),
+    telemetry_jsonl: instrumentationJsonlPath,
+    tracked_sessions: feishuSessionState.size
+  });
+});
+
+app.post(FEISHU_WEBHOOK_PATH, async (req, res) => {
+  if (!FEISHU_WEBHOOK_ENABLED) {
+    return res.status(503).json({
+      ok: false,
+      error: 'feishu webhook disabled',
+      hint: 'set FEISHU_WEBHOOK_ENABLED=true to enable'
+    });
+  }
+
+  const normalized = normalizeFeishuCallbackPayload(req.body || {});
+
+  if (!verifyFeishuToken(normalized.token)) {
+    return res.status(403).json({
+      ok: false,
+      error: 'invalid feishu verification token'
+    });
+  }
+
+  if (normalized.challenge) {
+    return res.json({ challenge: normalized.challenge });
+  }
+
+  if (normalized.unsupportedEncryption) {
+    return res.status(400).json({
+      ok: false,
+      error: 'encrypted callback payload is not supported yet',
+      hint: 'disable callback encryption in Feishu event subscription for now'
+    });
+  }
+
+  const messages = Array.isArray(normalized.messages) ? normalized.messages : [];
+  if (messages.length === 0) {
+    return res.json({
+      ok: true,
+      ignored: true,
+      event_type: normalized.eventType || 'unknown'
+    });
+  }
+
+  let emitted = 0;
+  for (const message of messages) {
+    emitted += ingestFeishuMessage(message);
+  }
+
+  await telemetry.flushNow();
+
+  return res.json({
+    ok: true,
+    event_type: normalized.eventType || 'unknown',
+    messages_received: messages.length,
+    events_emitted: emitted
+  });
+});
+
+app.get('/api/multi-agent/mode', (req, res) => {
+  res.json(MULTI_AGENT_MODE);
 });
 
 app.post('/api/replay', (req, res) => {
@@ -937,7 +1228,7 @@ wss.on('connection', socket => {
 setInterval(() => {
   const run = state.runs[0];
   if (!run || run.status !== 'running') return;
-  appendLog('INFO', `ToolOutputChunk node_agent_ui seq=${state.seq + 1}`, { runId: run.id, nodeId: 'node_agent_ui' });
+  appendLog('INFO', `ToolOutputChunk node_work_1 seq=${state.seq + 1}`, { runId: run.id, nodeId: 'node_work_1' });
 }, 4000);
 
 const PORT = process.env.PORT || 3799;

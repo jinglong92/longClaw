@@ -14,12 +14,35 @@
       </aside>
 
       <main class="center">
-        <div class="panel-title">对话</div>
-        <div id="chatStream" class="chat-stream"></div>
-        <form id="chatForm" class="chat-input-wrap">
-          <input id="chatInput" placeholder="输入消息，或 /pause run_001" autocomplete="off" />
-          <button type="submit">发送</button>
-        </form>
+        <div class="panel-title center-topbar">
+          <span>多代理控制台（CTRL 关系图）</span>
+          <button id="controlConsoleToggle" class="console-toggle-btn" type="button">折叠</button>
+        </div>
+        <section id="controlConsolePanel" class="control-console">
+          <div class="control-flow" id="controlFlowSummary">
+            <span class="flow-node">User</span>
+            <span class="flow-arrow">-></span>
+            <span class="flow-node ctrl">CTRL</span>
+            <span class="flow-arrow">-></span>
+            <span class="flow-node" id="activeRouteNode">[LIFE]</span>
+            <span class="flow-arrow">-></span>
+            <span class="flow-node ctrl">CTRL</span>
+            <span class="flow-arrow">-></span>
+            <span class="flow-node">User</span>
+          </div>
+          <div class="control-subtitle">CTRL 与专职助理关系（可见层）</div>
+          <div id="modeSummary" class="mode-summary"></div>
+          <div id="specialistRelationGrid" class="specialist-relation-grid"></div>
+        </section>
+
+        <section class="chat-section">
+          <div class="panel-title chat-title">会话窗口</div>
+          <div id="chatStream" class="chat-stream"></div>
+          <form id="chatForm" class="chat-input-wrap">
+            <input id="chatInput" placeholder="输入消息，或 /pause run_001" autocomplete="off" />
+            <button type="submit">发送</button>
+          </form>
+        </section>
       </main>
 
       <aside class="right">

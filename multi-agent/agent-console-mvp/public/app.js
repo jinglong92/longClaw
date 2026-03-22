@@ -3,16 +3,26 @@ const chatStreamEl = document.getElementById('chatStream');
 const logStreamEl = document.getElementById('logStream');
 const nodeListEl = document.getElementById('nodeList');
 const traceRunStreamEl = document.getElementById('traceRunStream');
+const controlConsolePanelEl = document.getElementById('controlConsolePanel');
+const controlConsoleToggleEl = document.getElementById('controlConsoleToggle');
+const activeRouteNodeEl = document.getElementById('activeRouteNode');
+const specialistRelationGridEl = document.getElementById('specialistRelationGrid');
+const modeSummaryEl = document.getElementById('modeSummary');
 const hiddenEventStreamEl = document.getElementById('hiddenEventStream');
 const evaluationSummaryEl = document.getElementById('evaluationSummary');
 const comparisonSummaryEl = document.getElementById('comparisonSummary');
 const chatForm = document.getElementById('chatForm');
 const chatInput = document.getElementById('chatInput');
 
+let VISIBLE_SPECIALISTS = ['LIFE', 'JOB', 'WORK', 'PARENT', 'LEARN', 'MONEY', 'BRO', 'SIS'];
+let SPECIALIST_META = {};
+let MODE_META = null;
+const CONTROL_PANEL_STATE_KEY = 'longclaw.controlConsoleCollapsed';
+
 let currentRunId = 'run_001';
 
 async function init() {
-  const [runsRes, msgRes, logsRes, nodesRes, tracesRes, eventsRes, evalRes, cmpRes] = await Promise.all([
+  const [runsRes, msgRes, logsRes, nodesRes, tracesRes, eventsRes, evalRes, cmpRes, modeRes] = await Promise.all([
     fetch('/api/runs').then(r => r.json()),
     fetch('/api/messages').then(r => r.json()),
     fetch('/api/logs').then(r => r.json()),
@@ -20,12 +30,21 @@ async function init() {
     fetch('/api/traces?limit=80').then(r => r.json()),
     fetch('/api/events?actor_type=hidden_agent&limit=120').then(r => r.json()),
     fetch('/api/evaluations').then(r => r.json()),
-    fetch('/api/comparisons').then(r => r.json())
+    fetch('/api/comparisons').then(r => r.json()),
+    fetch('/api/multi-agent/mode').then(r => r.json())
   ]);
+
+  MODE_META = modeRes;
+  VISIBLE_SPECIALISTS = Array.isArray(modeRes?.specialists)
+    ? modeRes.specialists.map(item => item.id)
+    : VISIBLE_SPECIALISTS;
+  SPECIALIST_META = Object.fromEntries((modeRes?.specialists || []).map(item => [item.id, item]));
 
   renderRuns(runsRes.items || []);
   renderNodes(nodesRes.items || []);
   renderTraceRuns(tracesRes.items || []);
+  renderModeSummary();
+  renderControlConsole(nodesRes.items || [], tracesRes.items || []);
   (msgRes.items || []).forEach(pushMessage);
   (logsRes.items || []).forEach(pushLog);
   (eventsRes.items || []).forEach(pushHiddenEvent);
@@ -33,8 +52,31 @@ async function init() {
   renderComparisonSummary(cmpRes.latest || null);
 
   bindToolbar();
+  bindControlConsoleToggle();
   bindChat();
   connectWs();
+}
+
+function setControlConsoleCollapsed(collapsed) {
+  if (collapsed) {
+    controlConsolePanelEl.classList.add('collapsed');
+    controlConsoleToggleEl.textContent = '展开';
+  } else {
+    controlConsolePanelEl.classList.remove('collapsed');
+    controlConsoleToggleEl.textContent = '折叠';
+  }
+}
+
+function bindControlConsoleToggle() {
+  const stored = localStorage.getItem(CONTROL_PANEL_STATE_KEY);
+  const initCollapsed = stored === '1';
+  setControlConsoleCollapsed(initCollapsed);
+
+  controlConsoleToggleEl.addEventListener('click', () => {
+    const collapsed = !controlConsolePanelEl.classList.contains('collapsed');
+    setControlConsoleCollapsed(collapsed);
+    localStorage.setItem(CONTROL_PANEL_STATE_KEY, collapsed ? '1' : '0');
+  });
 }
 
 function renderRuns(items) {
@@ -84,6 +126,64 @@ function renderTraceRuns(items) {
       : 'unknown';
     div.textContent = `${trace.trace_id} | route=${route} | latency=${Math.round(trace.latency_metrics?.end_to_end_ms || 0)}ms`;
     traceRunStreamEl.appendChild(div);
+  }
+}
+
+function renderModeSummary() {
+  if (!MODE_META) {
+    modeSummaryEl.textContent = '多代理模式元数据加载失败';
+    return;
+  }
+
+  modeSummaryEl.innerHTML = `
+    <div class="line"><strong>Mode:</strong> ${MODE_META.version || 'unknown'} | <strong>CTRL:</strong> ${MODE_META.ctrl?.id || 'CTRL'}</div>
+    <div class="line"><strong>Contract:</strong> ${MODE_META.ctrl?.contract || 'N/A'}</div>
+    <div class="line"><strong>Routing:</strong> ${MODE_META.routing?.default || 'N/A'}</div>
+    <div class="line"><strong>Risk Audit:</strong> ${MODE_META.routing?.riskAudit || 'N/A'} | <strong>并行上限:</strong> ${MODE_META.routing?.parallelLimit || 1}</div>
+  `;
+}
+
+function latestNodeStatusBySpecialist(nodes) {
+  const result = {};
+  for (const specialist of VISIBLE_SPECIALISTS) {
+    result[specialist] = 'idle';
+  }
+
+  for (const node of nodes) {
+    if (!VISIBLE_SPECIALISTS.includes(node.agentId)) continue;
+    if (node.runId !== currentRunId) continue;
+    if (result[node.agentId] === 'idle') {
+      result[node.agentId] = node.status || 'idle';
+    }
+  }
+  return result;
+}
+
+function renderControlConsole(nodes, traces) {
+  const latestTrace = [...traces].reverse().find(trace => trace.run_id === currentRunId) || [...traces].reverse()[0];
+  const route = Array.isArray(latestTrace?.selected_visible_route)
+    ? latestTrace.selected_visible_route
+    : ['LIFE'];
+
+  activeRouteNodeEl.textContent = route.length === 1
+    ? `[${route[0]}]`
+    : `([${route[0]}] || [${route[1]}])`;
+
+  const statusMap = latestNodeStatusBySpecialist(nodes);
+  specialistRelationGridEl.innerHTML = '';
+
+  for (const specialist of VISIBLE_SPECIALISTS) {
+    const status = statusMap[specialist] || 'idle';
+    const meta = SPECIALIST_META[specialist] || {};
+    const card = document.createElement('div');
+    card.className = 'specialist-card';
+    card.innerHTML = `
+      <div class="specialist-name">${specialist}</div>
+      <div class="specialist-link">${meta.domain || 'CTRL -> specialist -> CTRL'}</div>
+      <div class="specialist-link">${meta.style || '默认风格'}</div>
+      <span class="specialist-status ${status}">${status}</span>
+    `;
+    specialistRelationGridEl.appendChild(card);
   }
 }
 
@@ -151,6 +251,8 @@ async function refreshAll() {
   renderRuns(runsRes.items || []);
   renderNodes(nodesRes.items || []);
   renderTraceRuns(tracesRes.items || []);
+  renderModeSummary();
+  renderControlConsole(nodesRes.items || [], tracesRes.items || []);
   renderEvaluationSummary(evalRes.latest || null);
   renderComparisonSummary(cmpRes.latest || null);
 }
