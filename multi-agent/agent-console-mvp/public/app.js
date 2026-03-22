@@ -11,6 +11,11 @@ const modeSummaryEl = document.getElementById('modeSummary');
 const hiddenEventStreamEl = document.getElementById('hiddenEventStream');
 const evaluationSummaryEl = document.getElementById('evaluationSummary');
 const comparisonSummaryEl = document.getElementById('comparisonSummary');
+const kpiAgentsEl = document.getElementById('kpiAgents');
+const kpiRunsEl = document.getElementById('kpiRuns');
+const kpiRiskEl = document.getElementById('kpiRisk');
+const kpiLatencyEl = document.getElementById('kpiLatency');
+const todayTimelineEl = document.getElementById('todayTimeline');
 const chatForm = document.getElementById('chatForm');
 const chatInput = document.getElementById('chatInput');
 
@@ -43,7 +48,9 @@ async function init() {
   renderRuns(runsRes.items || []);
   renderNodes(nodesRes.items || []);
   renderTraceRuns(tracesRes.items || []);
+  renderTimeline(logsRes.items || []);
   renderModeSummary();
+  renderOverview(modeRes, runsRes.items || [], tracesRes.items || []);
   renderControlConsole(nodesRes.items || [], tracesRes.items || []);
   (msgRes.items || []).forEach(pushMessage);
   (logsRes.items || []).forEach(pushLog);
@@ -141,6 +148,34 @@ function renderModeSummary() {
     <div class="line"><strong>Routing:</strong> ${MODE_META.routing?.default || 'N/A'}</div>
     <div class="line"><strong>Risk Audit:</strong> ${MODE_META.routing?.riskAudit || 'N/A'} | <strong>并行上限:</strong> ${MODE_META.routing?.parallelLimit || 1}</div>
   `;
+}
+
+function renderOverview(modeMeta, runs, traces) {
+  kpiAgentsEl.textContent = Array.isArray(modeMeta?.specialists) ? modeMeta.specialists.length : '-';
+  kpiRunsEl.textContent = runs.length;
+  const latest = [...traces].slice(-10);
+  const p95 = latest.length
+    ? Math.max(...latest.map(item => Number(item?.latency_metrics?.end_to_end_ms || 0)))
+    : 0;
+  kpiLatencyEl.textContent = `${Math.round(p95)} ms`;
+
+  const riskScore = latest.length
+    ? latest.reduce((acc, item) => acc + Number(item?.evaluation_scores?.risk_score || 0), 0) / latest.length
+    : 0;
+  const riskLabel = riskScore >= 0.75 ? 'HIGH' : riskScore >= 0.45 ? 'MED' : 'LOW';
+  kpiRiskEl.textContent = riskLabel;
+}
+
+function renderTimeline(logs) {
+  todayTimelineEl.innerHTML = '';
+  const items = [...logs].slice(-6).reverse();
+  for (const log of items) {
+    const row = document.createElement('div');
+    row.className = 'timeline-row';
+    const ts = new Date(log.ts).toLocaleTimeString();
+    row.textContent = `${ts} · ${log.text}`;
+    todayTimelineEl.appendChild(row);
+  }
 }
 
 function latestNodeStatusBySpecialist(nodes) {
@@ -241,17 +276,20 @@ function renderComparisonSummary(item) {
 }
 
 async function refreshAll() {
-  const [runsRes, nodesRes, tracesRes, evalRes, cmpRes] = await Promise.all([
+  const [runsRes, nodesRes, tracesRes, evalRes, cmpRes, logsRes] = await Promise.all([
     fetch('/api/runs').then(r => r.json()),
     fetch('/api/nodes').then(r => r.json()),
     fetch('/api/traces?limit=80').then(r => r.json()),
     fetch('/api/evaluations').then(r => r.json()),
-    fetch('/api/comparisons').then(r => r.json())
+    fetch('/api/comparisons').then(r => r.json()),
+    fetch('/api/logs').then(r => r.json())
   ]);
   renderRuns(runsRes.items || []);
   renderNodes(nodesRes.items || []);
   renderTraceRuns(tracesRes.items || []);
+  renderTimeline(logsRes.items || []);
   renderModeSummary();
+  renderOverview(MODE_META, runsRes.items || [], tracesRes.items || []);
   renderControlConsole(nodesRes.items || [], tracesRes.items || []);
   renderEvaluationSummary(evalRes.latest || null);
   renderComparisonSummary(cmpRes.latest || null);

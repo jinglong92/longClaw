@@ -14,6 +14,13 @@
       </aside>
 
       <main class="center">
+        <section class="overview-grid" id="overviewGrid">
+          <div class="kpi-card"><div class="kpi-label">Agents</div><div class="kpi-value" id="kpiAgents">-</div></div>
+          <div class="kpi-card"><div class="kpi-label">Runs</div><div class="kpi-value" id="kpiRuns">-</div></div>
+          <div class="kpi-card"><div class="kpi-label">Risk Level</div><div class="kpi-value" id="kpiRisk">-</div></div>
+          <div class="kpi-card"><div class="kpi-label">Latency P95</div><div class="kpi-value" id="kpiLatency">-</div></div>
+        </section>
+
         <div class="panel-title center-topbar">
           <span>多代理控制台（CTRL 关系图）</span>
           <button id="controlConsoleToggle" class="console-toggle-btn" type="button">折叠</button>
@@ -55,6 +62,9 @@
 
         <div class="sub-title">节点（点击操作）</div>
         <div id="nodeList" class="node-list"></div>
+
+        <div class="sub-title">今日时间线</div>
+        <div id="todayTimeline" class="timeline-stream"></div>
 
         <div class="sub-title">Trace Runs</div>
         <div id="traceRunStream" class="trace-run-stream"></div>
