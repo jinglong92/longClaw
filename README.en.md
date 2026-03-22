@@ -144,7 +144,6 @@ Role labels are fixed: `LIFE/JOB/WORK/PARENT/LEARN/MONEY/BRO/SIS`.
 |   |-- README.md
 |   |-- ARCHITECTURE.md
 |   |-- UNIFIED_SYNC_2026-03-22.md
-|   |-- starter-kit/
 |   `-- agent-console-mvp/
 |-- memory/
 |-- TOOLS.md
@@ -182,10 +181,6 @@ Current MVP includes chat-first layout, run controls, realtime logs, basic contr
 - Architecture details: `multi-agent/ARCHITECTURE.md`
 - Console details: `multi-agent/agent-console-mvp/README.md`
 - Unified sync notes: `multi-agent/UNIFIED_SYNC_2026-03-22.md`
-- OSS starter kit: `multi-agent/starter-kit/README.md`
-- CLI draft spec: `multi-agent/starter-kit/CLI_SPEC_v0.1.md`
-- Privacy and compatibility guide: `multi-agent/starter-kit/PRIVACY_AND_COMPATIBILITY.md`
-- PR validation workflow: `.github/workflows/multi-agent-config-validate.yml`
 - Chinese docs: `README.md`
 
 ---
