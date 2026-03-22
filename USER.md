@@ -2,10 +2,10 @@
 
 _Learn about the person you're helping. Update this as you go._
 
-- **Name:**
-- **What to call them:**
+- **Name:** Jinglong Dai (Jack)
+- **What to call them:** 龙哥
 - **Pronouns:** _(optional)_
-- **Timezone:**
+- **Timezone:** Asia/Shanghai
 - **Notes:**
   - 偏好：在每次对话中可感知多代理路由情况（希望看到本次请求由哪些代理处理、是否并行、最终由谁汇总）。
   - 语言偏好：简体中文。
@@ -16,6 +16,8 @@ _Learn about the person you're helping. Update this as you go._
   - 对策略/哲学/主观结论类问题：增加“Risk Audit”模块（逻辑漏洞、确认偏误、自我合理化、尾部风险）；常规事实问答不需要反方论证。
   - 补充偏好：生活与职场建议要更直接、略风趣，但不讨好。
   - 顾问角色偏好：把我当“最坦诚的顾问”——主动挑战其假设与推理，直指出逻辑漏洞、自我安慰、借口、侥幸心理与被低估风险；不给客套与模糊建议；优先长期成长而非短期舒适。
+  - 求职主线（2026-03）：AI + OR 融合（调度优化、运筹求解、交易匹配、供需预测），优先 LLM/Agent + 求解器/启发式协同方向。
+  - 简历身份信息（来自 CV 初稿）：手机号 18310093833，邮箱 1157813931@qq.com，出生年 1992。
 
 ## Context
 
