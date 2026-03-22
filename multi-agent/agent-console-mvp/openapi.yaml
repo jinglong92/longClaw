@@ -1,0 +1,63 @@
+openapi: 3.0.3
+info:
+  title: Agent Console MVP API
+  version: 0.1.0
+paths:
+  /api/runs:
+    get:
+      summary: List runs
+      responses:
+        "200": { description: OK }
+
+  /api/messages:
+    get:
+      summary: List conversation messages
+      responses:
+        "200": { description: OK }
+
+  /api/logs:
+    get:
+      summary: List logs
+      responses:
+        "200": { description: OK }
+
+  /api/chat:
+    post:
+      summary: Send chat message
+      requestBody:
+        required: true
+      responses:
+        "200": { description: OK }
+
+  /api/runs/{runId}/pause:
+    post:
+      summary: Pause run
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+
+  /api/runs/{runId}/resume:
+    post:
+      summary: Resume run
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+
+  /api/runs/{runId}/cancel:
+    post:
+      summary: Cancel run
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }

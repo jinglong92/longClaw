@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent Console MVP</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="left">
+        <div class="panel-title">会话 / Runs</div>
+        <ul id="runList" class="run-list"></ul>
+      </aside>
+
+      <main class="center">
+        <div class="panel-title">对话</div>
+        <div id="chatStream" class="chat-stream"></div>
+        <form id="chatForm" class="chat-input-wrap">
+          <input id="chatInput" placeholder="输入消息，或 /pause run_001" autocomplete="off" />
+          <button type="submit">发送</button>
+        </form>
+      </main>
+
+      <aside class="right">
+        <div class="panel-title">运行控制</div>
+        <div class="toolbar">
+          <button data-action="pause">Pause</button>
+          <button data-action="resume">Resume</button>
+          <button data-action="cancel" class="danger">Cancel</button>
+        </div>
+
+        <div class="sub-title">实时日志</div>
+        <div id="logStream" class="log-stream"></div>
+      </aside>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
