@@ -2,7 +2,7 @@
 
 ## Daily AI Intel Push (high priority)
 
-When heartbeat runs between 08:30-10:30 (Asia/Shanghai), prepare and send one daily digest to the user if not sent today.
+When heartbeat runs, enforce fixed deadline: send the digest before 09:30 (Asia/Shanghai) each day. If missed, send at first available heartbeat after 09:30.
 
 ### Scope (must cover)
 1. Industry leaders' latest views on AI progress/future trends
@@ -24,3 +24,4 @@ When heartbeat runs between 08:30-10:30 (Asia/Shanghai), prepare and send one da
 ### De-duplication rule
 - Track last sent date in `memory/heartbeat-state.json`
 - If already sent today, do not resend unless there is major breaking update
+- Normal case is exactly one push per day
