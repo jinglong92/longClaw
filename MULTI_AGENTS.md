@@ -119,3 +119,15 @@
 - 安全约束：不主动获取敏感信息
 - 强制可见：每条回复显示 Routing
 - 多代理模式：默认启用（至少经过 CTRL + 1 专职）
+
+## 6) 统一交流机制（Agent Council）
+
+- 最近一次全体同步：`multi-agent/UNIFIED_SYNC_2026-03-22.md`
+- 触发条件：
+  1) 用户明确要求“统一交流/全体同步”
+  2) 路由规则或角色口径出现漂移
+  3) 新增/删除专职代理
+- 同步产物（必须落盘）：
+  - 会议纪要：`multi-agent/UNIFIED_SYNC_YYYY-MM-DD.md`
+  - 配置变更：`MULTI_AGENTS.md`（必要时联动 `AGENTS.md`）
+  - 长期偏好：`MEMORY.md`
