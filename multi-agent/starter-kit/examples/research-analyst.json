@@ -1,0 +1,34 @@
+{
+  "version": "0.1",
+  "profile_name": "research-analyst",
+  "compatibility_mode": "openclaw_v1",
+  "controller": {
+    "id": "CTRL",
+    "default_mode": "auto_route",
+    "max_parallel_specialists": 2,
+    "must_finalize": true
+  },
+  "specialists": [
+    { "id": "LEARN", "enabled": true, "domain": "paper reading and method analysis" },
+    { "id": "WORK", "enabled": true, "domain": "strategy and product impact" },
+    { "id": "MONEY", "enabled": true, "domain": "resource and budget implication" },
+    { "id": "LIFE", "enabled": true, "domain": "execution scheduling" }
+  ],
+  "routing": {
+    "parallel_limit": 2,
+    "triggers": [
+      { "name": "paper-reading", "keywords": ["论文", "paper", "SOTA"], "route": ["LEARN"] },
+      { "name": "method-comparison", "keywords": ["对比", "benchmark", "ablation"], "route": ["LEARN", "WORK"] },
+      { "name": "business-impact", "keywords": ["商业", "落地", "ROI"], "route": ["WORK", "MONEY"] },
+      { "name": "execution-plan", "keywords": ["实验计划", "里程碑", "排期"], "route": ["LIFE", "LEARN"] }
+    ]
+  },
+  "risk_audit": {
+    "enabled": true,
+    "required_fields": ["core_gap", "tail_risk", "falsifier"]
+  },
+  "output_visibility": {
+    "show_routing": true,
+    "routing_format": "User -> CTRL -> [ROLE] -> CTRL -> User"
+  }
+}

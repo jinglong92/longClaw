@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+"""Starter-kit CLI shim for `openclaw ma validate`.
+
+Usage example:
+  ./multi-agent/starter-kit/bin/openclaw ma validate --config ./multi-agent.config.json
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+
+def _load_validator():
+    tools_dir = Path(__file__).resolve().parents[1] / "tools"
+    sys.path.insert(0, str(tools_dir))
+    import validate_config  # type: ignore
+
+    return validate_config
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="openclaw",
+        description="OpenClaw starter-kit local CLI",
+    )
+
+    sub = parser.add_subparsers(dest="command")
+
+    ma = sub.add_parser("ma", help="multi-agent commands")
+    ma_sub = ma.add_subparsers(dest="ma_command")
+
+    validate = ma_sub.add_parser("validate", help="validate a multi-agent config")
+    validate.add_argument("--config", required=True, help="path to config JSON")
+    validate.add_argument("--strict", action="store_true", help="fail on unknown fields")
+
+    return parser
+
+
+def main() -> int:
+    parser = build_parser()
+    args = parser.parse_args()
+
+    if args.command != "ma" or args.ma_command != "validate":
+        parser.print_help()
+        return 2
+
+    validator = _load_validator()
+    config_path = Path(args.config).expanduser().resolve()
+    return validator.run_validation(config_path, strict=args.strict)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

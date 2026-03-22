@@ -1,0 +1,52 @@
+name: Validate Multi-Agent Configs
+
+on:
+  pull_request:
+    paths:
+      - "multi-agent/starter-kit/**"
+      - ".github/workflows/multi-agent-config-validate.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate starter-kit example configs (strict)
+        run: |
+          set -euo pipefail
+          for cfg in multi-agent/starter-kit/examples/*.json; do
+            echo "Validating $cfg"
+            python3 multi-agent/starter-kit/tools/validate_config.py --config "$cfg" --strict
+          done
+
+      - name: Validate changed starter-kit JSON files
+        run: |
+          set -euo pipefail
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          changed=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" -- "multi-agent/starter-kit/**/*.json" || true)
+          if [ -z "$changed" ]; then
+            echo "No changed starter-kit JSON files"
+            exit 0
+          fi
+
+          while IFS= read -r file; do
+            if [ -n "$file" ]; then
+              echo "Validating changed file: $file"
+              python3 multi-agent/starter-kit/tools/validate_config.py --config "$file" --strict
+            fi
+          done <<< "$changed"
+
+      - name: Validate CLI shim still works
+        run: |
+          set -euo pipefail
+          ./multi-agent/starter-kit/bin/openclaw ma validate \
+            --config multi-agent/starter-kit/examples/general-assistant.json --strict
