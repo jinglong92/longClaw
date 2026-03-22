@@ -129,8 +129,24 @@ body {
   cursor: pointer;
 }
 
+.trace-run-stream {
+  max-height: 120px;
+  overflow: auto;
+  padding: 0 10px 8px;
+}
+
+.trace-row {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  font-family: "JetBrains Mono", Menlo, monospace;
+  font-size: 11px;
+  color: #c7d2fe;
+}
+
 .log-stream {
-  height: calc(100vh - 390px);
+  height: 180px;
   overflow: auto;
   padding: 10px;
 }
@@ -140,4 +156,34 @@ body {
   border-bottom: 1px dashed #2a3346;
   padding: 6px 0;
   color: #b8c0d6;
+}
+
+.hidden-event-stream {
+  height: 150px;
+  overflow: auto;
+  padding: 10px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.hidden-event-row {
+  font-family: "JetBrains Mono", Menlo, monospace;
+  font-size: 11px;
+  border-bottom: 1px dashed #2a3346;
+  padding: 5px 0;
+  color: #9cc3ff;
+}
+
+.summary-box {
+  margin: 0 10px 10px;
+  padding: 10px;
+  min-height: 80px;
+  max-height: 140px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #0e141f;
+  color: #c7d2fe;
+  font-size: 12px;
+  line-height: 1.4;
 }

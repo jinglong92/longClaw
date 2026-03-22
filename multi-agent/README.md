@@ -59,3 +59,16 @@ Add a new specialist only if all are true for 2+ weeks:
 - current domain boundaries are stable
 - conflict resolution remains within 24h
 - output volume remains manageable
+
+## Hidden Training Layer (Internal)
+
+This workspace now contains an internal-only optimization subsystem:
+
+- `optimization/`: runtime instrumentation, trace aggregation, replay, evaluators, registry
+- `hidden-agents/`: ROUTER_AGENT / PLANNER_AGENT / MEMORY_AGENT / CRITIC_AGENT / EVAL_AGENT / PATCH_AGENT / SAFETY_AGENT
+
+Important boundaries:
+
+- hidden agents are not user-facing route labels
+- visible route labels remain `LIFE/JOB/WORK/PARENT/LEARN/MONEY/BRO/SIS`
+- hidden layer defaults to observe-only and cannot auto-mutate visible routing protocol

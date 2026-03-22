@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://longclaw.dev/schemas/optimization-trace.schema.json",
+  "title": "Hidden Training Optimization Trace",
+  "type": "object",
+  "required": [
+    "trace_id",
+    "run_id",
+    "session_id",
+    "request_id",
+    "timestamp",
+    "user_input",
+    "context_snapshot_summary",
+    "selected_visible_route",
+    "hidden_analysis_events",
+    "plan_steps",
+    "tool_calls",
+    "memory_events",
+    "risk_audit_events",
+    "final_output_summary",
+    "cost_metrics",
+    "latency_metrics",
+    "evaluation_scores",
+    "version_metadata",
+    "event_count",
+    "event_ids"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "trace_id": { "type": "string", "minLength": 1 },
+    "run_id": { "type": "string", "minLength": 1 },
+    "session_id": { "type": "string", "minLength": 1 },
+    "request_id": { "type": "string", "minLength": 1 },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "user_input": { "type": "string" },
+    "context_snapshot_summary": { "type": "string" },
+    "selected_visible_route": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "items": {
+        "type": "string",
+        "enum": ["LIFE", "JOB", "WORK", "PARENT", "LEARN", "MONEY", "BRO", "SIS"]
+      }
+    },
+    "hidden_analysis_events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["agent_id", "summary"],
+        "additionalProperties": true,
+        "properties": {
+          "agent_id": { "type": "string", "minLength": 1 },
+          "summary": { "type": "string" }
+        }
+      }
+    },
+    "plan_steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "tool_calls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "memory_events": {
+      "type": "object",
+      "required": ["reads", "writes"],
+      "additionalProperties": false,
+      "properties": {
+        "reads": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "writes": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+      }
+    },
+    "risk_audit_events": {
+      "type": "object",
+      "required": ["started", "finished"],
+      "additionalProperties": false,
+      "properties": {
+        "started": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "finished": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+      }
+    },
+    "final_output_summary": { "type": "string" },
+    "cost_metrics": {
+      "type": "object",
+      "required": ["token_cost_proxy"],
+      "additionalProperties": true,
+      "properties": {
+        "token_cost_proxy": { "type": "number" }
+      }
+    },
+    "latency_metrics": {
+      "type": "object",
+      "required": ["end_to_end_ms"],
+      "additionalProperties": true,
+      "properties": {
+        "end_to_end_ms": { "type": "number" }
+      }
+    },
+    "evaluation_scores": {
+      "type": "object",
+      "additionalProperties": {
+        "type": ["number", "string", "boolean", "null", "array", "object"]
+      }
+    },
+    "version_metadata": {
+      "type": "object",
+      "required": [
+        "router_version",
+        "prompt_version",
+        "memory_policy_version",
+        "evaluator_version",
+        "hidden_policy_version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "router_version": { "type": "string", "minLength": 1 },
+        "prompt_version": { "type": "string", "minLength": 1 },
+        "memory_policy_version": { "type": "string", "minLength": 1 },
+        "evaluator_version": { "type": "string", "minLength": 1 },
+        "hidden_policy_version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "event_count": { "type": "integer", "minimum": 0 },
+    "event_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

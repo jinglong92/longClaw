@@ -2,23 +2,35 @@ const runListEl = document.getElementById('runList');
 const chatStreamEl = document.getElementById('chatStream');
 const logStreamEl = document.getElementById('logStream');
 const nodeListEl = document.getElementById('nodeList');
+const traceRunStreamEl = document.getElementById('traceRunStream');
+const hiddenEventStreamEl = document.getElementById('hiddenEventStream');
+const evaluationSummaryEl = document.getElementById('evaluationSummary');
+const comparisonSummaryEl = document.getElementById('comparisonSummary');
 const chatForm = document.getElementById('chatForm');
 const chatInput = document.getElementById('chatInput');
 
 let currentRunId = 'run_001';
 
 async function init() {
-  const [runsRes, msgRes, logsRes, nodesRes] = await Promise.all([
+  const [runsRes, msgRes, logsRes, nodesRes, tracesRes, eventsRes, evalRes, cmpRes] = await Promise.all([
     fetch('/api/runs').then(r => r.json()),
     fetch('/api/messages').then(r => r.json()),
     fetch('/api/logs').then(r => r.json()),
-    fetch('/api/nodes').then(r => r.json())
+    fetch('/api/nodes').then(r => r.json()),
+    fetch('/api/traces?limit=80').then(r => r.json()),
+    fetch('/api/events?actor_type=hidden_agent&limit=120').then(r => r.json()),
+    fetch('/api/evaluations').then(r => r.json()),
+    fetch('/api/comparisons').then(r => r.json())
   ]);
 
   renderRuns(runsRes.items || []);
   renderNodes(nodesRes.items || []);
+  renderTraceRuns(tracesRes.items || []);
   (msgRes.items || []).forEach(pushMessage);
   (logsRes.items || []).forEach(pushLog);
+  (eventsRes.items || []).forEach(pushHiddenEvent);
+  renderEvaluationSummary(evalRes.latest || null);
+  renderComparisonSummary(cmpRes.latest || null);
 
   bindToolbar();
   bindChat();
@@ -61,6 +73,20 @@ function renderNodes(items) {
   });
 }
 
+function renderTraceRuns(items) {
+  traceRunStreamEl.innerHTML = '';
+  const latest = [...items].slice(-8).reverse();
+  for (const trace of latest) {
+    const div = document.createElement('div');
+    div.className = 'trace-row';
+    const route = Array.isArray(trace.selected_visible_route)
+      ? trace.selected_visible_route.join('+')
+      : 'unknown';
+    div.textContent = `${trace.trace_id} | route=${route} | latency=${Math.round(trace.latency_metrics?.end_to_end_ms || 0)}ms`;
+    traceRunStreamEl.appendChild(div);
+  }
+}
+
 function pushMessage(msg) {
   const div = document.createElement('div');
   const roleClass = ['user', 'assistant', 'system'].includes(msg.role) ? msg.role : 'system';
@@ -79,13 +105,54 @@ function pushLog(log) {
   logStreamEl.scrollTop = logStreamEl.scrollHeight;
 }
 
+function pushHiddenEvent(event) {
+  if (!event || event.actor_type !== 'hidden_agent') return;
+  const div = document.createElement('div');
+  div.className = 'hidden-event-row';
+  const ts = new Date(event.timestamp || Date.now()).toLocaleTimeString();
+  div.textContent = `[${ts}] ${event.actor_id} :: ${event.event_type}`;
+  hiddenEventStreamEl.appendChild(div);
+  hiddenEventStreamEl.scrollTop = hiddenEventStreamEl.scrollHeight;
+}
+
+function renderEvaluationSummary(item) {
+  if (!item || !item.report) {
+    evaluationSummaryEl.textContent = '暂无评估数据';
+    return;
+  }
+  const report = item.report;
+  evaluationSummaryEl.textContent = JSON.stringify(
+    {
+      generated_at: report.generated_at,
+      trace_count: report.trace_count,
+      summary: report.summary
+    },
+    null,
+    2
+  );
+}
+
+function renderComparisonSummary(item) {
+  if (!item || !item.payload) {
+    comparisonSummaryEl.textContent = '暂无候选对比';
+    return;
+  }
+  comparisonSummaryEl.textContent = JSON.stringify(item.payload, null, 2);
+}
+
 async function refreshAll() {
-  const [runsRes, nodesRes] = await Promise.all([
+  const [runsRes, nodesRes, tracesRes, evalRes, cmpRes] = await Promise.all([
     fetch('/api/runs').then(r => r.json()),
-    fetch('/api/nodes').then(r => r.json())
+    fetch('/api/nodes').then(r => r.json()),
+    fetch('/api/traces?limit=80').then(r => r.json()),
+    fetch('/api/evaluations').then(r => r.json()),
+    fetch('/api/comparisons').then(r => r.json())
   ]);
   renderRuns(runsRes.items || []);
   renderNodes(nodesRes.items || []);
+  renderTraceRuns(tracesRes.items || []);
+  renderEvaluationSummary(evalRes.latest || null);
+  renderComparisonSummary(cmpRes.latest || null);
 }
 
 function bindToolbar() {
@@ -108,7 +175,7 @@ async function retryNode(nodeId) {
 }
 
 async function rerouteNode(nodeId) {
-  const target = prompt('输入目标 agentId', 'agent_research');
+  const target = prompt('输入目标专职标签（LIFE/JOB/WORK/PARENT/LEARN/MONEY/BRO/SIS）', 'WORK');
   if (!target) return;
   await fetch(`/api/nodes/${nodeId}/reroute`, {
     method: 'POST',
@@ -162,7 +229,7 @@ function bindChat() {
     await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
+      body: JSON.stringify({ text, runId: currentRunId })
     });
     chatInput.value = '';
   });
@@ -193,6 +260,14 @@ function connectWs() {
     }
     if (msg.type === 'log.new') {
       pushLog(msg.data);
+      return;
+    }
+    if (msg.type === 'event.new') {
+      pushHiddenEvent(msg.data);
+      return;
+    }
+    if (msg.type === 'optimization.updated') {
+      refreshAll();
     }
   };
 }

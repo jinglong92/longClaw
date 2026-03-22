@@ -1,0 +1,17 @@
+{
+  "version": "evaluator_v1",
+  "enabled_metrics": [
+    "task_completion_proxy",
+    "unnecessary_clarification_rate",
+    "tool_success_rate",
+    "memory_hit_quality",
+    "memory_pollution_rate",
+    "route_confidence",
+    "route_regret_proxy",
+    "risk_audit_trigger_rate",
+    "latency_ms",
+    "token_cost_proxy",
+    "human_override_needed",
+    "failure_type"
+  ]
+}

@@ -33,6 +33,52 @@ paths:
       responses:
         "200": { description: OK }
 
+  /api/events:
+    get:
+      summary: List structured runtime events
+      parameters:
+        - in: query
+          name: actor_type
+          schema: { type: string }
+        - in: query
+          name: run_id
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        "200": { description: OK }
+
+  /api/traces:
+    get:
+      summary: List aggregated traces derived from events
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        "200": { description: OK }
+
+  /api/evaluations:
+    get:
+      summary: List evaluator outputs
+      responses:
+        "200": { description: OK }
+
+  /api/comparisons:
+    get:
+      summary: List candidate-vs-baseline comparison artifacts
+      responses:
+        "200": { description: OK }
+
+  /api/replay:
+    post:
+      summary: Run offline replay from captured traces/events
+      requestBody:
+        required: false
+      responses:
+        "200": { description: OK }
+
   /api/chat:
     post:
       summary: Send chat message

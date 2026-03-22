@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://longclaw.dev/schemas/optimization-event.schema.json",
+  "title": "Hidden Training Optimization Event",
+  "type": "object",
+  "required": [
+    "event_id",
+    "run_id",
+    "session_id",
+    "request_id",
+    "timestamp",
+    "event_type",
+    "actor_type",
+    "actor_id",
+    "parent_event_id",
+    "payload",
+    "metrics",
+    "version_metadata"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "message_received",
+        "context_built",
+        "route_selected",
+        "specialist_invoked",
+        "specialist_completed",
+        "tool_call_started",
+        "tool_call_finished",
+        "memory_read",
+        "memory_write",
+        "risk_audit_started",
+        "risk_audit_finished",
+        "final_response_emitted",
+        "user_followup_received",
+        "hidden_analysis_emitted",
+        "evaluation_completed",
+        "replay_comparison_generated"
+      ]
+    },
+    "actor_type": {
+      "type": "string",
+      "enum": [
+        "ingress",
+        "ctrl",
+        "visible_specialist",
+        "hidden_agent",
+        "tool",
+        "memory",
+        "risk_auditor",
+        "system",
+        "user"
+      ]
+    },
+    "actor_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "parent_event_id": {
+      "type": ["string", "null"]
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": ["number", "integer", "string", "boolean", "null"]
+      }
+    },
+    "version_metadata": {
+      "type": "object",
+      "required": [
+        "router_version",
+        "prompt_version",
+        "memory_policy_version",
+        "evaluator_version",
+        "hidden_policy_version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "router_version": { "type": "string", "minLength": 1 },
+        "prompt_version": { "type": "string", "minLength": 1 },
+        "memory_policy_version": { "type": "string", "minLength": 1 },
+        "evaluator_version": { "type": "string", "minLength": 1 },
+        "hidden_policy_version": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
