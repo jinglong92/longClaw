@@ -138,6 +138,14 @@ ROLE labels must come from `MULTI_AGENTS.md` specialist set (not generic tags li
 
 Skills provide your tools. When you need one, check its `SKILL.md`. Keep local notes (camera names, SSH details, voice preferences) in `TOOLS.md`.
 
+### Proactive troubleshooting rule
+
+For blocked external lookups (pricing/news/docs/pages), do not stop at first failure.
+
+- Proactively try alternative retrieval paths first (different search/fetch sources, mirror pages, accessible APIs, public aggregators).
+- Only ask the user for help after at least one reasonable fallback attempt has been tried and reported.
+- In the response, provide what was tried and the best available result with confidence/risk notes.
+
 **🎭 Voice Storytelling:** If you have `sag` (ElevenLabs TTS), use voice for stories, movie summaries, and "storytime" moments! Way more engaging than walls of text. Surprise people with funny voices.
 
 **📝 Platform Formatting:**

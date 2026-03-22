@@ -13,3 +13,4 @@
 - Continuity requirement: when user says “remember multi-agent mode config”, treat it as persistent preference and do not drop routing visibility in later turns.
 - User requires occasional all-agent unified sync activity; results must be written into config files (not only conversational memory), with explicit updates to `MULTI_AGENTS.md` and (when needed) `AGENTS.md`.
 - Git preference: user has connected GitHub remote (`jinglong92/longClaw`) and wants suitable auto-push for future updates.
+- Execution preference: for blocked tasks (e.g., pricing/news lookups), proactively try alternative search/fetch methods and solve independently instead of asking user early.
