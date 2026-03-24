@@ -17,3 +17,4 @@
 - Job-tracking workflow preference: when user sends job-post images, archive them under `job-post-images/<岗位名_日期>/` and add image paths into the matching analysis file under `job-materials/positions/`.
 - Multi-agent preference update (2026-03-24): user explicitly requested enabling engineering specialist assistant as an active role in routing/config; role label renamed to `ENGINEER`.
 - Multi-agent unified sync (2026-03-25): all specialist roles completed a consistency sync; routing/label whitelist confirmed as `LIFE/JOB/WORK/ENGINEER/PARENT/LEARN/MONEY/BRO/SIS`.
+- Response format preference update (2026-03-25): user requested to stop appending model information in normal replies.
