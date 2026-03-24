@@ -15,4 +15,4 @@
 - Git preference: user has connected GitHub remote (`jinglong92/longClaw`) and wants suitable auto-push for future updates.
 - Execution preference: for blocked tasks (e.g., pricing/news lookups), proactively try alternative search/fetch methods and solve independently instead of asking user early.
 - Job-tracking workflow preference: when user sends job-post images, archive them under `job-post-images/<岗位名_日期>/` and add image paths into the matching analysis file under `job-materials/positions/`.
-- Multi-agent preference update (2026-03-24): user explicitly requested enabling ENG assistant as an active specialist role in routing/config.
+- Multi-agent preference update (2026-03-24): user explicitly requested enabling engineering specialist assistant as an active role in routing/config; role label renamed to `ENGINEER`.
