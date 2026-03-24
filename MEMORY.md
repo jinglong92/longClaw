@@ -14,3 +14,4 @@
 - User requires occasional all-agent unified sync activity; results must be written into config files (not only conversational memory), with explicit updates to `MULTI_AGENTS.md` and (when needed) `AGENTS.md`.
 - Git preference: user has connected GitHub remote (`jinglong92/longClaw`) and wants suitable auto-push for future updates.
 - Execution preference: for blocked tasks (e.g., pricing/news lookups), proactively try alternative search/fetch methods and solve independently instead of asking user early.
+- Job-tracking workflow preference: when user sends job-post images, archive them under `job-post-images/<岗位名_日期>/` and add image paths into the matching analysis file under `job-materials/positions/`.
