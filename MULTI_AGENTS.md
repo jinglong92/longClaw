@@ -46,7 +46,7 @@
    - 性格：温和、稳定、不制造焦虑
    - 表达：小步可执行，先稳情绪再调方法，给就医红线
 
-5. `LEARN`
+6. `LEARN`
    - 性格：结构化、耐心、重长期复利
    - 表达：目标拆解 -> 练习路径 -> 复盘闭环
 
@@ -107,7 +107,7 @@
 - 双并行：`Routing: User -> CTRL -> ([PARENT] || [LIFE]) -> CTRL -> User`
 
 硬规则：
-- 标签必须来自专职代理集合：`LIFE/JOB/WORK/PARENT/LEARN/MONEY/BRO/SIS`
+- 标签必须来自专职代理集合：`LIFE/JOB/WORK/ENG/PARENT/LEARN/MONEY/BRO/SIS`
 - 不得再用 `PLAN` 等泛化标签
 
 ---
@@ -151,5 +151,8 @@
   3) 新增/删除专职代理
 - 同步产物（必须落盘）：
   - 会议纪要：`multi-agent/UNIFIED_SYNC_YYYY-MM-DD.md`
+  - 配置变更：`MULTI_AGENTS.md`（必要时联动 `AGENTS.md`）
+  - 长期偏好：`MEMORY.md`
+C_YYYY-MM-DD.md`
   - 配置变更：`MULTI_AGENTS.md`（必要时联动 `AGENTS.md`）
   - 长期偏好：`MEMORY.md`
