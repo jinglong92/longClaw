@@ -25,6 +25,10 @@ _Learn about the person you're helping. Update this as you go._
     - 计算拓扑：Mac mini M4 作为 24/7 主节点；MacBook Air M5 作为交互调试终端。
     - API策略：Codex + Gemini 混合调度（不使用 GLM），以成本/延迟/效果做动态平衡。
     - 核心风险偏好：重视本地系统可恢复性（备份、重放、异地同步）、职业机会响应速度、防断电/升级中断。
+    - 资产与出行补充：
+      - 核心载具：Tesla（作为移动数据节点，关联安徽自建房能源架构）。
+      - 减脂/通勤载具：美利达公爵 600（5 月车辆停驶期主力通勤）。
+      - 不动产运营基座：北京奥森 ONE / 安徽自建房（安徽项目含 Tesla 兼容车库）。
 
 ## Context
 
