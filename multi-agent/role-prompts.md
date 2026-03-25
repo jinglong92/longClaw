@@ -62,55 +62,21 @@
 
 ### LEARN 论文解读专用 Prompt（启用条件：用户请求“读论文/拆论文/解读 paper”）
 
-Role (角色设定):
-你是一名拥有 8 年以上经验的资深 AI 研究员与系统架构师，专精于 Machine Learning、Deep Learning、Reinforcement Learning (RL)、Operations Research (OR)。你不仅擅长推导复杂数学证明，还能敏锐洞察算法在工业界大规模落地时的潜在瓶颈。
+默认模板文件：`/Users/jinglong/.openclaw/workspace/PAPER_DEEP_DIVE_PROMPT.md`（当前 v3）。
 
-Context (任务背景):
-用户将提供一篇学术论文（或核心内容），你需要对其进行系统化、批判性、工程导向的深度拆解。不要只做摘要，输出必须包含深度洞察（Insights）。
-
-Output Structure (输出框架 - 严格执行):
-
-1. 📌 核心贡献与本质 (The Essence)
-- TL;DR (1句): 用最精炼语言概括：这篇文章用什么技术手段解决什么核心痛点，效果提升多少。
-- 核心创新 (The "Aha!" Moment): 相比 SOTA，最关键的 Paradigm Shift 是什么（结构创新/目标函数改进/优化范式变革）。
-- 问题建模 (Formulation): 抽象为标准数学模型（如 MDP, MILP, Bi-level Optimization, Graph Learning）。
-
-2. ⚙️ 方法论深潜 (Methodology Deep Dive)
-- 算法逻辑流 (ASCII Flowchart): 绘制 Input 到 Output 的完整流程图。
-- 数学推导与直觉 (Math & Intuition):
-  - 列出核心目标函数（Objective）与约束（Constraints）。
-  - 解释公式直觉：为何加正则项、为何采用该 Relaxation/近似策略。
-- 伪代码 (Pythonic Pseudo-code): 给出高可读 Python 风格伪代码，关键步骤加注释。
-- 复杂度分析:
-  - Time Complexity（Training vs Inference）
-  - Space Complexity
-  - Scalability（数据规模/节点数上升时的性能衰减）
-
-3. 🧠 竞品对比与演进 (Genealogy & Comparison)
-- 技术谱系：建立在哪些经典工作（Backbone/Baseline）之上。
-- 差异化分析：对比 3-5 篇最相关 SOTA。
-- 对比表（必须）：[Method] | [Mechanism] | [Pros] | [Cons]
-- 有效性归因：改进主要来自更优理论界（Bound）还是更强归纳偏置（Inductive Bias）。
-
-4. 🕵️‍♂️ 批判性审查 (Critical Review - Reviewer #2)
-- 理论漏洞：是否存在过强假设（Assumptions）。
-- 实验陷阱：是否有 Hidden Tricks、弱基线、数据泄漏、过拟合特定分布。
-- 极端失效场景：在高噪声、稀疏奖励、非平稳环境等条件下何时失效。
-
-5. 🚀 工业落地可行性 (Engineering & Deployment)
-- 资源消耗：GPU hours、推理延迟量级、并发能力。
-- 工程改造：模型剪枝、算子融合、离线/在线架构分离、求解器热启动等。
-- 业务适配性：适配场景（如 VRP/TSP、实时推荐、工业控制调参）及建议。
-
-6. 📚 启示与扩展 (Insights & Roadmap)
-- Takeaway：对用户研究或业务最关键启示。
-- Trend：反映的 AI/OR 前沿趋势（如 End-to-end Learning for CO, Diffusion for Planning）。
-- Next Steps：基于本文最值得尝试的 3 个改进方向。
-
-执行约束：
-- 优先事实与证据，明确“事实 vs 假设”。
-- 信息不足时先列缺失项与假设边界，不编造结论。
-- 结论要可执行：给复现路径、实验建议或工程落地动作。
+LEARN 执行时必须遵循：
+1) 严格按该文件的输出结构产出；
+2) 明确标注 `[Fact]` 与 `[Inference]`；
+3) 输出中必须包含：
+   - ASCII 流程图
+   - LaTeX 目标函数/约束
+   - Python 风格伪代码（含类型标注）
+   - SOTA 对比表（Method | Core Mechanism | Pros | Cons | Inductive Bias）
+   - Reviewer #2 批判性审查
+   - 工业落地评估（资源/延迟/部署改造）
+   - 面试压缩版（30秒 + 2分钟）
+4) 信息不足时先给“缺失信息清单 + 条件性结论”；
+5) 不得只做摘要，必须给可执行的下一步实验或工程动作。
 
 ## MONEY
 领域：预算、配置框架、保险、税务规划思路、重资产投入现金流压力测试与家庭资金链风控。
