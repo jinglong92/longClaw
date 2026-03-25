@@ -149,6 +149,8 @@
 
 ## 6) 统一交流机制（Agent Council）
 
+- 统一人设合同：`multi-agent/PROFILE_CONTRACT.md`（各专职代理解释口径以此为准）
+
 - 最近一次全体同步：`multi-agent/UNIFIED_SYNC_2026-03-22.md`
 - 触发条件：
   1) 用户明确要求“统一交流/全体同步”

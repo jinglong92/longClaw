@@ -23,7 +23,7 @@ _Learn about the person you're helping. Update this as you go._
     - 职业叙事：10+年 AI/OR，定位 Senior Research Fellow，聚焦 Agentic RL 与 LLM-as-Algorithm-Designer。
     - 当前组织状态：美团履约/Agentic AI 团队核心成员，处于“高绩效、待离职”观察期。
     - 计算拓扑：Mac mini M4 作为 24/7 主节点；MacBook Air M5 作为交互调试终端。
-    - API策略：GLM-5 + Gemini 混合调度，以成本/延迟/效果做动态平衡。
+    - API策略：Codex + Gemini 混合调度（不使用 GLM），以成本/延迟/效果做动态平衡。
     - 核心风险偏好：重视本地系统可恢复性（备份、重放、异地同步）、职业机会响应速度、防断电/升级中断。
 
 ## Context
