@@ -77,7 +77,7 @@ flowchart LR
 
 ### 2.2 Visual architecture dashboard
 
-![longClaw multi-agent architecture dashboard](multi-agent/architecture-dashboard-zh-v3.png)
+![longClaw multi-agent architecture dashboard](docs/architecture-dashboard-zh-v5.jpg)
 
 Note: The PNG gives a quick dashboard-style view; the Mermaid sequence below explains request-level execution.
 
@@ -147,6 +147,8 @@ Role labels are fixed: `LIFE/JOB/WORK/PARENT/LEARN/MONEY/BRO/SIS`.
 |   `-- agent-console-mvp/
 |-- memory/
 |-- TOOLS.md
+|-- docs/
+|   `-- console-preview.png
 |-- README.en.md
 `-- README.md
 ```
@@ -173,6 +175,24 @@ npm run dev
 Open: `http://localhost:3799`
 
 Current MVP includes chat-first layout, run controls, realtime logs, basic control actions, and audit endpoint.
+
+---
+
+## 7.1 NoCode Online Console (Visual Preview)
+
+A visual control console built on Meituan's NoCode platform — no local setup required. View the live architecture topology, real-time task queue, and routing logs directly in your browser.
+
+🔗 **Live access**: [longClaw Multi-Agent Console](https://mto6jdn73suurp.sandbox.nocode.sankuai.com/#/longclaw)
+
+The console has five panels:
+
+- **Left — Agent topology**: SVG visualization of the full routing graph from User → CTRL → Specialists, including Policy, Protocol, Preference+Memory, and Memory nodes
+- **Top right — Live task queue**: active tasks with domain labels (JOB / PARENT+LIFE / WORK) and status badges
+- **Mid right — System observability**: routing latency, mislead rate, change state, and parallel concurrency limit
+- **Bottom right — Routing log stream**: recent SINGLE / PARALLEL / DECISION routing records
+- **Footer — Console contract**: CTRL routing rules, parallel constraints, and specialist responsibility summary
+
+![longClaw NoCode Console Preview](docs/architecture-dashboard-zh-v5.jpg)
 
 ---
 
