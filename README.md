@@ -79,7 +79,7 @@ flowchart LR
 
 ### 2.2 图文架构总览（Dashboard）
 
-![longClaw 多代理控制台（最新）](multi-agent/architecture-dashboard-zh-v4.jpg)
+![longClaw 多代理控制系统架构图](docs/architecture-dashboard-zh-v5.jpg)
 
 说明：上图用于快速理解控制台视角下的结构关系；下方 Mermaid 时序图用于表达请求级执行路径。
 
@@ -153,6 +153,7 @@ sequenceDiagram
 |-- memory/
 |-- TOOLS.md
 |-- docs/
+|   `-- console-preview.png
 |-- README.en.md
 `-- README.md
 ```
@@ -179,6 +180,24 @@ npm run dev
 访问：`http://localhost:3799`
 
 MVP 当前包含：聊天主视图、运行控制、实时日志、基础控制动作与审计接口。
+
+---
+
+## 7.1 NoCode 在线控制台（可视化预览）
+
+基于美团 NoCode 平台构建的可视化控制台，无需本地部署，直接在浏览器中查看当前运行架构、实时任务队列与路由日志。
+
+🔗 **在线访问**：[longClaw 多代理控制台](https://mto6jdn73suurp.sandbox.nocode.sankuai.com/#/longclaw)
+
+控制台包含五个核心面板：
+
+- **左栏 — 代理架构拓扑图**：SVG 可视化展示 User → CTRL → 专职代理的完整路由拓扑，含 Policy、Protocol、Preference+Memory、Memory 等核心节点
+- **右栏上 — 实时任务队列**：当前活跃任务列表，含任务标签（JOB / PARENT+LIFE / WORK）与状态
+- **右栏中 — 系统观测态**：路由延迟、误导率、变更状态、并行上限等关键指标实时展示
+- **右栏下 — 运行日志流**：最近决策的 SINGLE / PARALLEL / DECISION 路由记录
+- **底部 — 控制台说明**：CTRL 契约定义，包含路由规则、并行约束与代理职责说明
+
+![longClaw NoCode 控制台效果图](docs/architecture-dashboard-zh-v5.jpg)
 
 ---
 
@@ -209,26 +228,6 @@ npm run replay -- --mode route-comparison --out ../optimization/reports/replay-l
 ```
 
 说明：回放会输出评估指标与 patch 建议，但默认不会自动改线上路由策略。
-
-### 9.3 飞书对话日志导入轨迹
-
-```bash
-cd multi-agent/agent-console-mvp
-npm run import:feishu -- \
-  --input /path/to/feishu-export.json \
-  --run-id run_feishu_20260322 \
-  --session-id sess_feishu_main
-```
-
-导入工具会将飞书消息转换为标准事件（`message_received/context_built/route_selected/final_response_emitted` 等），直接进入同一条评估与 replay 管线。
-
-### 9.4 飞书实时回调入轨迹
-
-- 回调状态 API：`/api/integrations/feishu/status`
-- 默认回调路径：`/api/integrations/feishu/webhook`
-- 配置环境变量：`FEISHU_WEBHOOK_ENABLED`、`FEISHU_WEBHOOK_PATH`、`FEISHU_VERIFICATION_TOKEN`
-
-启用后，飞书实时消息会自动进入事件流（JSONL/PG/Redis sink），无需先导出日志。
 
 ---
 
