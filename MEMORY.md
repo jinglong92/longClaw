@@ -18,6 +18,7 @@
 - Multi-agent preference update (2026-03-24): user explicitly requested enabling engineering specialist assistant as an active role in routing/config; role label renamed to `ENGINEER`.
 - Multi-agent unified sync (2026-03-25): all specialist roles completed a consistency sync; routing/label whitelist confirmed as `LIFE/JOB/WORK/ENGINEER/PARENT/LEARN/MONEY/BRO/SIS`.
 - Response format preference update (2026-03-25): user requested to stop appending model information in normal replies.
+- Privacy/git preference update (2026-03-25): do not commit or push any files under `job-materials/resume/` (resume materials stay local only).
 - Personal context update (2026-03-25): user clarified “养虾” means deep tuning/iteration of OpenClaw local Agent system (not aquaculture), with target architecture Mac mini M4 (24/7 node) + MacBook Air M5 (interface), and model routing Codex + Gemini (not GLM) for cost/latency balance.
 - Risk priorities update (2026-03-25): emphasize resiliency (backup/replay/offsite sync), prevent career-opportunity drift during project immersion, and mitigate node interruption from power/macos updates.
 - Asset/lifestyle context update (2026-03-25): key vehicle is Tesla (mobile data node context), commute/fitness bike is Merida Duke 600 (especially during May vehicle pause), and operation bases include Beijing Aosen ONE + Anhui self-built house (with Tesla-compatible garage).
