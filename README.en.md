@@ -86,26 +86,44 @@ Note: The PNG gives a quick dashboard-style view; the Mermaid sequence below exp
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant C as CTRL
+    participant S as System
+    participant C as CTRL/LeadResearcher
     participant A as Specialist A
     participant B as Specialist B
+    participant M as Memory
+    participant Q as CitationAgent
 
-    U->>C: Submit request
-    C->>C: Intent detection and routing decision
-    alt Single specialist
-        C->>A: Dispatch task
-        A-->>C: Conclusion / actions / risks
-    else Two specialists in parallel
-        par Parallel specialists
-            C->>A: Dispatch subtask A
+    U->>S: Submit request
+    S->>C: Create session and hand over to CTRL
+    C->>M: Read USER/MEMORY/daily context
+    M-->>C: Return preferences and context
+
+    loop Iterative research process (plan -> execute -> evaluate)
+        C->>C: think(plan approach)
+        C->>M: Save stage plan
+        C->>M: Retrieve context
+        par Create subtasks in parallel
+            C->>A: create subagent for aspect A
             and
-            C->>B: Dispatch subtask B
+            C->>B: create subagent for aspect B
         end
-        A-->>C: Output A
-        B-->>C: Output B
+        A->>A: web_search + think(evaluate)
+        B->>B: web_search + think(evaluate)
+        A-->>C: complete_task A
+        B-->>C: complete_task B
+        C->>C: think(synthesize results) + Risk Audit
+        alt More research needed
+            C->>C: Continue loop
+        else Sufficient evidence
+            C->>C: Exit loop
+        end
     end
-    C->>C: Risk audit and conflict arbitration
-    C-->>U: Unified response with visible routing
+
+    C-->>S: complete_task (research result)
+    S->>Q: Process docs and locate citation positions
+    Q-->>S: Return report with inserted citations
+    S->>M: Persist results
+    S-->>U: Return results with citations + routing
 ```
 
 ---
@@ -126,7 +144,7 @@ Each response should include route visibility:
 - Single specialist: `Routing: User -> CTRL -> [JOB] -> CTRL -> User`
 - Parallel specialists: `Routing: User -> CTRL -> ([PARENT] || [LIFE]) -> CTRL -> User`
 
-Role labels are fixed: `LIFE/JOB/WORK/PARENT/LEARN/MONEY/BRO/SIS`.
+Role labels are fixed: `LIFE/JOB/WORK/ENGINEER/PARENT/LEARN/MONEY/BRO/SIS`.
 
 ---
 

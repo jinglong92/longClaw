@@ -159,26 +159,44 @@ flowchart LR
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant C as CTRL
+    participant S as System
+    participant C as CTRL/LeadResearcher
     participant A as Specialist A
     participant B as Specialist B
+    participant M as Memory
+    participant Q as CitationAgent
 
-    U->>C: 提交请求
-    C->>C: 意图识别 + 路由决策（读取 MEMORY + USER）
-    alt 单专职
-        C->>A: 分派任务
-        A-->>C: 结论/行动/风险
-    else 双专职并行
-        par 专职并行
-            C->>A: 分派子任务 A
+    U->>S: 提交请求
+    S->>C: 创建会话并交给 CTRL
+    C->>M: 读取 USER/MEMORY/当日记忆
+    M-->>C: 返回偏好与上下文
+
+    loop 迭代研究流程（plan -> execute -> evaluate）
+        C->>C: think(plan approach)
+        C->>M: 保存阶段计划（save plan）
+        C->>M: 检索上下文（retrieve context）
+        par 并行创建子任务
+            C->>A: create subagent for aspect A
             and
-            C->>B: 分派子任务 B
+            C->>B: create subagent for aspect B
         end
-        A-->>C: 输出 A
-        B-->>C: 输出 B
+        A->>A: web_search + think(evaluate)
+        B->>B: web_search + think(evaluate)
+        A-->>C: complete_task A
+        B-->>C: complete_task B
+        C->>C: think(synthesize results) + Risk Audit
+        alt 需要更多研究
+            C->>C: Continue loop
+        else 信息充分
+            C->>C: Exit loop
+        end
     end
-    C->>C: Risk Audit + 冲突仲裁
-    C-->>U: 统一答复 + Routing 可见性
+
+    C-->>S: complete_task（research result）
+    S->>Q: 处理文档与研究结果，定位引用位置
+    Q-->>S: 返回插入引用后的报告
+    S->>M: Persist results
+    S-->>U: 返回结果（含 citations + Routing）
 ```
 
 ---
