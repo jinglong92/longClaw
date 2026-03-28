@@ -1,0 +1,11 @@
+{
+  "openclaw_demo_llf": {
+    "file_name": "openclaw_demo_llf.jsonl",
+    "formatting": "alpaca",
+    "columns": {
+      "instruction": "instruction",
+      "input": "input",
+      "output": "output"
+    }
+  }
+}

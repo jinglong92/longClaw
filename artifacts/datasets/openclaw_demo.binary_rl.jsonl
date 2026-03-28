@@ -1,0 +1,2 @@
+{"trace_id": "tr_demo_001", "session_id": "sess_demo", "turn_id": "turn_001", "state": {"request_text": "请帮我规划今天的工作优先级", "route": "WORK", "metadata": {"quality_score": 0.82}}, "action": "WORK", "reward": 1.0, "label": 1, "policy_version": "v1"}
+{"trace_id": "tr_demo_002", "session_id": "sess_demo", "turn_id": "turn_002", "state": {"request_text": "帮我看这个职业选择", "route": "JOB", "metadata": {"quality_score": 0.41}}, "action": "JOB", "reward": -1.0, "label": 0, "policy_version": "v1"}

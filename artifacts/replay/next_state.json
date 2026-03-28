@@ -1,0 +1,21 @@
+{
+  "session_id": "sess_demo",
+  "policy_version": "v1",
+  "history": [
+    {
+      "turn_id": "turn_001",
+      "request_text": "请帮我规划今天的工作优先级",
+      "response_text": "先处理高影响且有截止时间的任务。",
+      "route": "WORK",
+      "metadata": {
+        "quality_score": 0.82
+      }
+    }
+  ],
+  "stats": {
+    "turn_count": 1,
+    "avg_retries": 0.0,
+    "explicit_correction_rate": 0.0,
+    "tool_success_rate": 1.0
+  }
+}

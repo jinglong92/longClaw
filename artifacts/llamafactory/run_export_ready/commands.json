@@ -1,0 +1,5 @@
+{
+  "train": "llamafactory-cli train artifacts/llamafactory/run_export_ready/llamafactory_lora_sft.yaml",
+  "chat": "llamafactory-cli chat artifacts/llamafactory/run_export_ready/llamafactory_chat.yaml",
+  "export": "llamafactory-cli export artifacts/llamafactory/run_export_ready/llamafactory_export.yaml"
+}

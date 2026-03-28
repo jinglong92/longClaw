@@ -1,0 +1,5 @@
+{
+  "dpo_hook": "TODO: generate DPO YAML from preference dataset",
+  "ppo_hook": "TODO: generate PPO YAML from reward model + rollout buffer",
+  "rm_hook": "TODO: generate reward model YAML from binary preference pairs"
+}

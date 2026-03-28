@@ -1,0 +1,7 @@
+{
+  "dataset_name": "openclaw_demo",
+  "binary_rl": "openclaw_demo.binary_rl.jsonl",
+  "opd": "openclaw_demo.opd.jsonl",
+  "sft": "openclaw_demo.sft.jsonl",
+  "llamafactory_sft": "openclaw_demo.llamafactory_sft.jsonl"
+}

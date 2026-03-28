@@ -1,0 +1,2 @@
+{"instruction": "请帮我规划今天的工作优先级", "input": "", "output": "先处理高影响且有截止时间的任务。", "system": "route=WORK;policy=v1"}
+{"instruction": "帮我看这个职业选择", "input": "", "output": "建议先确认风险和机会成本。", "system": "route=JOB;policy=v1"}

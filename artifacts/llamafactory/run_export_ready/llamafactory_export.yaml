@@ -1,0 +1,3 @@
+model_name_or_path: mlx-community/Qwen2.5-1.5B-Instruct-4bit
+adapter_name_or_path: artifacts/llamafactory/run_export_ready/adapter_stub
+export_dir: artifacts/llamafactory/run_export_ready/merged

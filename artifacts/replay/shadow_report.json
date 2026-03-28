@@ -1,0 +1,23 @@
+{
+  "baseline": {
+    "wrong_route_rate": 0.5,
+    "retry_rate": 0.5,
+    "explicit_correction_rate": 0.5,
+    "tool_success_proxy": 0.5,
+    "trainable_sample_yield": 0.5
+  },
+  "candidate": {
+    "wrong_route_rate": 0.0,
+    "retry_rate": 0.5,
+    "explicit_correction_rate": 0.0,
+    "tool_success_proxy": 0.5,
+    "trainable_sample_yield": 1.0
+  },
+  "delta": {
+    "wrong_route_rate": -0.5,
+    "retry_rate": 0.0,
+    "explicit_correction_rate": -0.5,
+    "tool_success_proxy": 0.0,
+    "trainable_sample_yield": 0.5
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "backend": "mlx-lm",
+  "base_model": "mlx-community/Qwen2.5-1.5B-Instruct-4bit",
+  "dataset_path": "artifacts/mlx/openclaw_demo_sft.jsonl",
+  "lora": {
+    "rank": 8,
+    "alpha": 16,
+    "dropout": 0.05
+  },
+  "train": {
+    "learning_rate": 0.0002,
+    "epochs": 2
+  },
+  "command_template": "python -m mlx_lm.lora --model {base_model} --train-data {dataset_path} --adapter-path {adapter_path} --batch-size 1"
+}

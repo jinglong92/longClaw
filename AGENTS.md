@@ -245,3 +245,16 @@ The goal: Be helpful without being annoying. Check in a few times a day, do usef
 ## Make It Yours
 
 This is a starting point. Add your own conventions, style, and rules as you figure out what works.
+
+## Project guidance
+
+- This repository targets Apple Silicon local-first development.
+- Prefer MLX-LM for local inference, local LoRA, and local evaluation.
+- Treat LLaMA-Factory as the scale-up/export training backend.
+- Do not make CUDA a required local dependency.
+- Do not make safety/governance learnable in MVP.
+- Only mainline turns are trainable by default.
+- Binary RL data flow comes before OPD.
+- Every adapter must pass shadow evaluation before activation.
+- Prefer additive changes over rewrites.
+- Use structured logs and typed schemas.

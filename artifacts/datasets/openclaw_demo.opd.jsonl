@@ -1,0 +1,2 @@
+{"trace_id": "tr_demo_001", "observation": "route=WORK, retries=0, correction=False", "problem": "none", "diagnosis": "keep_policy", "label": 1, "reward": 1.0}
+{"trace_id": "tr_demo_002", "observation": "route=JOB, retries=2, correction=True", "problem": "routing_mismatch;answer_correction_needed;high_retry;tool_failure", "diagnosis": "prioritize_router_training", "label": 0, "reward": -1.0}

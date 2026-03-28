@@ -273,15 +273,6 @@ CTRL 不是专职代理，是总控——负责拆解、仲裁、合并与优先
 
 ---
 
-## 8. 快速开始
-
-1. 阅读控制规则与边界：`AGENTS.md`
-2. 阅读人格与用户偏好：`SOUL.md`, `USER.md`
-3. 阅读路由配置与角色分工：`MULTI_AGENTS.md`
-4. 加载连续上下文：`MEMORY.md`, `memory/`
-
----
-
 ## 9. 本地训练底座（Apple Silicon / Local-first）
 
 以下流程可在 Mac mini M4 16GB 本地执行：

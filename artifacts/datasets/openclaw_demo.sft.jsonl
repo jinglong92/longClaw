@@ -1,0 +1,2 @@
+{"messages": [{"role": "user", "content": "请帮我规划今天的工作优先级"}, {"role": "assistant", "content": "先处理高影响且有截止时间的任务。"}], "meta": {"trace_id": "tr_demo_001", "policy_version": "v1", "label": 1}}
+{"messages": [{"role": "user", "content": "帮我看这个职业选择"}, {"role": "assistant", "content": "建议先确认风险和机会成本。"}], "meta": {"trace_id": "tr_demo_002", "policy_version": "v1", "label": 0}}
