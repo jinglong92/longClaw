@@ -28,10 +28,10 @@ When heartbeat runs, enforce fixed deadline: send the digest before 09:30 (Asia/
 
 ---
 
-## Daily LeetCode Push (10:00 Asia/Shanghai)
+## Daily LeetCode Push (10:00 + 18:00 Asia/Shanghai)
 
 ### Goal
-Send **one** interview problem + concise solution every day at/after 10:00 (Asia/Shanghai).
+Send **one** interview problem + concise solution at/after 10:00, and another one at/after 18:00 (Asia/Shanghai) each day.
 
 ### Output format
 1. Problem title + LeetCode number
@@ -41,7 +41,9 @@ Send **one** interview problem + concise solution every day at/after 10:00 (Asia
 5. One common pitfall
 
 ### Scheduling & de-duplication
-- Use `memory/heartbeat-state.json` key `lastChecks.leetcodeDaily` to track last sent date.
-- If today has already been sent, do not resend.
-- If 10:00 is missed, send at first available heartbeat after 10:00.
+- Use `memory/heartbeat-state.json` keys:
+  - `lastChecks.leetcodeDaily10` for the 10:00 push
+  - `lastChecks.leetcodeDaily18` for the 18:00 push
+- If a slot has already been sent today, do not resend that slot.
+- If 10:00 or 18:00 is missed, send at first available heartbeat after that slot time.
 - Prefer medium/high-frequency interview questions; avoid repeating within 14 days.
