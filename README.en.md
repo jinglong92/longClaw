@@ -167,7 +167,6 @@ Role labels are fixed: `LIFE/JOB/WORK/ENGINEER/PARENT/LEARN/MONEY/BRO/SIS`.
 |   |-- README.md
 |   |-- ARCHITECTURE.md
 |   |-- UNIFIED_SYNC_2026-03-22.md
-|   `-- agent-console-mvp/
 |-- openclaw_substrate/
 |   |-- cli.py
 |   |-- gateway.py
@@ -247,21 +246,7 @@ Detailed docs:
 
 ---
 
-## 8. Run Agent Console MVP
-
-```bash
-cd multi-agent/agent-console-mvp
-npm install
-npm run dev
-```
-
-Open: `http://localhost:3799`
-
-Current MVP includes chat-first layout, run controls, realtime logs, basic control actions, and audit endpoint.
-
----
-
-## 8.1 NoCode Online Console (Visual Preview)
+## 8. NoCode Online Console (Visual Preview)
 
 A visual control console built on Meituan's NoCode platform — no local setup required. View the live architecture topology, real-time task queue, and routing logs directly in your browser.
 
@@ -282,7 +267,6 @@ The console has five panels:
 ## 9. References
 
 - Architecture details: `multi-agent/ARCHITECTURE.md`
-- Console details: `multi-agent/agent-console-mvp/README.md`
 - Unified sync notes: `multi-agent/UNIFIED_SYNC_2026-03-22.md`
 - Training substrate architecture: `docs/substrate/architecture.md`
 - Local MLX workflow: `docs/substrate/local_mlx_workflow.md`
