@@ -1,0 +1,53 @@
+{
+  "flags": {
+    "gateway_enabled": true,
+    "trace_plane_enabled": true,
+    "judge_plane_enabled": true,
+    "dataset_builder_enabled": true,
+    "shadow_eval_enabled": true,
+    "mlx_backend_enabled": true,
+    "llamafactory_backend_enabled": true
+  },
+  "paths": {
+    "root_dir": ".",
+    "traces_raw_jsonl": "artifacts/traces/raw_traces.jsonl",
+    "traces_rewarded_jsonl": "artifacts/traces/rewarded_traces.jsonl",
+    "rewards_jsonl": "artifacts/rewards/reward_log.jsonl",
+    "datasets_dir": "artifacts/datasets",
+    "replay_dir": "artifacts/replay",
+    "adapter_registry_path": "artifacts/adapters/registry.jsonl",
+    "adapter_store_dir": "artifacts/adapters",
+    "backend_export_dir": "artifacts/exports"
+  },
+  "gateway": {
+    "host": "127.0.0.1",
+    "port": 8090,
+    "default_backend": "mlx-lm",
+    "mlx_chat_url": "http://127.0.0.1:8080/v1/chat/completions",
+    "timeout_seconds": 45.0,
+    "mock_on_backend_error": true
+  },
+  "policy": {
+    "policy_version": "v1",
+    "max_state_history_turns": 16,
+    "eligibility_min_quality": 0.6
+  },
+  "mlx": {
+    "default_base_model": "mlx-community/Qwen2.5-1.5B-Instruct-4bit",
+    "lora_rank": 8,
+    "lora_alpha": 16,
+    "lora_dropout": 0.05,
+    "learning_rate": 0.0002,
+    "epochs": 2
+  },
+  "llamafactory": {
+    "stage": "sft",
+    "finetuning_type": "lora",
+    "per_device_train_batch_size": 1,
+    "gradient_accumulation_steps": 8,
+    "learning_rate": 0.0001,
+    "num_train_epochs": 3,
+    "cutoff_len": 2048,
+    "template": "qwen"
+  }
+}
