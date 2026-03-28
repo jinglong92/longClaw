@@ -272,16 +272,7 @@ CTRL 不是专职代理，是总控——负责拆解、仲裁、合并与优先
 
 ---
 
-## 8. 快速开始
-
-1. 阅读控制规则与边界：`AGENTS.md`
-2. 阅读人格与用户偏好：`SOUL.md`, `USER.md`
-3. 阅读路由配置与角色分工：`MULTI_AGENTS.md`
-4. 加载连续上下文：`MEMORY.md`, `memory/`
-
----
-
-## 9. 本地训练底座（Apple Silicon / Local-first）
+## 8. 本地训练底座（Apple Silicon / Local-first）
 
 以下流程可在 Mac mini M4 16GB 本地执行：
 
@@ -341,7 +332,7 @@ python3 -m openclaw_substrate.cli backend-train-adapter \
 
 ---
 
-## 10. NoCode 在线控制台（可视化预览）
+## 9. NoCode 在线控制台（可视化预览）
 
 基于美团 NoCode 平台构建的可视化控制台，无需本地部署，直接在浏览器中查看当前运行架构、实时任务队列与路由日志。
 
@@ -359,7 +350,7 @@ python3 -m openclaw_substrate.cli backend-train-adapter \
 
 ---
 
-## 11. 参考文档
+## 10. 参考文档
 
 - 架构说明：`multi-agent/ARCHITECTURE.md`
 - 全体同步记录：`multi-agent/UNIFIED_SYNC_2026-03-22.md`
@@ -371,15 +362,15 @@ python3 -m openclaw_substrate.cli backend-train-adapter \
 
 ---
 
-## 12. 隐藏训练层（v0.1）
+## 11. 隐藏训练层（v0.1）
 
-### 12.1 轨迹数据位置
+### 11.1 轨迹数据位置
 
 - 运行时结构化事件（默认 JSONL）：`artifacts/traces/raw_traces.jsonl`
 - 奖励输出：`artifacts/rewards/reward_log.jsonl`
 - replay / 对比报告输出：`artifacts/replay/shadow_report.json`
 
-### 12.2 一次本地训练优化回放
+### 11.2 一次本地训练优化回放
 
 ```bash
 python3 -m openclaw_substrate.cli shadow-eval \
@@ -392,7 +383,7 @@ python3 -m openclaw_substrate.cli shadow-eval \
 
 ---
 
-## 13. 说明
+## 12. 说明
 
 - 这是持续演进中的个人工作区，文档和状态文件会频繁更新
 - 若要用于团队/生产，请补充鉴权、审计留存、故障回滚与 SLA 约束
