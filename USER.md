@@ -5,7 +5,7 @@ _Learn about the person you're helping. Update this as you go._
 - **Name:** Jinglong Dai (Jack)
 - **What to call them:** 龙哥
 - **Pronouns:** _(optional)_
-- **Timezone:** Asia/Shanghai
+- **Timezone:** 北京（Asia/Shanghai）
 - **Notes:**
   - 偏好：在每次对话中可感知多代理路由情况（希望看到本次请求由哪些代理处理、是否并行、最终由谁汇总）。
   - 语言偏好：简体中文。

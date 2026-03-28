@@ -77,7 +77,7 @@ flowchart LR
 
 ### 2.2 Visual architecture dashboard
 
-![longClaw multi-agent architecture dashboard](docs/console-preview.png)
+![longClaw multi-agent architecture dashboard](docs/architecture-dashboard-zh-v5.png)
 
 Note: The PNG gives a quick dashboard-style view; the Mermaid sequence below explains request-level execution.
 
@@ -148,7 +148,7 @@ Role labels are fixed: `LIFE/JOB/WORK/PARENT/LEARN/MONEY/BRO/SIS`.
 |-- memory/
 |-- TOOLS.md
 |-- docs/
-|   `-- console-preview.png
+|   `-- architecture-dashboard-zh-v5.png
 |-- README.en.md
 `-- README.md
 ```
@@ -192,7 +192,7 @@ The console has five panels:
 - **Bottom right — Routing log stream**: recent SINGLE / PARALLEL / DECISION routing records
 - **Footer — Console contract**: CTRL routing rules, parallel constraints, and specialist responsibility summary
 
-![longClaw NoCode Console Preview](docs/console-preview.png)
+![longClaw NoCode Console Preview](docs/architecture-dashboard-zh-v5.png)
 
 ---
 

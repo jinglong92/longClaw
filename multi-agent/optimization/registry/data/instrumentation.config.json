@@ -1,7 +1,0 @@
-{
-  "version": "instrumentation_v1",
-  "jsonl_enabled": true,
-  "jsonl_path": "multi-agent/optimization/traces/events.jsonl",
-  "flush_mode": "buffered_non_blocking",
-  "strict_validation": true
-}
