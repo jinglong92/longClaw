@@ -12,11 +12,12 @@ longClaw is a personal multi-agent control workspace for AI collaboration, with 
 
 ## 1. Project Overview
 
-This repository has three capability layers:
+This repository has four capability layers:
 
 1. **Behavior and boundary layer**: assistant behavior, privacy boundaries, and safety constraints (`AGENTS.md`, `SOUL.md`, `USER.md`)
 2. **Memory and continuity layer**: long-term preferences and daily context (`MEMORY.md`, `memory/`)
 3. **Multi-agent execution layer**: routing protocol, specialist roles, and console prototype (`MULTI_AGENTS.md`, `multi-agent/`)
+4. **Training substrate layer (local-first)**: trace, judge, dataset, replay, and backend-pluggable training/export (`openclaw_substrate/`, `docs/substrate/`)
 
 ---
 
@@ -36,6 +37,7 @@ flowchart LR
         L[LIFE]
         J[JOB]
         W[WORK]
+        E[ENGINEER]
         PA[PARENT]
         LE[LEARN]
         M[MONEY]
@@ -46,6 +48,7 @@ flowchart LR
     S --> L
     S --> J
     S --> W
+    S --> E
     S --> PA
     S --> LE
     S --> M
@@ -55,6 +58,7 @@ flowchart LR
     P --> L
     P --> J
     P --> W
+    P --> E
     P --> PA
     P --> LE
     P --> M
@@ -64,6 +68,7 @@ flowchart LR
     L --> R[Risk Audit]
     J --> R
     W --> R
+    E --> R
     PA --> R
     LE --> R
     M --> R
@@ -163,10 +168,17 @@ Role labels are fixed: `LIFE/JOB/WORK/ENGINEER/PARENT/LEARN/MONEY/BRO/SIS`.
 |   |-- ARCHITECTURE.md
 |   |-- UNIFIED_SYNC_2026-03-22.md
 |   `-- agent-console-mvp/
+|-- openclaw_substrate/
+|   |-- cli.py
+|   |-- gateway.py
+|   |-- trace_plane.py
+|   |-- judge_plane.py
+|   `-- backends/
 |-- memory/
 |-- TOOLS.md
 |-- docs/
-|   `-- architecture-dashboard-zh-v5.png
+|   |-- architecture-dashboard-zh-v5.png
+|   `-- substrate/
 |-- README.en.md
 `-- README.md
 ```
@@ -182,7 +194,60 @@ Role labels are fixed: `LIFE/JOB/WORK/ENGINEER/PARENT/LEARN/MONEY/BRO/SIS`.
 
 ---
 
-## 7. Run Agent Console MVP
+## 7. Local Training Substrate (Apple Silicon / Local-first)
+
+Run the local-first training loop on Mac mini M4:
+
+```bash
+# 1) Optional: print MLX serving command template
+python3 -m openclaw_substrate.cli mlx-serve \
+  --config openclaw_substrate/configs/local.example.json \
+  --dry-run
+
+# 2) Start OpenAI-compatible gateway
+python3 -m openclaw_substrate.cli gateway-serve \
+  --config openclaw_substrate/configs/local.example.json
+
+# 3) Judge + dataset + replay
+python3 -m openclaw_substrate.cli judge-run --config openclaw_substrate/configs/local.example.json
+python3 -m openclaw_substrate.cli dataset-build --config openclaw_substrate/configs/local.example.json --dataset-name openclaw_demo
+python3 -m openclaw_substrate.cli shadow-eval --baseline artifacts/traces/rewarded_baseline.jsonl --candidate artifacts/traces/rewarded_candidate.jsonl --out artifacts/replay/shadow_report.json
+```
+
+Generate backend-specific artifacts:
+
+```bash
+# Local backend: MLX-LM
+python3 -m openclaw_substrate.cli backend-train-adapter \
+  --config openclaw_substrate/configs/local.example.json \
+  --backend mlx-lm \
+  --dataset-name openclaw_demo_sft \
+  --dataset-path artifacts/mlx/openclaw_demo_sft.jsonl \
+  --out-dir artifacts/mlx \
+  --run-name run_local_mlx
+
+# Scale-up export backend: LLaMA-Factory
+python3 -m openclaw_substrate.cli backend-train-adapter \
+  --config openclaw_substrate/configs/local.example.json \
+  --backend llamafactory \
+  --dataset-name openclaw_demo_llf \
+  --dataset-path artifacts/llamafactory/openclaw_demo_llf.jsonl \
+  --out-dir artifacts/llamafactory \
+  --run-name run_export_ready
+```
+
+Detailed docs:
+
+- `docs/substrate/architecture.md`
+- `docs/substrate/local_mlx_workflow.md`
+- `docs/substrate/llamafactory_export_workflow.md`
+- `docs/substrate/trace_schema.md`
+- `docs/substrate/reward_design.md`
+- `docs/substrate/adapter_registry.md`
+
+---
+
+## 8. Run Agent Console MVP
 
 ```bash
 cd multi-agent/agent-console-mvp
@@ -196,7 +261,7 @@ Current MVP includes chat-first layout, run controls, realtime logs, basic contr
 
 ---
 
-## 7.1 NoCode Online Console (Visual Preview)
+## 8.1 NoCode Online Console (Visual Preview)
 
 A visual control console built on Meituan's NoCode platform — no local setup required. View the live architecture topology, real-time task queue, and routing logs directly in your browser.
 
@@ -214,16 +279,19 @@ The console has five panels:
 
 ---
 
-## 8. References
+## 9. References
 
 - Architecture details: `multi-agent/ARCHITECTURE.md`
 - Console details: `multi-agent/agent-console-mvp/README.md`
 - Unified sync notes: `multi-agent/UNIFIED_SYNC_2026-03-22.md`
+- Training substrate architecture: `docs/substrate/architecture.md`
+- Local MLX workflow: `docs/substrate/local_mlx_workflow.md`
+- LLaMA-Factory export workflow: `docs/substrate/llamafactory_export_workflow.md`
 - Chinese docs: `README.md`
 
 ---
 
-## 9. Notes
+## 10. Notes
 
 - This is an evolving personal workspace; docs and state files may change frequently
 - For team/production usage, add authentication, audit retention, rollback strategy, and SLA constraints
