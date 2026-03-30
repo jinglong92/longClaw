@@ -27,3 +27,5 @@
 - Asset/lifestyle context update (2026-03-25): key vehicle is Tesla (mobile data node context), commute/fitness bike is Merida Duke 600 (especially during May vehicle pause), and operation bases include Beijing Aosen ONE + Anhui self-built house (with Tesla-compatible garage).
 - Medical preference update (2026-03-26): for next hospital visit, user prefers Peking University Third Hospital (北医三院) Second Outpatient Clinic (二门诊).
 - Memory ops preference update (2026-03-28): user approved backfilling missing daily memory files and enabling anti-gap policy (auto-create `memory/YYYY-MM-DD.md` on first meaningful interaction, append brief logs at end of material work blocks).
+- Notification frequency preference update (2026-03-29): user reported heartbeat/proactive messages are too frequent; default to lower interruption frequency and only push when critical updates or scheduled fixed slots require it.
+- Heartbeat wording preference update (2026-03-30): user asked not to send the literal text “心跳正常”; avoid sending this phrase in heartbeat/proactive replies.

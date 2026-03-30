@@ -41,6 +41,17 @@ class GatewayConfig:
 
 
 @dataclass
+class WechatConfig:
+    enabled: bool = False
+    path: str = "/wechat/inbound"
+    auth_header: str = "X-OpenClaw-Token"
+    auth_token: str = ""
+    default_model: str = "qwen2.5-local"
+    system_prompt: str = "你是 OpenClaw 助手，请直接给出可执行回答。"
+    session_prefix: str = "wx"
+
+
+@dataclass
 class PolicyConfig:
     policy_version: str = "v1"
     max_state_history_turns: int = 16
@@ -74,6 +85,7 @@ class SubstrateConfig:
     flags: FeatureFlags = field(default_factory=FeatureFlags)
     paths: PathConfig = field(default_factory=PathConfig)
     gateway: GatewayConfig = field(default_factory=GatewayConfig)
+    wechat: WechatConfig = field(default_factory=WechatConfig)
     policy: PolicyConfig = field(default_factory=PolicyConfig)
     mlx: MlxConfig = field(default_factory=MlxConfig)
     llamafactory: LlamaFactoryConfig = field(default_factory=LlamaFactoryConfig)

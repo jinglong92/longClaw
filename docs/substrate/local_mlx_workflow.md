@@ -38,6 +38,8 @@ python3 -m openclaw_substrate.cli gateway-serve \
 
 Gateway endpoint: `http://127.0.0.1:8090/v1/chat/completions`
 
+Optional WeChat webhook endpoint: `http://127.0.0.1:8090/wechat/inbound`
+
 ## 3) Produce traces
 
 Send OpenAI-compatible chat requests through gateway with metadata:
@@ -47,6 +49,28 @@ Send OpenAI-compatible chat requests through gateway with metadata:
 - `policy_version`
 
 Raw traces are written to `artifacts/traces/raw_traces.jsonl`.
+
+### WeChat webhook payload example
+
+Enable `wechat.enabled=true` in config, then post:
+
+```bash
+curl -X POST http://127.0.0.1:8090/wechat/inbound \
+  -H 'Content-Type: application/json' \
+  -H 'X-OpenClaw-Token: <token-if-configured>' \
+  -d '{
+    "user_id": "wx_u_001",
+    "conversation_id": "wx_chat_001",
+    "message_id": "msg_001",
+    "text": "帮我总结今天最重要的三件事"
+  }'
+```
+
+Response fields:
+
+- `reply`: assistant text to send back to WeChat user
+- `session_id`: normalized session id (prefixed with `wechat.session_prefix`)
+- `turn_id`: turn id for trace correlation
 
 ## 4) Assemble next-state
 
