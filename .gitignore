@@ -1,2 +1,8 @@
 # Local private materials
 job-materials/resume/
+
+# Local noise / runtime artifacts
+.DS_Store
+**/.DS_Store
+.openclaw/
+artifacts/
