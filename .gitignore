@@ -1,5 +1,8 @@
 # Local private materials
 job-materials/resume/
+job-materials/positions/
+job-post-images/
+memory/
 
 # Local noise / runtime artifacts
 .DS_Store
