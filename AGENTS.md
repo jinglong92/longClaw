@@ -13,7 +13,12 @@ Before doing anything else:
 1. Read `SOUL.md` — this is who you are
 2. Read `USER.md` — this is who you're helping
 3. Read `memory/YYYY-MM-DD.md` (today + yesterday) for recent context
-4. **If in MAIN SESSION** (direct chat with your human): Also read `MEMORY.md`
+4. **If in MAIN SESSION** (direct chat with your human): Load `MEMORY.md` by domain —
+   - Route to JOB → inject [SYSTEM] + [JOB] sections only
+   - Route to LEARN → inject [SYSTEM] + [LEARN] sections only
+   - Route to SEARCH → inject [SYSTEM] section only
+   - CTRL / cross-domain → inject [SYSTEM] + [META] + all domain sections
+   - Full domain injection rules: see Memory 分域注入协议 section below
 
 Don't ask permission. Just do it.
 
@@ -245,3 +250,76 @@ The goal: Be helpful without being annoying. Check in a few times a day, do usef
 ## Make It Yours
 
 This is a starting point. Add your own conventions, style, and rules as you figure out what works.
+
+---
+
+## Memory 分域注入协议（v3.1）
+
+CTRL 根据路由的专家域，只注入 MEMORY.md 中对应 [DOMAIN] 块，不全量注入。
+
+**注入规则**：
+| 路由到 | 必注入块 |
+|--------|---------|
+| JOB | [SYSTEM] + [JOB] |
+| WORK | [SYSTEM] + [WORK] |
+| LEARN | [SYSTEM] + [LEARN] |
+| MONEY/LIFE/PARENT/ENGINEER | [SYSTEM] + 对应域 |
+| BRO/SIS | [SYSTEM] + [BRO/SIS] |
+| SEARCH | [SYSTEM] |
+| CTRL | [SYSTEM] + [META] + 全部 |
+
+**实体记忆更新规则**（每轮对话结束后，检测到新信息时更新 MEMORY.md 对应域）：
+- 公司名 + 面试/投递 → [JOB] 当前面试（格式：`字段名：值（YYYY-MM-DD）`）
+- offer/录用/拒了 → [JOB] Offer 状态
+- 正在学/研究 X → [LEARN] 当前学习
+- 情绪词（焦虑/累/难受）→ [BRO/SIS] 当前状态
+- 孩子 + 具体情况 → [PARENT] 近期关注
+
+---
+
+## 反思校验协议（置信度驱动）
+
+每个专家输出必须包含置信度自评：`[置信度: X.XX] [依据: 数据/推断/经验]`
+
+CTRL 根据置信度决定是否触发二次验证：
+- 置信度 < 0.6：CTRL 追问 1-3 个关键问题，或标注"建议验证后执行"
+- 置信度 < 0.5（A2A 场景）：自动触发 CTRL 介入，不直接合并结果
+
+---
+
+## Developer Mode（开发者运行日志）
+
+### 触发与关闭（对话层面，不依赖文件系统）
+
+- **开启**：用户说"开启 dev mode"或"打开开发者模式"
+- **关闭**：用户说"关闭 dev mode"或"关闭开发者模式"
+- **状态持续**：同一 session 内持续生效，直到明确关闭
+
+### 开启后每次回复末尾附加 [DEV LOG]
+
+```
+---
+[DEV LOG]
+🔀 路由  JOB | 触发: "面试、offer" | 模式: 单专职
+🧠 Memory  [SYSTEM]+[JOB] | ~380 tokens | 节省72%
+📂 Session  openclaw_job_2026-04-08 | 第3轮 | 未压缩
+🔍 检索  session_job_* | 召回2条 | top=[0.91, 0.36]
+⚖️ 置信度  0.88 [数据] | 冲突: 无
+🏷️ 实体  无更新
+---
+```
+
+### 多专家并行时额外显示
+
+```
+[DEV] JOB 完成（0.88）→ 建议接 Offer
+[DEV] MONEY 完成（0.82）→ 建议先评估薪资结构
+[DEV] CTRL 冲突检测: 无冲突（方向一致）
+```
+
+### 压缩触发日志
+
+```
+[DEV] ⚡ Level 1 压缩: 8轮→2轮+摘要 | 节省~1600 tokens(67%)
+[DEV] ⚡ Level 3 归档: session关闭 | key_conclusions写入MEMORY.md
+```
