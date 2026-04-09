@@ -29,3 +29,5 @@
 - Memory ops preference update (2026-03-28): user approved backfilling missing daily memory files and enabling anti-gap policy (auto-create `memory/YYYY-MM-DD.md` on first meaningful interaction, append brief logs at end of material work blocks).
 - Notification frequency preference update (2026-03-29): user reported heartbeat/proactive messages are too frequent; default to lower interruption frequency and only push when critical updates or scheduled fixed slots require it.
 - Heartbeat wording preference update (2026-03-30): user asked not to send the literal text “心跳正常”; avoid sending this phrase in heartbeat/proactive replies.
+- Resume baseline update (2026-04-06): user provided latest resume PDF (`job-materials/resume/resume_2026-04-06_jack.pdf`) and explicitly asked assistant to remember his profile for future job-targeting/advisory context.
+- Resume positioning snapshot (2026-04-06): narrative emphasizes 10+ years AI/OR background, current focus on Agentic AI + LLM + optimization integration, and measurable delivery in recommendation/operations/research tracks; use this as default framing for future role-fit analysis.
