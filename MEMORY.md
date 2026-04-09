@@ -46,6 +46,7 @@
 - Learn-agent preference update (2026-03-25): for paper reading, LEARN should default to `PAPER_DEEP_DIVE_PROMPT.md` v3 structure (fact/inference split, math+pseudo-code+comparison+reviewer2+deployment+interview compression).
 - Learn-agent preference update (2026-03-26): when user sends a paper/topic in chat, automatically apply the latest deep-dive review prompt (role/context + strict output structure with Essence/Method/Comparison/Reviewer2/Deployment/Insights/Decision Card) without requiring a re-ask.
 - Learn-agent config update (2026-03-26): this default paper deep-dive behavior is now hardened in `MULTI_AGENTS.md` under LEARN role definition (not only memory).
+- Interview prep preference update (2026-04-09): user wants a daily algorithm interview crash-course style feed (problem + core idea + concise Python), aimed at rapidly reactivating prior coding interview memory for job search.
 
 ---
 

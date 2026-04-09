@@ -13,6 +13,8 @@ REPO_PATH="${1:-}"
 BREW_PREFIX="/opt/homebrew"
 NODE_FORMULA="node@20"
 NODE_MAJOR_TARGET="20"
+NODE_FALLBACK_ROOT="$HOME/.longclaw/node20"
+NODE_FALLBACK_CURRENT="$NODE_FALLBACK_ROOT/current"
 ZPROFILE="$HOME/.zprofile"
 BASH_PROFILE="$HOME/.bash_profile"
 PLAYWRIGHT_SKILLS_MARKER="$HOME/.longclaw-bootstrap/playwright-skills.done"
@@ -63,13 +65,6 @@ current_node_major() {
   if command_exists node; then
     node -p "process.versions.node.split('.')[0]" 2>/dev/null || true
   fi
-}
-
-brew_package_installed() {
-  local formula="$1"
-  [[ -x "$BREW_PREFIX/opt/$formula/bin" ]] && return 0
-  [[ -L "$BREW_PREFIX/opt/$formula" ]] && return 0
-  brew list --versions "$formula" >/dev/null 2>&1
 }
 
 load_shell_profiles_best_effort() {
@@ -125,6 +120,9 @@ pin_node20_in_profiles() {
   local block
   block=$(cat <<'EOF'
 # >>> longclaw node20 >>>
+if [ -d "$HOME/.longclaw/node20/current/bin" ]; then
+  export PATH="$HOME/.longclaw/node20/current/bin:$PATH"
+fi
 export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
 # <<< longclaw node20 <<<
 EOF
@@ -133,21 +131,75 @@ EOF
   append_block_if_missing "$BASH_PROFILE" '# >>> longclaw node20 >>>' "$block"
 }
 
-ensure_node20_runtime() {
-  if brew_package_installed "$NODE_FORMULA"; then
-    ok "$NODE_FORMULA 已安装"
-  else
-    log "安装 $NODE_FORMULA..."
-    brew install "$NODE_FORMULA"
-    ok "$NODE_FORMULA 安装完成"
-  fi
+brew_node20_present() {
+  [[ -x "$BREW_PREFIX/opt/$NODE_FORMULA/bin/node" ]]
+}
 
+detect_latest_node20_version() {
+  python3 <<'PYEOF'
+import json
+import urllib.request
+
+with urllib.request.urlopen("https://nodejs.org/dist/index.json", timeout=30) as resp:
+    releases = json.load(resp)
+
+for item in releases:
+    version = item.get("version", "")
+    files = set(item.get("files", []))
+    if version.startswith("v20.") and "osx-arm64-tar" in files:
+        print(version)
+        break
+PYEOF
+}
+
+install_node20_official() {
+  local version archive url tmpdir release_dir
+
+  version="$(detect_latest_node20_version)"
+  [[ -n "$version" ]] || die "无法获取最新 Node 20 版本"
+
+  archive="node-${version}-darwin-arm64.tar.gz"
+  url="https://nodejs.org/dist/${version}/${archive}"
+  tmpdir="$(mktemp -d)"
+  release_dir="$NODE_FALLBACK_ROOT/releases/${version}"
+
+  mkdir -p "$NODE_FALLBACK_ROOT/releases"
+
+  log "通过 Node 官方发布包安装 ${version}（绕过 Homebrew portable-ruby 下载）"
+  curl -fsSL "$url" -o "$tmpdir/$archive"
+  tar -xzf "$tmpdir/$archive" -C "$tmpdir"
+
+  rm -rf "$release_dir"
+  mv "$tmpdir/node-${version}-darwin-arm64" "$release_dir"
+  ln -sfn "$release_dir" "$NODE_FALLBACK_CURRENT"
+  rm -rf "$tmpdir"
+
+  ok "官方 Node 20 安装完成: ${version}"
+}
+
+ensure_node20_runtime() {
   pin_node20_in_profiles
 
-  export PATH="$BREW_PREFIX/opt/$NODE_FORMULA/bin:$PATH"
+  export PATH="$NODE_FALLBACK_CURRENT/bin:$BREW_PREFIX/opt/$NODE_FORMULA/bin:$PATH"
   hash -r
 
   local major
+  major="$(current_node_major)"
+  if [[ "$major" == "$NODE_MAJOR_TARGET" ]]; then
+    ok "Node 已固定到: $(node -v)"
+    ok "npm 版本: $(npm -v)"
+    return
+  fi
+
+  if brew_node20_present; then
+    ok "检测到 Homebrew 的 $NODE_FORMULA"
+  else
+    install_node20_official
+  fi
+
+  export PATH="$NODE_FALLBACK_CURRENT/bin:$BREW_PREFIX/opt/$NODE_FORMULA/bin:$PATH"
+  hash -r
+
   major="$(current_node_major)"
   if [[ "$major" != "$NODE_MAJOR_TARGET" ]]; then
     die "Node 版本不是期望的 $NODE_MAJOR_TARGET.x，当前是: $(node -v 2>/dev/null || echo 'unknown')"
