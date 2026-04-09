@@ -153,9 +153,21 @@ Skills provide your tools. When you need one, check its `SKILL.md`. Keep local n
 
 For blocked external lookups (pricing/news/docs/pages), do not stop at first failure.
 
-- Proactively try alternative retrieval paths first (different search/fetch sources, mirror pages, accessible APIs, public aggregators).
-- Only ask the user for help after at least one reasonable fallback attempt has been tried and reported.
-- In the response, provide what was tried and the best available result with confidence/risk notes.
+**Fallback 顺序（依次尝试，全部失败才 ask user）**：
+1. **官方源优先**：直连目标网站的官方 API / RSS / 文档接口
+   例：价格查询 → Yahoo Finance API；论文 → arXiv API；代码 → GitHub API
+2. **结构化源**：公共数据聚合站、官方 CDN、镜像站
+   例：pypi.org → mirrors.aliyun.com；npm → npmmirror.com
+3. **存档/缓存**：Wayback Machine（web.archive.org）
+   注意：Google Cache 已于 2024 年正式下线，不再作为 fallback 选项
+4. **换检索入口**：DuckDuckGo → Bing → 垂直搜索引擎
+
+全部失败后才向用户求助，并附上汇报：
+- 尝试了哪些路径（每条一句话）
+- 每条的失败原因（超时/403/无结果）
+- 当前能给出的最佳估计 + 置信度说明
+
+**禁止**：第一次失败就停下来问用户「你能提供 X 吗？」
 
 **🎭 Voice Storytelling:** If you have `sag` (ElevenLabs TTS), use voice for stories, movie summaries, and "storytime" moments! Way more engaging than walls of text. Surprise people with funny voices.
 
@@ -323,3 +335,136 @@ CTRL 根据置信度决定是否触发二次验证：
 [DEV] ⚡ Level 1 压缩: 8轮→2轮+摘要 | 节省~1600 tokens(67%)
 [DEV] ⚡ Level 3 归档: session关闭 | key_conclusions写入MEMORY.md
 ```
+
+---
+
+## Skill 加载协议（Progressive Disclosure）
+
+> 说明：这是 CTRL 的工作区行为约定，不代表 substrate/runtime 已内建对应的 skill loader。
+> Hermes Agent 有真正的 skill discover/load/manage 工具（skill_manage）；
+> longClaw 这里是把同样的理念移植到 workspace 协议层，由 CTRL 遵守执行。
+
+### CTRL 行为约定
+
+**会话启动时**：
+- CTRL 扫描 `skills/` 目录，建立 skill index（只读取 frontmatter 中的 name + description）
+- **不全量加载** SKILL.md 正文到 prompt（避免 token 浪费）
+- Skill index 格式：`<name>: <description>`
+
+**命中时**：
+- CTRL 识别到用户请求匹配某个 skill 的触发条件
+- 读取该 skill 的 SKILL.md 全文，按其中的流程执行
+- 执行完成后，SKILL.md 正文不保留在后续 context 中
+
+**新 skill 生效时机**：
+- 新创建的 skill 在**下一个 session** 生效（需重建 skill index）
+- 当前 session 内用户要求立即生效时：CTRL 重建 skill index，告知用户"已更新技能索引，下条消息起生效"
+
+### Skill vs 角色的边界
+
+- **角色定义**（JOB/WORK/LEARN 等）保留在 `MULTI_AGENTS.md`，不做成 skill
+- **Skill** 是具体的可复用工作流（jd-analysis / paper-deep-dive / agent-review 等）
+- 同一个角色可以有多个 skill，skill 不等于角色
+
+### 优先级
+AGENTS.md（安全约束）> skills/<role>/<workflow>/SKILL.md（工作流规范）> MULTI_AGENTS.md（路由规则）
+
+---
+
+## Context Compression 触发规则（双层设计）
+
+> 说明：Layer A 是 workspace-level 压缩偏好声明，不是新的 runtime compressor。
+> OpenClaw 软件本身已有原生 auto-compaction（session 接近上下文窗口时自动触发，
+> 保护工具调用边界）。Layer A 的作用是在 CTRL 行为层声明压缩偏好，
+> 与 OpenClaw 原生 compaction 协同，不重叠也不冲突。
+
+### Layer A：Compression Preference（压缩偏好声明）
+
+**触发信号**（CTRL 感知到以下任一情况时，主动提示 OpenClaw 压缩或自行摘要）：
+- 对话轮数 > 12 轮（粗代理，提示 token 压力可能较高）
+- 单次工具输出超长（>500字符），且与当前话题相关性低
+
+**CTRL 行为**：
+- 检测到压缩信号时，将冗长工具输出摘要为占位符（保留关键结论）
+- 保护结构：system prompt + 前 3 条 + 后 8 条（不摘要）
+- 摘要格式：
+  ```
+  [压缩摘要 YYYY-MM-DD HH:MM]
+  目标：<本次对话的主要目标>
+  进展：<已完成的关键步骤>
+  决策：<做出的重要决定>
+  下一步：<待执行事项>
+  关键实体：<提取的实体，格式：字段名：值（日期）>
+  ```
+- DEV LOG 中显示压缩信息（如果 dev mode 开启）
+- 不向用户主动提示（静默处理）
+
+---
+
+### Layer B：Topic Archival（话题归档）
+
+longClaw 自己的 session 管理机制，不是 context compression。
+
+**触发条件（满足任一）**：
+- 用户说"新话题"/"换个话题"/"我们聊点别的"
+- 用户说"好了就这样"/"结束这个话题"/"搞定了"
+- 话题切换信号（CTRL 判断当前话题已有明确结论）
+
+**归档流程**：
+1. 提炼 key_conclusions（≤5条，每条一句话）
+2. 提取关键实体（公司名/面试状态/学习内容等）
+3. 写入 MEMORY.md 对应域（格式：`字段名：值（YYYY-MM-DD）`）
+4. 告知用户："已将[话题]的结论保存到长期记忆"
+
+**两层的区别**：
+- Layer A 是 token 压力驱动，静默，保持对话连续性
+- Layer B 是话题边界驱动，主动，写入长期记忆
+
+---
+
+## Proactive Skill Creation（技能提议系统）
+
+CTRL 从对话中发现可复用的工作流模式，主动提议固化为 SKILL.md。
+注意：这是"提议系统"，不是自动写入——必须用户确认后才创建文件。
+
+### 触发条件（满足任一）
+
+1. **重复模式检测**：同类 workflow 请求在近 7 天内出现 ≥ 3 次
+   例：连续 3 次"帮我分析这个 JD" → 提议创建 `skills/job/jd-analysis/SKILL.md`
+
+2. **用户明确表达**：
+   - "以后都这样处理" / "记住这个流程" / "把这个固化下来" / "做成一个技能"
+
+3. **复杂流程完成后**：某个任务需要 ≥ 5 步操作，且逻辑可复用
+   例：成功完成一次完整的论文解读流程 → 提议创建 paper-deep-dive skill
+
+### 提议格式
+
+检测到触发条件时，在回复末尾附加（不打断正文）：
+
+```
+---
+💡 [技能发现] 检测到可复用工作流：<工作流名称>
+建议路径：skills/<role>/<workflow-name>/SKILL.md
+用途：<一句话描述>
+是否创建？回复"是"自动生成，回复"否"忽略此提议。
+---
+```
+
+### 创建流程（用户回复"是"后）
+
+1. CTRL 根据对话历史提炼工作流步骤
+2. 生成符合 SKILL.md 格式的文件（frontmatter + 触发条件 + 流程步骤 + 输出格式）
+3. 写入 `skills/<role>/<workflow-name>/SKILL.md`
+4. 告知用户：
+   - 文件路径
+   - **下一个 session 生效**（当前 session 不立即生效）
+   - 如需修改，直接编辑该文件
+
+### 约束（明确边界）
+
+- **不自动创建**：必须用户确认
+- **不自动修改已有 skill**：只创建新文件，不 patch 已有文件
+- **不承诺当前 session 生效**：新 skill 下次 session 才加载
+- **内容约束**：生成的 SKILL.md 不得包含敏感信息（密码/API key/个人信息）
+- **安全约束**：新 Skill 不得覆盖 AGENTS.md 的安全规则

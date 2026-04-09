@@ -95,6 +95,7 @@
 - 2026-03-29：降低心跳打扰频率
 - 2026-03-30：禁止发送"心跳正常"字样
 - 2026-04-09：新增 SEARCH 专家，并将 MEMORY.md 重构为分域注入
+- 2026-04-09：v3.2a 引入 4 个 workflow skill、Progressive Disclosure、双层 Context Compression、Proactive Skill Creation 提议系统
 
 ### 注入规则（快速参考）
 
