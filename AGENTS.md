@@ -357,8 +357,8 @@ CTRL 根据置信度决定是否触发二次验证：
 - 执行完成后，SKILL.md 正文不保留在后续 context 中
 
 **新 skill 生效时机**：
-- 新创建的 skill 在**下一个 session** 生效（需重建 skill index）
-- 当前 session 内用户要求立即生效时：CTRL 重建 skill index，告知用户"已更新技能索引，下条消息起生效"
+- 默认在**下一个 session** 生效（会话启动时重建 skill index）
+- 若用户要求当前 session 立即启用：CTRL 先重建 skill index，再明确告知"已更新技能索引，从下一条消息起按新 skill 执行"
 
 ### Skill vs 角色的边界
 
@@ -380,8 +380,8 @@ AGENTS.md（安全约束）> skills/<role>/<workflow>/SKILL.md（工作流规范
 
 ### Layer A：Compression Preference（压缩偏好声明）
 
-**触发信号**（CTRL 感知到以下任一情况时，主动提示 OpenClaw 压缩或自行摘要）：
-- 对话轮数 > 12 轮（粗代理，提示 token 压力可能较高）
+**触发信号**（CTRL 感知到以下任一启发式迹象时，主动提示 OpenClaw 压缩或自行摘要）：
+- 对话轮数 > 12 轮（轮数代理，不是精确 token 计数）
 - 单次工具输出超长（>500字符），且与当前话题相关性低
 
 **CTRL 行为**：

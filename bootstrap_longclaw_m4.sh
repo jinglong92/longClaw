@@ -266,7 +266,10 @@ ensure_playwright_skills() {
   fi
 
   log "安装 Playwright skills"
-  playwright-cli install --skills
+  (
+    cd "$HOME"
+    playwright-cli install --skills
+  )
   date '+%Y-%m-%d %H:%M:%S %z' > "$PLAYWRIGHT_SKILLS_MARKER"
   ok "Playwright skills 安装完成"
 }
