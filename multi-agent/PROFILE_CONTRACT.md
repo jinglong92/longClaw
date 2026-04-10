@@ -1,6 +1,6 @@
 # PROFILE_CONTRACT
 
-Last updated: 2026-03-25
+Last updated: 2026-04-10
 Owner: CTRL
 
 ## Purpose
@@ -31,6 +31,13 @@ P2 连续运行稳定性：断电、系统更新、任务中断防护
    - 可恢复性（Resilience）
 3. 涉及职业策略时，必须显式包含“外部机会响应机制”（周目标/KPI）。
 4. 若任一角色输出与本合同冲突，CTRL 以本合同为准并纠偏。
+
+## Resume Canonical Snapshot (2026-04-10)
+1. 身份锚点：Jack（Jinglong Dai），AI+OR 10+ 年，定位 Senior Expert / Fellow 轨。
+2. 能力锚点：调度优化/运筹求解/匹配与预测 + Agentic AI（RAG、ReAct/LangGraph、SFT→GRPO）。
+3. 叙事锚点：强调“决策级 AI 系统落地”，不是仅做对话型 Agent。
+4. 方法锚点：MIP、B&B、Column Generation、ALNS、Attention/DRL、因果与优化控制方法。
+5. 面试锚点：默认突出“Agent + OR 协同设计”与线上业务指标闭环能力。
 
 ## Suggested Weekly KPI
 - 系统：任务成功率、P95延迟、单任务成本、故障恢复时间
