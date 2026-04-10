@@ -53,6 +53,45 @@
 
 ---
 
+## Quick Start
+
+**前提**：已安装 [OpenClaw](https://github.com/openclaw/openclaw)，workspace 目录已创建。
+
+```bash
+# 1. Clone 本仓库
+git clone https://github.com/jinglong92/longClaw.git
+cd longClaw
+
+# 2. 把通用配置复制到你的 OpenClaw workspace
+cp AGENTS.md SOUL.md MULTI_AGENTS.md /path/to/your-workspace/
+cp -r skills/ /path/to/your-workspace/
+
+# 3. 改成你自己的配置（必须修改这 3 个文件）
+cp USER.md IDENTITY.md MEMORY.md /path/to/your-workspace/
+# 然后编辑它们，替换成你的个人信息
+
+# 4. 安装 memory 检索工具（可选，增强检索能力）
+cp -r tools/ /path/to/your-workspace/
+cd /path/to/your-workspace
+python3 tools/memory_entry.py    # 构建索引
+python3 tools/memory_search.py --query "测试" --verbose  # 验证
+
+# 5. 在 OpenClaw 对话中说"开启 dev mode"，验证路由可见
+```
+
+**需要改成你自己的 3 个文件**：
+
+| 文件 | 要改什么 |
+|------|---------|
+| `USER.md` | 你的名字、职业、偏好、当前上下文 |
+| `IDENTITY.md` | 你的 Agent 名字、性格、头像 |
+| `MEMORY.md` | 清空示例内容，从空白开始积累 |
+
+**可以直接复用（不需要改）**：
+`AGENTS.md` · `SOUL.md` · `MULTI_AGENTS.md` · `skills/` · `tools/`
+
+---
+
 ## 目录
 
 1. [三系统定位对比](#1-三系统定位对比)
@@ -158,7 +197,7 @@ $$\text{Injected Memory} = \text{[SYSTEM]} \cup \text{[Relevant Domain]}$$
 - 命中触发条件时才加载完整 `SKILL.md`
 - 执行完成后退出 context，不长期占用 token 预算
 
-当前 5 个 skill（详见 [§ Workflow Skills](#6-workflow-skills)）：
+当前 4 个 skill（详见 [§ Workflow Skills](#6-workflow-skills)）：
 
 | Skill | 触发场景 | 核心输出 |
 |-------|---------|---------|
@@ -166,7 +205,6 @@ $$\text{Injected Memory} = \text{[SYSTEM]} \cup \text{[Relevant Domain]}$$
 | `paper-deep-dive` | 发送论文标题/摘要 | 方法论 + 对比 + 可复述摘要 |
 | `agent-review` | 审查 workspace 配置 | 规则冲突 + token 效率 + 漏洞清单 |
 | `fact-check-latest` | 询问最新资讯/价格 | `[确定]`/`[推断]`/`[缺失]` 分级 |
-| `session-compression-flow` | 长会话压缩与新会话衔接 | 压缩触发→摘要落盘→索引重建→下会话连续性 |
 
 > ¹ Progressive Disclosure 设计借鉴自 **[Hermes Agent](https://github.com/NousResearch/hermes-agent)**。
 > Hermes 有完整的 skill_manage 工具实现自动 create/patch；longClaw 将其移植为 workspace 协议层约定。
@@ -350,12 +388,6 @@ python3 tools/memory_search.py --query "换电站运力" --domain ENGINEER --hyb
 
 输出：`[F]` 确定信息（≥2 个独立来源）/ `[I]` 推断信息（1 个来源）→ 时效说明 + 来源列表
 
-### session-compression-flow
-
-触发：长对话压缩、上下文膨胀、用户要求“压缩并衔接下一会话”
-
-输出：压缩触发原因 → 摘要块生成 → daily+MEMORY 双写落盘 → `memory_entry.py --rebuild` → 新会话按域召回
-
 ---
 
 ## 6. 演示
@@ -421,7 +453,6 @@ python3 tools/memory_search.py --query "上次面试进展" --domain JOB --hybri
 | [skills/learn/paper-deep-dive/SKILL.md](skills/learn/paper-deep-dive/SKILL.md) | 论文深度解读 |
 | [skills/engineer/agent-review/SKILL.md](skills/engineer/agent-review/SKILL.md) | Workspace 审查 |
 | [skills/search/fact-check-latest/SKILL.md](skills/search/fact-check-latest/SKILL.md) | 最新事实核查 |
-| [skills/meta/session-compression-flow/SKILL.md](skills/meta/session-compression-flow/SKILL.md) | 会话压缩与跨会话衔接流程 |
 
 ### Memory 检索工具
 
@@ -508,3 +539,14 @@ longClaw 是在官方 OpenClaw 软件基础上改造的 workspace。执行层（
 ---
 
 > 这套系统最有价值的地方，不是"会分角色聊天"，而是把控制、记忆、流程和优化闭环拆清楚——让每一层都可以独立演进、独立观测、独立优化。
+
+---
+
+## Contributing
+
+欢迎贡献 Workflow Skill、改进检索工具或完善训练底座。
+
+最低门槛的贡献方式：在 `skills/<domain>/<skill-name>/` 下新建一个 `SKILL.md`，
+描述一个具体的可复用工作流（参考现有的 `skills/job/jd-analysis/` 格式）。
+
+详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
