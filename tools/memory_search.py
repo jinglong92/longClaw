@@ -79,9 +79,14 @@ def fts(query: str, entries: list[dict], top_k: int = 20) -> list[tuple[dict, fl
         words = re.findall(r"\w+", e.get("text", "").lower())
         n = len(words) + 1
         tf = sum(words.count(t) / n for t in tokens)
-        eb = sum(0.2 for ent in e.get("entities", []) if ent.lower() in query.lower())
-        ib = float(e.get("importance", 0.5)) * 0.1
-        s = tf + eb + ib
+        # 实体精确命中 bonus（精确实体命中比 importance 更重要）
+        entity_hits = sum(1 for ent in e.get("entities", []) if ent.lower() in query.lower())
+        eb = entity_hits * 0.4
+        # importance 作为微调因子（缩小系数，不压过实体命中）
+        ib = float(e.get("importance", 0.5)) * 0.05
+        # daily 条目 bonus（事实性更强）
+        sb = 0.05 if e.get("source_type") == "daily" else 0.0
+        s = tf + eb + ib + sb
         if s > 0:
             scored.append((e, s))
     return sorted(scored, key=lambda x: -x[1])[:top_k]
