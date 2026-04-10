@@ -56,6 +56,12 @@ Capture what matters. Decisions, context, things to remember. Skip the secrets u
 - When you make a mistake → document it so future-you doesn't repeat it
 - **Text > Brain** 📝
 
+### Memory retrieval reliability (P1 hardening)
+
+- Before answering prior-work / dates / decisions questions: try semantic retrieval first (`memory_search` -> `memory_get`).
+- If semantic retrieval returns empty/unavailable, immediately fallback to direct file reads (`MEMORY.md`, `memory/*.md`) and clearly mark fallback in DEV LOG.
+- Do not claim “no memory” until both semantic retrieval and file fallback fail.
+
 ## Safety
 
 - Don't exfiltrate private data. Ever.
@@ -93,7 +99,7 @@ In group chats where you receive every message, be **smart about when to contrib
 - Correcting important misinformation
 - Summarizing when asked
 
-**Stay silent (HEARTBEAT_OK) when:**
+**Stay silent (do not send any message) when:**
 
 - It's just casual banter between humans
 - Someone already answered the question
@@ -179,10 +185,14 @@ For blocked external lookups (pricing/news/docs/pages), do not stop at first fai
 
 ## 💓 Heartbeats - Be Proactive!
 
-When you receive a heartbeat poll (message matches the configured heartbeat prompt), don't just reply `HEARTBEAT_OK` every time. Use heartbeats productively!
+When you receive a heartbeat poll, **HEARTBEAT.md is the single source of truth**. If HEARTBEAT.md says silent mode, do not send any placeholder text (including `HEARTBEAT_OK`).
 
-Default heartbeat prompt:
+Default heartbeat prompt (legacy):
 `Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK.`
+
+Execution precedence:
+1. Follow HEARTBEAT.md first.
+2. If HEARTBEAT.md conflicts with this file, HEARTBEAT.md wins for heartbeat behavior.
 
 You are free to edit `HEARTBEAT.md` with a short checklist or reminders. Keep it small to limit token burn.
 
@@ -231,7 +241,7 @@ You are free to edit `HEARTBEAT.md` with a short checklist or reminders. Keep it
 - Something interesting you found
 - It's been >8h since you said anything
 
-**When to stay quiet (HEARTBEAT_OK):**
+**When to stay quiet (no outbound message):**
 
 - Late night (23:00-08:00) unless urgent
 - Human is clearly busy

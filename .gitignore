@@ -2,10 +2,12 @@
 job-materials/resume/
 job-materials/positions/*
 job-post-images/*
-memory/*
+memory/
 
 # Local noise / runtime artifacts
 .DS_Store
 **/.DS_Store
 .openclaw/
 artifacts/
+.claude/
+openclaw_substrate/configs/local.runtime.json
