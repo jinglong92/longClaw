@@ -324,7 +324,7 @@ CTRL 根据置信度决定是否触发二次验证：
 [DEV LOG]
 🔀 路由  JOB | 触发: "面试、offer" | 模式: 单专职
 🧠 Memory  [SYSTEM]+[JOB] | ~380 tokens | 节省72%
-📂 Session  openclaw_job_2026-04-08 | 第3轮 | 未压缩
+📂 Session  openclaw_job_2026-04-08 | 对话轮次:3 | 压缩次数:0
 🔍 检索  session_job_* | 召回2条 | top=[0.91, 0.36]
 ⚖️ 置信度  0.88 [数据] | 冲突: 无
 🏷️ 实体  无更新
@@ -478,3 +478,51 @@ CTRL 从对话中发现可复用的工作流模式，主动提议固化为 SKILL
 - **不承诺当前 session 生效**：新 skill 下次 session 才加载
 - **内容约束**：生成的 SKILL.md 不得包含敏感信息（密码/API key/个人信息）
 - **安全约束**：新 Skill 不得覆盖 AGENTS.md 的安全规则
+
+## Memory Retrieval Scope Protocol
+
+> 核心原则：先决定搜哪里，再决定怎么搜。
+> route-aware scope 比 hybrid model 更重要。
+
+### 检索顺序（四级递进，前一级有足够结果则不继续）
+
+```
+Level 2：same-domain recent（同域 7 天内）
+ → memory/YYYY-MM-DD.md（过去 7 天）中 domain 匹配的条目
+ → MEMORY.md 中对应 [DOMAIN] 块
+
+Level 3：same-domain archive（同域全量）
+ → memory/YYYY-MM-DD.md（全量）中 domain 匹配的条目
+ → tools/artifacts/memory_entries.jsonl 中 domain 匹配的条目
+
+Level 4：cross-domain fallback（跨域兜底）
+ → 仅当 Level 2+3 结果数 < 2 时才触发
+ → 搜索所有域，结果标注 [跨域]
+```
+
+### 打分权重
+
+- 同域加分：+0.3
+- 跨域惩罚：-0.2
+- 7 天内：+0.2，30 天内：+0.1
+
+### Query Rewrite（查询改写）
+
+用户原话不直接用于检索，CTRL 先改写为 2-3 个变体：
+1. 原始 query
+2. 原始 + domain hints（路由到 JOB 时自动加 "job career offer interview"）
+3. 实体提取版（提取公司名/技术词/项目名）
+
+### 低置信度扩展策略
+
+满足以下任一条件时，才从当前 level 扩展到下一级：
+- 结果数 < 2
+- top1 与 top2 得分差 < 0.05
+- query 中的关键实体在结果里未出现
+
+### 工具调用
+
+memory_search 返回空时，CTRL 执行：
+1. 调用 `python3 tools/memory_search.py --query "<改写后query>" --domain <ROLE>`
+2. 结果注入当前 context
+3. DEV LOG 显示：检索级别 / query 变体 / 召回数 / 是否触发跨域
