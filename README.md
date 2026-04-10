@@ -254,6 +254,8 @@ $$\text{Interaction} \rightarrow \text{Trace} \rightarrow \text{Judge} \rightarr
 
 ![longClaw 多代理控制系统架构图](docs/architecture-dashboard-zh-v5.png)
 
+![longClaw Agent v3 路线架构图](docs/architecture-dashboard-zh-v3-agent.jpg)
+
 ### 3.2 当前六层结构
 
 ```mermaid
