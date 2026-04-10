@@ -4,10 +4,6 @@
 
 longClaw 是一个基于 [OpenClaw](https://openclaw.ai) 深度改造的个人 AI 操作系统。它的价值不在于"堆更多 Agent"，而在于把 Agent 从一次性对话，升级成一个**可路由、可记忆、可审计、可迭代优化**的工作系统。
 
-当前版本是一次**融合升级**，不是对旧设计的推翻：
-
-$$\text{longClaw} = \text{OpenClaw Base} + \text{v3.1 Protocol} + \text{v3.2a Workflow} + \text{Memory Retrieval v1} + \text{Local-first Substrate}$$
-
 |          |                                                                                          |
 | -------- | ---------------------------------------------------------------------------------------- |
 | **基于**   | [OpenClaw](https://openclaw.ai)（Peter Steinberger，MIT 开源）                                |
