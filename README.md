@@ -2,425 +2,362 @@
 
 语言 / Language: **简体中文** | [English](README.en.md)
 
-longClaw 是一个面向个人 AI 协作的多代理控制系统工作区。它不只是一套路由配置——它是一个有人格、有记忆、有风险意识、持续演进的个人 AI 操作系统。
+longClaw 是一个面向真实个人协作场景的 AI 控制系统。它的价值不在于“堆更多 Agent”，而在于把 Agent 从一次性对话，升级成一个**可路由、可记忆、可审计、可迭代优化**的工作系统。
+
+当前版本不是对旧设计的推翻，而是一次**融合升级**：
+
+\[
+\text{Current longClaw} = \text{Base Multi-Agent} + \text{v3.1 Protocol Upgrade} + \text{v3.2a Workflow Upgrade} + \text{Local-first Substrate}
+\]
 
 ---
 
-## 1. 系统全景
+## 1. 一句话定位
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        longClaw OS                              │
-│                                                                 │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌───────────────┐  │
-│  │ SOUL.md  │  │ USER.md  │  │MEMORY.md │  │ memory/日志   │  │
-│  │ 人格契约 │  │ 用户画像 │  │ 长期记忆 │  │ 每日短期记忆  │  │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └───────┬───────┘  │
-│       └─────────────┴──────────────┴────────────────┘          │
-│                              │                                  │
-│                    ┌─────────▼──────────┐                       │
-│                    │   CTRL  总控代理   │  ← 唯一对外出口       │
-│                    │  路由 · 仲裁 · 合并│                       │
-│                    └──────────┬─────────┘                       │
-│          ┌──────┬──────┬──────┼──────┬──────┬──────┐           │
-│        LIFE   JOB   WORK  ENGINEER PARENT LEARN MONEY          │
-│                          BRO · SIS                              │
-│                    （10 个专职代理：LIFE/JOB/WORK/ENGINEER/PARENT/LEARN/MONEY/BRO/SIS/SEARCH）                              │
-│                                                                 │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  Risk Audit · Heartbeat · Agent Council · Routing Log    │  │
-│  └──────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-```
+如果用一句话向面试官解释：
 
-本仓库包含五层能力：
+> longClaw 的核心创新，是把“会聊天的 LLM”升级成“有控制平面、有记忆平面、有工作流平面、还能沉淀训练资产的个人 AI Runtime”。
 
-1. **人格与边界层**：定义助手行为、人格契约与安全约束（`SOUL.md`, `AGENTS.md`）
-2. **用户与偏好层**：沉淀用户画像、长期偏好与风格约定（`USER.md`）
-3. **记忆与连续性层**：双层记忆机制，跨会话保持上下文（`MEMORY.md`, `memory/`）
-4. **多代理执行与工作流层**：路由协议、专职角色、workflow skill 与控制台（`MULTI_AGENTS.md`, `multi-agent/`, `skills/`）
-5. **训练底座层（Local-first）**：本地追踪、评测、数据集构建与后端可插拔训练导出（`openclaw_substrate/`, `docs/substrate/`）
+我真正解决的问题不是“怎么多加几个角色”，而是：
+
+1. **谁处理这个任务**：路由要可控。
+2. **为什么这么处理**：裁决要可解释。
+3. **跨会话怎么延续**：记忆不能靠上下文窗口碰运气。
+4. **系统怎么持续变好**：真实交互要沉淀成 trace / replay / dataset。
 
 ---
 
-## 2. 核心设计：四大支柱
+## 2. 演化路线：不是替代，是升级
 
-### 🧠 双层记忆系统
-
-longClaw 的记忆不依赖模型上下文窗口，而是通过文件持久化实现跨会话连续性：
-
-```
-MEMORY.md          ← 长期记忆：蒸馏后的偏好、决策、教训（主会话专用）
-memory/YYYY-MM-DD.md  ← 每日记忆：当天原始事件流水账
-```
-
-每次会话启动时，CTRL 自动读取今日 + 昨日日志与长期记忆，无需用户重复交代背景。Heartbeat 心跳机制会定期将日志中的关键信息蒸馏回 `MEMORY.md`，保持长期记忆的精炼与时效性。
-
-> 设计原则：**Text > Brain**。Mental notes 不过会话，文件才是真正的记忆。
-
-### 🎭 SOUL 人格契约
-
-`SOUL.md` 定义了助手的核心人格，不是功能描述，而是行为准则：
-
-- **真相优先**：不取悦，不模糊，直接指出逻辑漏洞与自我合理化
-- **有观点**：可以不同意，可以判断利弊，拒绝无立场的中立
-- **行动导向**：每个建议以"现在做什么"结尾，不空谈原则
-- **能力换信任**：用户给了真实的生活访问权，用胜任力回报，而非讨好
-
-### 👤 USER 用户画像
-
-`USER.md` 记录用户的真实上下文——不是通用用户，而是具体的人：
-
-- 称呼偏好、语言风格、表达要求
-- 当前职业叙事与求职主线
-- 计算拓扑（Mac mini M4 主节点 + MacBook Air M5 调试端）
-- 风险偏好与生活资产上下文
-
-这让每个专职代理都能在正确的背景下给出有针对性的建议，而不是泛化回答。
-
-### ⚡ Risk Audit 风险审计
-
-对涉及策略选择、价值判断、高影响决策的请求，CTRL 强制触发 Risk Audit：
-
-```
-触发场景：资金配置 / 职业决策 / 关系决策 / 路径取舍
-输出要求：至少 1 个核心逻辑漏洞 + 1 个尾部风险
-豁免场景：纯事实型问答
-```
-
----
-
-## 3. 多代理控制架构
-
-### 3.1 高层控制流
+### 2.1 版本演化图
 
 ```mermaid
 flowchart LR
-    U[User Request] --> C[CTRL Orchestrator]
-    C --> D{Domain Routing}
-
-    D -->|Single Domain| S[One Specialist]
-    D -->|Cross Domain| P[Two Specialists in Parallel max 2]
-
-    subgraph Specialists
-        L[LIFE]
-        J[JOB]
-        W[WORK]
-        E[ENGINEER]
-        PA[PARENT]
-        LE[LEARN]
-        M[MONEY]
-        B[BRO]
-        SI[SIS]
-        SE[SEARCH]
-    end
-
-    S --> L
-    S --> J
-    S --> W
-    S --> E
-    S --> PA
-    S --> LE
-    S --> M
-    S --> B
-    S --> SI
-    S --> SE
-
-    P --> L
-    P --> J
-    P --> W
-    P --> E
-    P --> PA
-    P --> LE
-    P --> M
-    P --> B
-    P --> SI
-    P --> SE
-
-    L --> R[Risk Audit]
-    J --> R
-    W --> R
-    E --> R
-    PA --> R
-    LE --> R
-    M --> R
-    B --> R
-    SI --> R
-    SE --> R
-
-    R --> F[CTRL Synthesis and Arbitration]
-    F --> O[Final Response with Routing]
-    O --> U
+    A["Base Version\nCTRL + Specialists + Memory"] --> B["v3.1\nProtocol Upgrade"]
+    B --> C["v3.2a\nWorkflow Skill Upgrade"]
+    C --> D["Substrate\nTrace / Judge / Replay / Dataset"]
 ```
 
-### 3.2 图文架构总览（Dashboard）
+### 2.2 每一轮升级做了什么
+
+| 阶段 | 保留了什么 | 新增了什么 | 解决了什么问题 |
+|---|---|---|---|
+| Base | `CTRL + 专职代理 + 基础记忆` | 多代理协作骨架 | 先把角色分工建立起来 |
+| `v3.1` | 保留原有角色体系 | `SEARCH`、分域记忆注入、置信度裁决、A2A/Session 协议、Developer Mode | 解决“路由不稳、记忆污染、检索弱、裁决不可见” |
+| `v3.2a` | 保留 `v3.1` 协议层 | workflow skills、Progressive Disclosure、Context Compression、Proactive Skill Creation | 解决“工作流重复、上下文膨胀、角色 prompt 越写越脏” |
+| Substrate | 保留上层控制协议 | trace / judge / dataset / replay / backend export | 解决“只能聊天、无法复盘、无法优化” |
+
+结论：
+
+- `v3.1` 不是替代 Base，而是把控制协议做硬。
+- `v3.2a` 不是替代 `v3.1`，而是把高频任务抽象成 workflow。
+- substrate 也不是替代上层，而是给上层提供优化闭环。
+
+---
+
+## 3. 这套设计真正有意思的地方
+
+### 3.1 从“多角色聊天”升级为“CTRL 控制平面”
+
+传统多代理系统常见问题：
+
+- 多个 Agent 都能回答，但没人负责最后裁决
+- 并行很多，看起来热闹，实际成本高且容易冲突
+- 回答出来了，但很难解释为什么这么路由、为什么这么答
+
+longClaw 的做法是：
+
+- `CTRL` 是唯一对外交付入口
+- 专职代理只做域内推理，不直接面向用户输出最终口径
+- 默认单专职，必要时最多双专职并行
+- 最后统一回到 CTRL 做仲裁和风险审计
+
+形式化地说：
+
+\[
+\text{Final Answer} = \text{CTRL}(\text{route}, \text{specialist outputs}, \text{risk audit}, \text{memory slice})
+\]
+
+这带来的直接收益是：
+
+- 稳定性更高
+- 输出口径更统一
+- 冲突更容易被发现和解释
+
+### 3.2 从“把所有东西都塞进 prompt”升级为“分域记忆注入”
+
+旧问题：长期记忆越来越长，最后所有请求都被历史噪声污染。
+
+当前设计：
+
+- `MEMORY.md` 不再是一整块文本
+- 而是按 `[SYSTEM] / [JOB] / [LEARN] / [ENGINEER] / ... / [META]` 分块
+- CTRL 按路由只注入必要片段
+
+所以：
+
+\[
+\text{Injected Memory} = \text{System} \cup \text{Relevant Domain}
+\]
+
+而不是：
+
+\[
+\text{Injected Memory} = \text{All Memory}
+\]
+
+这看起来是小改动，但对稳定性是大改动。
+
+### 3.3 从“角色能力膨胀”升级为“workflow skill”
+
+`v3.2a` 新增的重点不是更多角色，而是把高频复杂任务沉淀成 workflow skill。
+
+当前 4 个 skill：
+
+| Skill | 面向任务 | 作用 |
+|---|---|---|
+| `jd-analysis` | 岗位/JD | 提取能力模型、匹配度、短板与投递动作 |
+| `paper-deep-dive` | 论文/技术方法 | 深解方法、对比路线、压缩成面试可复述版本 |
+| `agent-review` | 协议/系统设计 | 审查规则冲突、脏设计、token 浪费 |
+| `fact-check-latest` | 最新事实核查 | 做多源交叉验证、区分确定与推断 |
+
+它们遵循一个关键设计：
+
+**Progressive Disclosure**
+
+- 会话启动时只建 skill index
+- 只有命中具体工作流时，才加载完整 `SKILL.md`
+- 用完就退出，不长期占上下文预算
+
+这比把所有流程都写进角色 prompt 更工程化，也更节省 token。
+
+### 3.4 从“聊天日志”升级为“训练可回放资产”
+
+最容易被低估的一点，是 `openclaw_substrate/`。
+
+我没有把它设计成一个“展示层目录”，而是设计成后续优化闭环的基础设施：
+
+- `gateway`: 统一入口
+- `trace_plane`: 记录 canonical trace
+- `judge_plane`: 规则评价 / 奖励信号
+- `dataset_builder`: 构建可训练数据
+- `shadow_eval`: baseline vs candidate 回放对比
+- `backends/*`: 本地 MLX-LM 与 LLaMA-Factory 导出路径
+
+也就是说，longClaw 的目标不是只会“回答得像个聪明助手”，而是最终可以：
+
+\[
+\text{Interaction} \rightarrow \text{Trace} \rightarrow \text{Judge} \rightarrow \text{Dataset} \rightarrow \text{Replay / Optimize}
+\]
+
+---
+
+## 4. 当前系统长什么样
+
+### 4.1 主架构图
 
 ![longClaw 多代理控制系统架构图](docs/architecture-dashboard-zh-v5.png)
 
-说明：上图用于快速理解控制台视角下的结构关系；下方 Mermaid 时序图用于表达请求级执行路径。
+这张图保留了历史设计图，因为它仍然准确表达了系统的控制台视角。
 
-### 3.3 请求执行时序
+### 4.2 当前五层结构
+
+```mermaid
+flowchart TD
+    U["User"] --> C["CTRL Control Plane"]
+
+    C --> P["Persona & Safety\nAGENTS.md / SOUL.md"]
+    C --> M["Memory Plane\nUSER.md / MEMORY.md / memory/YYYY-MM-DD.md"]
+    C --> R["Routing Plane\nMULTI_AGENTS.md"]
+    C --> W["Workflow Plane\nskills/*/SKILL.md"]
+    C --> T["Training Plane\nopenclaw_substrate/*"]
+
+    R --> S1["LIFE / JOB / WORK / ENGINEER / PARENT"]
+    R --> S2["LEARN / MONEY / BRO / SIS / SEARCH"]
+
+    W --> K1["jd-analysis"]
+    W --> K2["paper-deep-dive"]
+    W --> K3["agent-review"]
+    W --> K4["fact-check-latest"]
+```
+
+### 4.3 请求是怎么流动的
 
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant S as System
-    participant C as CTRL/LeadResearcher
-    participant A as Specialist A
-    participant B as Specialist B
+    participant C as CTRL
     participant M as Memory
-    participant Q as CitationAgent
+    participant R as Router
+    participant K as Skill Loader
+    participant S as Specialist
+    participant A as Audit
 
-    U->>S: 提交请求
-    S->>C: 创建会话并交给 CTRL
-    C->>M: 读取 USER/MEMORY/当日记忆
-    M-->>C: 返回偏好与上下文
-
-    loop 迭代研究流程（plan -> execute -> evaluate）
-        C->>C: think(plan approach)
-        C->>M: 保存阶段计划（save plan）
-        C->>M: 检索上下文（retrieve context）
-        par 并行创建子任务
-            C->>A: create subagent for aspect A
-            and
-            C->>B: create subagent for aspect B
-        end
-        A->>A: web_search + think(evaluate)
-        B->>B: web_search + think(evaluate)
-        A-->>C: complete_task A
-        B-->>C: complete_task B
-        C->>C: think(synthesize results) + Risk Audit
-        alt 需要更多研究
-            C->>C: Continue loop
-        else 信息充分
-            C->>C: Exit loop
-        end
-    end
-
-    C-->>S: complete_task（research result）
-    S->>Q: 处理文档与研究结果，定位引用位置
-    Q-->>S: 返回插入引用后的报告
-    S->>M: Persist results
-    S-->>U: 返回结果（含 citations + Routing）
+    U->>C: 请求
+    C->>M: 读取必要记忆切片
+    C->>R: 决定单专职 / 双专职 / SEARCH 先行
+    R-->>C: route result
+    C->>K: 如命中 workflow，则按需加载 skill
+    K-->>C: skill or none
+    C->>S: 分派任务
+    S-->>C: 结构化结果 + 置信度
+    C->>A: 高影响任务触发风险审计
+    A-->>C: 风险与裁决约束
+    C-->>U: 最终统一输出 + Routing
 ```
 
 ---
 
-## 4. 10 个专职代理
+## 5. 为什么这种设计对真实场景更有价值
 
-| 代理 | 领域 | 性格 | 核心输出 |
-|------|------|------|----------|
-| `LIFE` | 生活助理 | 务实、细致 | 最省力方案 + 执行顺序 |
-| `JOB` | 求职助手 | 目标导向 | 匹配度判断 + 本周动作 |
-| `WORK` | 职场顾问 | 冷静、策略型 | 利弊分析 + 话术建议 |
-| `ENGINEER` | 工程顾问 | 严谨、务实 | 先结论后方案，强调可实现性 |
-| `PARENT` | 育儿顾问 | 温和、稳定 | 小步可执行 + 就医红线 |
-| `LEARN` | 学习教练 | 结构化、耐心 | 目标拆解 → 练习路径 → 复盘闭环 |
-| `MONEY` | 理财顾问 | 保守理性 | 现金流与回撤控制优先 |
-| `BRO` | 闲聊哥们 | 直接、幽默 | 人话直给，戳破借口 |
-| `SIS` | 姐妹视角 | 敏锐、共情 | 沟通细节与关系动态分析 |
-| `SEARCH` | 信息检索助手 | 客观、信息密度高 | 核心结论 + 来源列表 + 时效说明 |
+### 5.1 稳定性
 
-CTRL 不是专职代理，是总控——负责拆解、仲裁、合并与优先级排序，是唯一对外输出的出口。
+- 默认单专职，避免无意义并行
+- CTRL 统一输出，避免多口径冲突
+- 分域记忆注入，降低历史噪声污染
 
----
+### 5.2 可解释性
 
-## 5. 核心设计原则
+- 每次响应都带 Routing
+- 冲突裁决有明确协议
+- 最新事实核查强调“确定 / 推断 / 缺失”
 
-- **CTRL 唯一对外交付**：专职负责推理，最终由 CTRL 汇总输出
-- **默认单专职，必要时并行**：仅在跨域或明显盲区场景启用双专职并行（上限 2 个）
-- **风险优先于花哨表达**：涉及资金/职业/关系等高影响问题时强制 Risk Audit
-- **可追踪、可复盘**：路由路径、裁决逻辑与关键决策应可回溯
-- **文件即记忆**：所有重要上下文落盘，不依赖模型上下文窗口
+### 5.3 成本控制
 
----
+- Skill 按需加载，而不是全量加载
+- 长对话支持 compression / archival 规则
+- 不靠“更长上下文”粗暴解决复杂度
 
-## 6. 路由协议（对外可见）
+### 5.4 可优化性
 
-每次响应需包含路由信息：
-
-- 单专职：`Routing: User -> CTRL -> [JOB] -> CTRL -> User`
-- 双并行：`Routing: User -> CTRL -> ([PARENT] || [LIFE]) -> CTRL -> User`
-
-角色标签固定为：`LIFE/JOB/WORK/ENGINEER/PARENT/LEARN/MONEY/BRO/SIS/SEARCH`。
+- 交互可沉淀为 trace
+- 路由错误、重试率、回退率都可以被观测
+- 后续可以做 replay、shadow eval、adapter 迭代
 
 ---
 
-## 6.1 v3.2a 工作流技能与上下文协议
+## 6. 当前最值得讲给面试官的点
 
-v3.2a 在原有角色路由之外，引入了 4 个高频 workflow skill：
+如果只讲 4 个点，我建议讲这 4 个：
 
-| Skill | 路径 | 用途 |
-|------|------|------|
-| `jd-analysis` | `skills/job/jd-analysis/` | 拆 JD、评估匹配度、生成投递动作 |
-| `paper-deep-dive` | `skills/learn/paper-deep-dive/` | 论文深度解读与面试压缩 |
-| `agent-review` | `skills/engineer/agent-review/` | 审查 workspace 规则冲突与 token 浪费 |
-| `fact-check-latest` | `skills/search/fact-check-latest/` | 最新信息核查、多源交叉验证、时效标注 |
+1. **CTRL 控制平面**
+   - 我不是做了多个角色，而是把“路由、仲裁、风险控制”独立成控制平面。
 
-这些 skill 遵循 **Progressive Disclosure**：
+2. **分域记忆注入**
+   - 我没有让系统盲目记更多，而是让记忆可切片、可控、可解释。
 
-- 会话启动时只建立 skill index（`name + description`）
-- 只有命中对应工作流时，CTRL 才读取完整 `SKILL.md`
-- skill 属于工作流，不等于角色；角色定义仍以 `MULTI_AGENTS.md` 为准
+3. **workflow skill 机制**
+   - 我把高频任务从“角色 prompt 膨胀”里拆出来，变成按需加载的流程资产。
 
-v3.2a 还新增了两类 workspace 协议：
+4. **trace-first substrate**
+   - 我不是停留在 prompt engineering，而是给系统留了 replay / judge / dataset 的优化路径。
 
-- **Context Compression（双层）**：Layer A 用于 token 压力下的静默摘要；Layer B 用于话题归档与长期记忆写入
-- **Proactive Skill Creation**：检测重复工作流后主动提议创建 skill，但不会自动写入，必须用户确认
-
-注意：以上能力目前主要是 workspace 协议层约定，不代表 `openclaw_substrate/` 已经内建对应 runtime loader / compressor / skill manager。
+这 4 点组合起来，才构成 longClaw 的创新闭环。
 
 ---
 
-## 7. 仓库结构
+## 7. 你可以怎么现场演示
+
+### 7.1 演示一：路由与裁决
 
 ```text
-.
-|-- AGENTS.md          ← 全局行为与安全约束（最高优先级）
-|-- bootstrap_longclaw_m4.sh ← Mac mini M4 本机 bootstrap（Node 20 pin + CLI 工具链）
-|-- SOUL.md            ← 助手人格契约
-|-- USER.md            ← 用户画像与偏好
-|-- MEMORY.md          ← 长期记忆（蒸馏版）
-|-- HEARTBEAT.md       ← 心跳巡检任务清单
-|-- MULTI_AGENTS.md    ← 路由协议与专职代理配置
-|-- skills/            ← workflow skills（v3.2a）
-|   |-- job/jd-analysis/
-|   |-- learn/paper-deep-dive/
-|   |-- engineer/agent-review/
-|   `-- search/fact-check-latest/
-|-- multi-agent/
-|   |-- README.md
-|   |-- ARCHITECTURE.md
-|   |-- UNIFIED_SYNC_2026-03-22.md
-|-- openclaw_substrate/ ← 本地训练底座（Gateway/Trace/Judge/Dataset/Backends）
-|   |-- cli.py
-|   |-- gateway.py
-|   |-- trace_plane.py
-|   |-- judge_plane.py
-|   `-- backends/
-|-- memory/            ← 每日记忆日志（memory/YYYY-MM-DD.md）
-|-- TOOLS.md
-|-- docs/
-|   |-- architecture-dashboard-zh-v5.png
-|   `-- substrate/     ← 训练底座设计与工作流文档
-|-- README.en.md
-`-- README.md
+开启 dev mode。
+从 ENGINEER 和 JOB 两个视角同时看：这个技术项目应该怎么讲进简历？
+要求：给出各自置信度，最后由 CTRL 仲裁。
 ```
+
+这能演示：
+
+- 路由可见
+- 双专职并行是克制触发，不是默认乱并发
+- CTRL 不是摆设，而是真正负责统一结论
+
+### 7.2 演示二：workflow skill
+
+```text
+按 jd-analysis 工作流处理这个岗位。
+输出：能力模型、匹配度、主要短板、投递建议。
+```
+
+这能演示：
+
+- 角色负责领域
+- skill 负责流程
+- 输出结构明显比普通聊天稳定
+
+### 7.3 演示三：最新事实核查
+
+```text
+按 fact-check-latest 工作流，核查最近 30 天 Agent + OR 岗位趋势。
+要求区分 [确定]/[推断]/[缺失]。
+```
+
+这能演示：
+
+- `SEARCH` 角色存在意义
+- 对“最新信息”不装懂
+- 信息完整性与不确定性被显式表达
 
 ---
 
-## 8. 本地训练底座（Apple Silicon / Local-first）
+## 8. 相关代码与文档入口
 
-以下流程可在 Mac mini M4 16GB 本地执行：
+### 8.1 核心协议文件
 
-1. 启动本地 MLX-LM Serving（命令模板）：
+- [AGENTS.md](AGENTS.md)
+- [MULTI_AGENTS.md](MULTI_AGENTS.md)
+- [SOUL.md](SOUL.md)
+- [USER.md](USER.md)
+- [MEMORY.md](MEMORY.md)
 
-```bash
-python3 -m openclaw_substrate.cli mlx-serve \
-  --config openclaw_substrate/configs/local.example.json \
-  --dry-run
-```
+### 8.2 当前 workflow skill
 
-2. 启动 OpenAI 兼容 Gateway：
+- [skills/job/jd-analysis/SKILL.md](skills/job/jd-analysis/SKILL.md)
+- [skills/learn/paper-deep-dive/SKILL.md](skills/learn/paper-deep-dive/SKILL.md)
+- [skills/engineer/agent-review/SKILL.md](skills/engineer/agent-review/SKILL.md)
+- [skills/search/fact-check-latest/SKILL.md](skills/search/fact-check-latest/SKILL.md)
 
-```bash
-python3 -m openclaw_substrate.cli gateway-serve \
-  --config openclaw_substrate/configs/local.example.json
-```
+### 8.3 本地训练底座
 
-3. 生成训练数据与评估：
+- [openclaw_substrate/gateway.py](openclaw_substrate/gateway.py)
+- [openclaw_substrate/trace_plane.py](openclaw_substrate/trace_plane.py)
+- [openclaw_substrate/judge_plane.py](openclaw_substrate/judge_plane.py)
+- [openclaw_substrate/dataset_builder.py](openclaw_substrate/dataset_builder.py)
+- [openclaw_substrate/shadow_eval.py](openclaw_substrate/shadow_eval.py)
+- [openclaw_substrate/cli.py](openclaw_substrate/cli.py)
 
-```bash
-python3 -m openclaw_substrate.cli judge-run --config openclaw_substrate/configs/local.example.json
-python3 -m openclaw_substrate.cli dataset-build --config openclaw_substrate/configs/local.example.json --dataset-name openclaw_demo
-python3 -m openclaw_substrate.cli shadow-eval --baseline artifacts/traces/rewarded_baseline.jsonl --candidate artifacts/traces/rewarded_candidate.jsonl --out artifacts/replay/shadow_report.json
-```
+### 8.4 历史页面与设计资料
 
-4. 生成后端训练产物：
+这些内容继续保留，因为它们是演化过程的一部分，而不是废弃物：
 
-```bash
-# Local backend: MLX-LM
-python3 -m openclaw_substrate.cli backend-train-adapter \
-  --config openclaw_substrate/configs/local.example.json \
-  --backend mlx-lm \
-  --dataset-name openclaw_demo_sft \
-  --dataset-path artifacts/mlx/openclaw_demo_sft.jsonl \
-  --out-dir artifacts/mlx \
-  --run-name run_local_mlx
-
-# Scale-up backend export: LLaMA-Factory
-python3 -m openclaw_substrate.cli backend-train-adapter \
-  --config openclaw_substrate/configs/local.example.json \
-  --backend llamafactory \
-  --dataset-name openclaw_demo_llf \
-  --dataset-path artifacts/llamafactory/openclaw_demo_llf.jsonl \
-  --out-dir artifacts/llamafactory \
-  --run-name run_export_ready
-```
-
-详细文档见 `docs/substrate/`：
-
-- `architecture.md`
-- `local_mlx_workflow.md`
-- `llamafactory_export_workflow.md`
-- `trace_schema.md`
-- `reward_design.md`
-- `adapter_registry.md`
+- [multi-agent/README.md](multi-agent/README.md)
+- [multi-agent/ARCHITECTURE.md](multi-agent/ARCHITECTURE.md)
+- [multi-agent/PROFILE_CONTRACT.md](multi-agent/PROFILE_CONTRACT.md)
+- [multi-agent/LEARNING_GUIDE_FOR_JINGLONG.md](multi-agent/LEARNING_GUIDE_FOR_JINGLONG.md)
+- [multi-agent/UNIFIED_SYNC_2026-03-22.md](multi-agent/UNIFIED_SYNC_2026-03-22.md)
+- [multi-agent/UNIFIED_SYNC_2026-03-25.md](multi-agent/UNIFIED_SYNC_2026-03-25.md)
+- [docs/openclaw-iteration-plan-v1.md](docs/openclaw-iteration-plan-v1.md)
+- [docs/openclaw-面试讲解提纲_2026-03-25.md](docs/openclaw-面试讲解提纲_2026-03-25.md)
+- [docs/hidden-training-agents-v0.1.md](docs/hidden-training-agents-v0.1.md)
+- 历史 NoCode 控制台页面：[longClaw 多代理控制台](https://control-system-panel.mynocode.host/#/longclaw)
 
 ---
 
-## 9. NoCode 在线控制台（可视化预览）
+## 9. 当前边界
 
-基于美团 NoCode 平台构建的可视化控制台，无需本地部署，直接在浏览器中查看当前运行架构、实时任务队列与路由日志。
+必须说清楚的事实：
 
-🔗 **在线访问**：[longClaw 多代理控制台](https://control-system-panel.mynocode.host/#/longclaw)
-
-控制台包含五个核心面板：
-
-- **左栏 — 代理架构拓扑图**：SVG 可视化展示 User → CTRL → 专职代理的完整路由拓扑，含 Policy、Protocol、Preference+Memory、Memory 等核心节点
-- **右栏上 — 实时任务队列**：当前活跃任务列表，含任务标签（JOB / PARENT+LIFE / WORK）与状态
-- **右栏中 — 系统观测态**：路由延迟、误导率、变更状态、并行上限等关键指标实时展示
-- **右栏下 — 运行日志流**：最近决策的 SINGLE / PARALLEL / DECISION 路由记录
-- **底部 — 控制台说明**：CTRL 契约定义，包含路由规则、并行约束与代理职责说明
-
-![longClaw NoCode 控制台效果图](docs/architecture-dashboard-zh-v5.png)
+1. `v3.2a` 目前首先是 workspace-level 协议，不是完整 runtime 自动装载器。
+2. `SEARCH` 的最新事实核查能力，仍受外部检索配置影响。
+3. substrate 已经定义了优化闭环，但仍处于早期联动阶段。
+4. 这套系统最强的部分是“控制设计”，不是“底层模型花样”。
 
 ---
 
-## 10. 参考文档
+## 10. 面试里最该落的判断
 
-- 架构说明：`multi-agent/ARCHITECTURE.md`
-- 全体同步记录：`multi-agent/UNIFIED_SYNC_2026-03-22.md`
-- 隐藏训练层设计文档：`docs/hidden-training-agents-v0.1.md`
-- 本地训练底座架构：`docs/substrate/architecture.md`
-- 本地 MLX 工作流：`docs/substrate/local_mlx_workflow.md`
-- LLaMA-Factory 导出工作流：`docs/substrate/llamafactory_export_workflow.md`
-- 英文文档：`README.en.md`
+如果让我用一句最硬的话收尾：
 
----
+> 我做的不是一个会分角色聊天的 Demo，而是一个把控制、记忆、流程和优化闭环拆清楚的个人 AI Runtime。
 
-## 11. 隐藏训练层（v0.1）
-
-### 11.1 轨迹数据位置
-
-- 运行时结构化事件（默认 JSONL）：`artifacts/traces/raw_traces.jsonl`
-- 奖励输出：`artifacts/rewards/reward_log.jsonl`
-- replay / 对比报告输出：`artifacts/replay/shadow_report.json`
-
-### 11.2 一次本地训练优化回放
-
-```bash
-python3 -m openclaw_substrate.cli shadow-eval \
-  --baseline artifacts/traces/rewarded_baseline.jsonl \
-  --candidate artifacts/traces/rewarded_candidate.jsonl \
-  --out artifacts/replay/shadow_report.json
-```
-
-说明：回放会输出 baseline/candidate 的核心指标差异（wrong-route / retry / correction / tool-success / sample-yield），用于 adapter 上线前闸门。
-
----
-
-## 12. 说明
-
-- 这是持续演进中的个人工作区，文档和状态文件会频繁更新
-- 若要用于团队/生产，请补充鉴权、审计留存、故障回滚与 SLA 约束
+这也是 longClaw 最有意思的地方。
