@@ -4,6 +4,7 @@ import argparse
 import json
 import re
 import subprocess
+import urllib.request
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -92,19 +93,52 @@ def fts(query: str, entries: list[dict], top_k: int = 20) -> list[tuple[dict, fl
     return sorted(scored, key=lambda x: -x[1])[:top_k]
 
 
-def embed(text: str, model: str = "nomic-embed-text") -> Optional[list[float]]:
+def embed(text: str, model: str = "nomic-embed-text", debug: bool = False) -> Optional[list[float]]:
+    # 新版优先：/api/embed + input
     try:
-        r = subprocess.run(
-            ["ollama", "embed", model, "--input", text[:512]],
-            capture_output=True,
-            text=True,
-            timeout=15,
+        payload = json.dumps({"model": model, "input": text[:512]}).encode("utf-8")
+        req = urllib.request.Request(
+            "http://127.0.0.1:11434/api/embed",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
         )
-        if r.returncode != 0:
-            return None
-        return json.loads(r.stdout)["embeddings"][0]
-    except Exception:
-        return None
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        vec = data.get("embedding")
+        if not vec and "embeddings" in data and data["embeddings"]:
+            vec = data["embeddings"][0]
+        if vec:
+            if debug:
+                print(f" [embed] /api/embed ok len={len(vec)}")
+            return vec
+    except Exception as e:
+        if debug:
+            print(f" [embed] /api/embed failed: {e}")
+
+    # 旧版兼容：/api/embeddings + prompt
+    try:
+        payload = json.dumps({"model": model, "prompt": text[:512]}).encode("utf-8")
+        req = urllib.request.Request(
+            "http://127.0.0.1:11434/api/embeddings",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        vec = data.get("embedding")
+        if not vec and "embeddings" in data and data["embeddings"]:
+            vec = data["embeddings"][0]
+        if vec:
+            if debug:
+                print(f" [embed] /api/embeddings ok len={len(vec)}")
+            return vec
+    except Exception as e:
+        if debug:
+            print(f" [embed] /api/embeddings failed: {e}")
+
+    return None
 
 
 def cosine(a: list[float], b: list[float]) -> float:
@@ -132,25 +166,24 @@ def rrf(fts_list: list[dict], sem_list: list[dict], k: int = 60) -> list[tuple[d
 
 
 def search(query: str, domain: Optional[str] = None, top_k: int = 5, hybrid: bool = False,
-           entries_path: Path = DEFAULT_ENTRIES, verbose: bool = False) -> list[Hit]:
+           entries_path: Path = DEFAULT_ENTRIES, verbose: bool = False, debug_embed: bool = False) -> list[Hit]:
     all_entries = load(entries_path)
     if not all_entries:
         print(f"[WARN] {entries_path} 不存在或为空，请先运行: python3 tools/memory_entry.py")
         return []
 
-    hits: list[Hit] = []
-    seen: set[str] = set()
+    # 收集所有 level 的候选，最后统一按分数排序
+    # level 作为 tiebreaker：同分时 level 小的（更精确的 scope）优先
+    candidates: dict[str, Hit] = {}
 
     for level in [2, 3, 4]:
-        if level == 4 and len(hits) >= 2:
-            break
-        pool = [e for e in scope(all_entries, domain, level) if e["id"] not in seen]
+        pool = [e for e in scope(all_entries, domain, level) if e["id"] not in candidates]
         if not pool:
             continue
 
         fts_map: dict[str, tuple[dict, float]] = {}
         for q in rewrite(query, domain):
-            for e, s in fts(q, pool, top_k=top_k * 3):
+            for e, s in fts(q, pool, top_k=top_k * 4):
                 if e["id"] not in fts_map or s > fts_map[e["id"]][1]:
                     fts_map[e["id"]] = (e, s)
 
@@ -161,28 +194,33 @@ def search(query: str, domain: Optional[str] = None, top_k: int = 5, hybrid: boo
             continue
 
         if hybrid:
-            qvec = embed(query)
+            qvec = embed(query, debug=debug_embed)
             if qvec:
-                sem_ranked = []
-                for e, _ in fts_ranked[: top_k * 2]:
-                    ev = embed(e.get("text", ""))
-                    sem_ranked.append((e, cosine(qvec, ev or [])))
-                sem_ranked.sort(key=lambda x: -x[1])
+                sem_ranked = sorted(
+                    [(e, cosine(qvec, embed(e["text"], debug=debug_embed) or [])) for e, _ in fts_ranked[:top_k * 2]],
+                    key=lambda x: -x[1]
+                )
                 fused = rrf([e for e, _ in fts_ranked], [e for e, _ in sem_ranked])
-                for e, s, modes in fused[:top_k]:
-                    if e["id"] not in seen:
-                        hits.append(Hit(e["id"], e["source"], e["domain"], e["created_at"],
-                                        e["text"], e.get("entities", []), s, level, modes))
-                        seen.add(e["id"])
+                for e, s, modes in fused:
+                    if e["id"] not in candidates:
+                        candidates[e["id"]] = Hit(
+                            e["id"], e["source"], e["domain"], e["created_at"],
+                            e["text"], e.get("entities", []), s, level, modes)
                 continue
+            elif verbose:
+                print(" [hybrid] embedding unavailable, fallback to fts")
 
-        for e, s in fts_ranked[:top_k]:
-            if e["id"] not in seen:
-                hits.append(Hit(e["id"], e["source"], e["domain"], e["created_at"],
-                                e["text"], e.get("entities", []), s, level, ["fts"]))
-                seen.add(e["id"])
+        for e, s in fts_ranked:
+            if e["id"] not in candidates:
+                candidates[e["id"]] = Hit(
+                    e["id"], e["source"], e["domain"], e["created_at"],
+                    e["text"], e.get("entities", []), s, level, ["fts"])
 
-    return hits[:top_k]
+        if level == 3 and len(candidates) >= 2:
+            break
+
+    sorted_hits = sorted(candidates.values(), key=lambda h: (-h.score, h.level))
+    return sorted_hits[:top_k]
 
 
 def main() -> None:
@@ -193,6 +231,7 @@ def main() -> None:
     p.add_argument("--hybrid", action="store_true")
     p.add_argument("--entries", type=Path, default=DEFAULT_ENTRIES)
     p.add_argument("--verbose", action="store_true")
+    p.add_argument("--debug-embed", action="store_true")
     args = p.parse_args()
 
     print("\n=== Memory 检索 ===")
@@ -200,7 +239,7 @@ def main() -> None:
     print(f"Domain: {args.domain or '(全域)'}")
     print(f"Mode: {'hybrid' if args.hybrid else 'fts-only'}\n")
 
-    hits = search(args.query, args.domain, args.top_k, args.hybrid, args.entries, args.verbose)
+    hits = search(args.query, args.domain, args.top_k, args.hybrid, args.entries, args.verbose, args.debug_embed)
     if not hits:
         print("(无结果)")
         return

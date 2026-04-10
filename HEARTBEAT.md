@@ -36,6 +36,14 @@ Heartbeat may still perform internal work, including:
 
 These actions must remain silent unless a critical emergency exists.
 
+### Scheduled Weekly Maintenance (Sunday Night)
+
+- Every Sunday night, run weekly memory distillation:
+  1) read important facts from this week's `memory/*.md`
+  2) distill and write them into the matching domain blocks in `MEMORY.md`
+  3) rebuild retrieval index via `python3 tools/memory_entry.py --rebuild`
+- This is an internal maintenance task and remains silent by default (no outbound message unless critical emergency).
+
 ---
 
 ## What Counts as a Critical Emergency
