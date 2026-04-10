@@ -2,29 +2,68 @@
 
 语言 / Language: **简体中文** | [English](README.en.md)
 
-longClaw 是一个基于 [OpenClaw](https://openclaw.ai) 深度改造的个人 AI 操作系统。它的价值不在于"堆更多 Agent"，而在于把 Agent 从一次性对话，升级成一个**可路由、可记忆、可审计、可迭代优化**的工作系统。
+> 基于 [OpenClaw](https://github.com/openclaw/openclaw) 深度改造的个人 AI 操作系统——
+> 把单个 AI 助手升级为**可扩展的多专家协作运行时**，
+> 带工业级记忆检索、会话管理和完整的开发者可观测性。
 
-|          |                                                                                          |
-| -------- | ---------------------------------------------------------------------------------------- |
-| **基于**   | [OpenClaw](https://openclaw.ai)（Peter Steinberger，MIT 开源）                                |
+---
+
+## 你可以用它做什么
+
+**🧩 搭建可扩展的多代理系统**
+定义任意数量的专职代理（JOB / WORK / LEARN / ENGINEER / ...），通过 CTRL 控制平面统一路由和仲裁。每个代理只处理自己域内的任务，CTRL 负责最终裁决和输出——不会出现多个代理同时给出矛盾答案的情况。
+
+**🧠 多层工业级记忆存储与检索**
+内置三层记忆体系：每日日志（短期）、分域长期记忆（MEMORY.md 按 [DOMAIN] 分块）、结构化 JSONL 条目索引（持久化）。检索时先按路由域收敛范围，再做 FTS + Embedding Rerank（Ollama 本地推理），精准召回相关记忆，不被跨域噪声污染。
+
+**🔄 智能会话管理与上下文压缩**
+内置两层压缩策略：token 压力驱动的自动压缩（保护首尾关键消息、清理孤立工具对），以及话题边界触发的归档（结论写入长期记忆）。长对话不再因上下文溢出而丢失关键信息。
+
+**🔍 一键开启 Developer Mode，后台过程完全可见**
+
+在对话中说 **"开启 dev mode"** 即可，每次回复末尾自动附加运行日志：
+
+```
+[DEV LOG]
+🔀 路由     JOB | 触发: "offer、面试" | 模式: 单专职
+🧠 Memory   [SYSTEM]+[JOB] | ~380 tokens | 节省 72%
+📂 Session  第 5 轮 | recent_turns=5/8 | 未触发压缩
+🔍 检索     scope=JOB | level=同域归档 | 召回 3 条 | top=[0.91, 0.78, 0.62]
+⚖️ 置信度   0.88 [依据: 数据+经验] | 冲突: 无
+🤝 A2A      JOB → PARENT 时间冲突协调 | confidence=0.85 | needs_ctrl=false
+🏷️ 实体     检测到新实体: Shopee=进行中（2026-04-10）→ 已更新 [JOB]
+```
+
+可观测的内容包括：**路由决策 · 记忆注入量 · 会话压缩状态 · 检索召回详情 · 专家置信度 · A2A 多代理通信 · 冲突裁决过程 · 实体更新记录**
+
+**⚡ Workflow Skill 按需加载**
+把高频复杂任务（JD 分析、论文解读、配置审查、事实核查）固化为独立 SKILL.md，会话启动时只建索引，命中时才加载全文，执行完即退出——不长期占用上下文预算。
+
+**📊 本地训练底座（Local-first）**
+真实交互可沉淀为训练资产：Trace 收集 → Judge 评分 → Dataset 构建 → MLX / LLaMA-Factory 本地训练，全流程在 Mac mini M4 上运行，无需上传数据到云端。
+
+---
+
+| | |
+|---|---|
+| **基于** | [OpenClaw](https://github.com/openclaw/openclaw)（Peter Steinberger，MIT 开源，353k ⭐） |
 | **部分借鉴** | [Hermes Agent](https://github.com/NousResearch/hermes-agent)（Nous Research，MIT 开源，40k ⭐） |
-| **运行环境** | Mac mini M4（24/7 本地），WhatsApp / Telegram / Discord 交互                                    |
-| **核心差异** | 在 OpenClaw 执行层之上，增加了多专家仲裁、分域记忆、向量化检索、训练底座四层能力                                            |
+| **运行环境** | Mac mini M4（24/7 本地），WhatsApp / Telegram / Discord 交互 |
+| **核心扩展** | 在 OpenClaw 执行层之上，增加了多专家仲裁、分域记忆、向量化检索、训练底座四层能力 |
 
 ---
 
 ## 目录
 
 1. [三系统定位对比](#1-三系统定位对比)
-2. [演化路线](#2-演化路线不是替代是升级)
-3. [核心设计](#3-核心设计)
-4. [当前系统架构](#4-当前系统架构)
-5. [Memory 检索系统](#5-memory-检索系统)
-6. [Workflow Skills](#6-workflow-skills)
-7. [演示](#7-演示)
-8. [文件索引](#8-文件索引)
-9. [当前边界](#9-当前边界)
-10. [设计借鉴说明](#10-设计借鉴说明)
+2. [核心设计](#2-核心设计)
+3. [当前系统架构](#3-当前系统架构)
+4. [Memory 检索系统](#4-memory-检索系统)
+5. [Workflow Skills](#5-workflow-skills)
+6. [演示](#6-演示)
+7. [文件索引](#7-文件索引)
+8. [当前边界](#8-当前边界)
+9. [设计借鉴说明](#9-设计借鉴说明)
 
 ---
 
@@ -84,37 +123,9 @@ longClaw（本仓库）：
 
 ---
 
-## 2. 演化路线：不是替代，是升级
+## 2. 核心设计
 
-### 2.1 版本演化图
-
-```mermaid
-flowchart LR
-    A["OpenClaw Base\nCTRL + Specialists + Memory"] --> B["v3.1\nProtocol Upgrade"]
-    B --> C["v3.2a\nWorkflow Skill Upgrade"]
-    C --> D["Memory Retrieval v1\nFTS + Hybrid Embedding"]
-    D --> E["Substrate\nTrace / Judge / Replay / Dataset"]
-```
-
-### 2.2 每一轮升级做了什么
-
-| 阶段                      | 新增了什么                                                                               | 解决了什么问题                    |
-| ----------------------- | ----------------------------------------------------------------------------------- | -------------------------- |
-| **OpenClaw Base**       | CTRL + 专职代理 + 基础记忆                                                                  | 建立多代理协作骨架                  |
-| **v3.1**                | SEARCH 专家、分域记忆注入、置信度裁决、A2A 协议、Session 管理、Developer Mode                             | 路由不稳、记忆全量污染、裁决不可见          |
-| **v3.2a** ¹             | workflow skills、Progressive Disclosure、Context Compression、Proactive Skill Creation | 工作流重复、上下文膨胀、角色 prompt 越写越脏 |
-| **Memory Retrieval v1** | route-aware scope、Query Rewrite、FTS 全局重排、Hybrid Embedding（Ollama）                   | 全局检索噪声大、词面不重叠就召回为空         |
-| **Substrate**           | trace / judge / dataset / replay / backend export                                   | 只能聊天、无法复盘、无法优化             |
-
-> ¹ `v3.2a` 的 workflow skill 格式、Progressive Disclosure、Context Compression 部分借鉴自
-> **[Hermes Agent](https://github.com/NousResearch/hermes-agent)**。
-> 详见 [§ 设计借鉴说明](#10-设计借鉴说明)。
-
----
-
-## 3. 核心设计
-
-### 3.1 CTRL 控制平面
+### 2.1 CTRL 控制平面
 
 传统多代理系统的问题：多个 Agent 都能回答，但没人负责最后裁决；并行多但冲突难以解释；路由决策不可见。
 
@@ -129,7 +140,7 @@ $$\text{Final Answer} = \text{CTRL}(\text{route},\ \text{specialist outputs},\ \
 
 **与官方 OpenClaw / Hermes 的差异**：两者均为单 Agent 范式，没有专家仲裁层。longClaw 的多专家仲裁是三系统中独有的。
 
-### 3.2 分域记忆注入
+### 2.2 分域记忆注入
 
 `MEMORY.md` 按 `[SYSTEM] / [JOB] / [LEARN] / [ENGINEER] / ... / [META]` 分块，CTRL 按路由只注入必要片段：
 
@@ -139,7 +150,7 @@ $$\text{Injected Memory} = \text{[SYSTEM]} \cup \text{[Relevant Domain]}$$
 
 **与官方 OpenClaw / Hermes 的差异**：官方 OpenClaw 全量注入 MEMORY.md；Hermes 的 FTS 检索是全局范围。longClaw 在注入前先按路由域过滤，是三系统中唯一做到分域注入的。
 
-### 3.3 Workflow Skill（借鉴 Hermes，有所调整）
+### 2.3 Workflow Skill（借鉴 Hermes，有所调整）
 
 把高频复杂任务沉淀为 workflow skill，遵循 **Progressive Disclosure**¹ 原则：
 
@@ -161,7 +172,7 @@ $$\text{Injected Memory} = \text{[SYSTEM]} \cup \text{[Relevant Domain]}$$
 
 **与官方 OpenClaw 的差异**：官方 OpenClaw 的 Agent 可以自动写 SKILL.md（真正的自我进化）；longClaw 目前是提议系统，用户确认后才写入。
 
-### 3.4 route-aware Memory 检索
+### 2.4 route-aware Memory 检索
 
 OpenClaw 原生 `memory_search` 是 FTS-only，词面不重叠就返回空结果。longClaw 在此基础上增加了两层：
 
@@ -181,7 +192,7 @@ $$S(q,d) = S_{\text{fts}} + 0.4 \cdot N_{\text{entity}} + 0.05 \cdot \text{imp}(
 
 **与 Hermes 的差异**：Hermes 的 FTS 是全库统一检索；longClaw 先按路由域收敛范围，再做 FTS + embedding rerank，解决了"更聪明地召回不该召回的东西"的问题。
 
-### 3.5 本地训练底座（openclaw_substrate）
+### 2.5 本地训练底座（openclaw_substrate）
 
 longClaw 独有，官方 OpenClaw 和 Hermes 均无此能力：
 
@@ -195,13 +206,13 @@ $$\text{Interaction} \rightarrow \text{Trace} \rightarrow \text{Judge} \rightarr
 
 ---
 
-## 4. 当前系统架构（含 Memory 检索层）
+## 3. 当前系统架构
 
-### 4.1 主架构图
+### 3.1 主架构图
 
 ![longClaw 多代理控制系统架构图](docs/architecture-dashboard-zh-v5.png)
 
-### 4.2 当前六层结构
+### 3.2 当前六层结构
 
 ```mermaid
 flowchart TD
@@ -227,7 +238,7 @@ flowchart TD
     RET --> RE3["Ollama nomic-embed-text（可选）"]
 ```
 
-### 4.3 请求流动时序
+### 3.3 请求流动时序
 
 ```mermaid
 sequenceDiagram
@@ -257,7 +268,7 @@ sequenceDiagram
 
 ---
 
-## 5. Memory 检索系统
+## 4. Memory 检索系统
 
 > 2026-04-10 新增，独立于 `openclaw_substrate`，放在 `tools/` 目录，无外部依赖（FTS 部分）。
 
@@ -310,7 +321,7 @@ python3 tools/memory_search.py --query "换电站运力" --domain ENGINEER --hyb
 
 ---
 
-## 6. Workflow Skills
+## 5. Workflow Skills
 
 4 个高频任务已固化为 workflow skill，按需加载，不常驻 prompt。
 
@@ -340,7 +351,7 @@ python3 tools/memory_search.py --query "换电站运力" --domain ENGINEER --hyb
 
 ---
 
-## 7. 演示
+## 6. 演示
 
 ### 演示一：多专家仲裁
 
@@ -383,7 +394,7 @@ python3 tools/memory_search.py --query "上次面试进展" --domain JOB --hybri
 
 ---
 
-## 8. 文件索引
+## 7. 文件索引
 
 ### 核心协议
 
@@ -435,7 +446,7 @@ python3 tools/memory_search.py --query "上次面试进展" --domain JOB --hybri
 
 ---
 
-## 9. 当前边界
+## 8. 当前边界
 
 | 边界 | 说明 |
 |------|------|
@@ -448,11 +459,11 @@ python3 tools/memory_search.py --query "上次面试进展" --domain JOB --hybri
 
 ---
 
-## 10. 设计借鉴说明
+## 9. 设计借鉴说明
 
 ### 官方 OpenClaw
 
-> **OpenClaw**（Peter Steinberger，MIT 开源）：https://openclaw.ai
+> **OpenClaw**（Peter Steinberger，MIT 开源，353k ⭐）：https://github.com/openclaw/openclaw
 
 longClaw 是在官方 OpenClaw 软件基础上改造的 workspace。执行层（代码执行、文件读写、浏览器控制、50+ 集成、Heartbeat 机制）完全继承官方 OpenClaw，运行在 Mac mini M4 上。
 
