@@ -9,3 +9,5 @@ memory/
 **/.DS_Store
 .openclaw/
 artifacts/
+.claude/
+openclaw_substrate/configs/local.runtime.json
