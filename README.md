@@ -565,3 +565,17 @@ longClaw 是在官方 OpenClaw 软件基础上改造的 workspace。执行层（
 描述一个具体的可复用工作流（参考现有的 `skills/job/jd-analysis/` 格式）。
 
 详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+## Skills Roadmap v1 (local extension)
+
+本地新增三类增强 skill：
+
+- `skill-safety-audit`：评估外部 skill / 仓库 / 安装脚本的接入风险
+- `research-execution-protocol`：复杂工程任务的证据驱动执行协议
+- `research-build`：从需求到实现闭环的最小交付 workflow
+
+原则：
+- 不替代 CTRL
+- 不改变全局人格
+- 不常驻污染上下文
+- 优先局部增强、可验证、可回滚
