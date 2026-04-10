@@ -197,7 +197,7 @@ $$\text{Injected Memory} = \text{[SYSTEM]} \cup \text{[Relevant Domain]}$$
 - 命中触发条件时才加载完整 `SKILL.md`
 - 执行完成后退出 context，不长期占用 token 预算
 
-当前 5 个 skill（详见 [§ Workflow Skills](#6-workflow-skills)）：
+当前 7 个 skill（详见 [§ Workflow Skills](#6-workflow-skills)）：
 
 | Skill | 触发场景 | 核心输出 |
 |-------|---------|---------|
@@ -206,6 +206,8 @@ $$\text{Injected Memory} = \text{[SYSTEM]} \cup \text{[Relevant Domain]}$$
 | `agent-review` | 审查 workspace 配置 | 规则冲突 + token 效率 + 漏洞清单 |
 | `fact-check-latest` | 询问最新资讯/价格 | `[确定]`/`[推断]`/`[缺失]` 分级 |
 | `research-execution-protocol` | 复杂实现/排障/验证闭环 | 证据驱动执行、最小改动、验证闭环输出 |
+| `session-compression-flow` | 长会话压缩与跨会话衔接 | 压缩触发→摘要落盘→索引重建→新会话连续性 |
+| `multi-agent-bootstrap` | 多代理架构搭建/迁移 | 快速同步初学者友好的多代理配置与可见路由 |
 
 > ¹ Progressive Disclosure 设计借鉴自 **[Hermes Agent](https://github.com/NousResearch/hermes-agent)**。
 > Hermes 有完整的 skill_manage 工具实现自动 create/patch；longClaw 将其移植为 workspace 协议层约定。
@@ -462,6 +464,8 @@ python3 tools/memory_search.py --query "上次面试进展" --domain JOB --hybri
 | [skills/engineer/agent-review/SKILL.md](skills/engineer/agent-review/SKILL.md) | Workspace 审查 |
 | [skills/search/fact-check-latest/SKILL.md](skills/search/fact-check-latest/SKILL.md) | 最新事实核查 |
 | [skills/engineer/research-execution-protocol/SKILL.md](skills/engineer/research-execution-protocol/SKILL.md) | 研究型工程执行协议 |
+| [skills/meta/session-compression-flow/SKILL.md](skills/meta/session-compression-flow/SKILL.md) | 会话压缩与跨会话衔接流程 |
+| [skills/multi-agent-bootstrap/SKILL.md](skills/multi-agent-bootstrap/SKILL.md) | 多代理架构搭建/迁移 |
 
 ### Memory 检索工具
 
