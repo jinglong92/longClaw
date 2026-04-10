@@ -158,7 +158,7 @@ $$\text{Injected Memory} = \text{[SYSTEM]} \cup \text{[Relevant Domain]}$$
 - 命中触发条件时才加载完整 `SKILL.md`
 - 执行完成后退出 context，不长期占用 token 预算
 
-当前 4 个 skill（详见 [§ Workflow Skills](#6-workflow-skills)）：
+当前 5 个 skill（详见 [§ Workflow Skills](#6-workflow-skills)）：
 
 | Skill | 触发场景 | 核心输出 |
 |-------|---------|---------|
@@ -166,6 +166,7 @@ $$\text{Injected Memory} = \text{[SYSTEM]} \cup \text{[Relevant Domain]}$$
 | `paper-deep-dive` | 发送论文标题/摘要 | 方法论 + 对比 + 可复述摘要 |
 | `agent-review` | 审查 workspace 配置 | 规则冲突 + token 效率 + 漏洞清单 |
 | `fact-check-latest` | 询问最新资讯/价格 | `[确定]`/`[推断]`/`[缺失]` 分级 |
+| `session-compression-flow` | 长会话压缩与新会话衔接 | 压缩触发→摘要落盘→索引重建→下会话连续性 |
 
 > ¹ Progressive Disclosure 设计借鉴自 **[Hermes Agent](https://github.com/NousResearch/hermes-agent)**。
 > Hermes 有完整的 skill_manage 工具实现自动 create/patch；longClaw 将其移植为 workspace 协议层约定。
@@ -349,6 +350,12 @@ python3 tools/memory_search.py --query "换电站运力" --domain ENGINEER --hyb
 
 输出：`[F]` 确定信息（≥2 个独立来源）/ `[I]` 推断信息（1 个来源）→ 时效说明 + 来源列表
 
+### session-compression-flow
+
+触发：长对话压缩、上下文膨胀、用户要求“压缩并衔接下一会话”
+
+输出：压缩触发原因 → 摘要块生成 → daily+MEMORY 双写落盘 → `memory_entry.py --rebuild` → 新会话按域召回
+
 ---
 
 ## 6. 演示
@@ -414,6 +421,7 @@ python3 tools/memory_search.py --query "上次面试进展" --domain JOB --hybri
 | [skills/learn/paper-deep-dive/SKILL.md](skills/learn/paper-deep-dive/SKILL.md) | 论文深度解读 |
 | [skills/engineer/agent-review/SKILL.md](skills/engineer/agent-review/SKILL.md) | Workspace 审查 |
 | [skills/search/fact-check-latest/SKILL.md](skills/search/fact-check-latest/SKILL.md) | 最新事实核查 |
+| [skills/meta/session-compression-flow/SKILL.md](skills/meta/session-compression-flow/SKILL.md) | 会话压缩与跨会话衔接流程 |
 
 ### Memory 检索工具
 
