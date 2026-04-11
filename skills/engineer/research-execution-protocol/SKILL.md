@@ -1,6 +1,6 @@
 ---
 name: research-execution-protocol
-description: 研究型工程执行协议。用于复杂实现、排障、代码修改、配置修复与实验验证。强调先证据后判断、先验证后宣称完成、失败后系统性换路，不改变全局人格。
+description: 研究型工程执行协议。用于复杂实现、排障、代码修改、配置修复与实验验证。强调先证据后判断、先验证后宣称完成、失败后系统性换路，不改变全局人格。冲突优先级次高：当请求包含“修 bug/继续查/验证闭环”与“交付落地”混合意图时，优先于 research-build。
 version: 1.0.0
 author: jinglong92
 license: MIT

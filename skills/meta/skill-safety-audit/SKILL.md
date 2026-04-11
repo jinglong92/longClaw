@@ -1,6 +1,6 @@
 ---
 name: skill-safety-audit
-description: 审计外部 SKILL.md / agent 仓库 / 自动化脚本的接入风险。用于判断某个 skill 是否应原样引入、拆解学习或禁止接入 longClaw。
+description: 审计外部 SKILL.md / agent 仓库 / 自动化脚本的接入风险。用于判断某个 skill 是否应原样引入、拆解学习或禁止接入 longClaw。冲突优先级最高：当请求同时包含“接入审计”与“实现/排障”意图时，先触发本技能。
 version: 1.0.0
 author: jinglong92
 license: MIT

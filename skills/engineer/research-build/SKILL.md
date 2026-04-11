@@ -1,6 +1,6 @@
 ---
 name: research-build
-description: 面向实现闭环的工程 workflow。用于把“需求/思路/方案”转成可交付改动，强调验收标准、最小改动、立即验证、明确回滚点。
+description: 面向实现闭环的工程 workflow。用于把“需求/思路/方案”转成可交付改动，强调验收标准、最小改动、立即验证、明确回滚点。冲突优先级最低：若请求同时包含“接入审计”或“修 bug/继续查”等排障闭环意图，应让位于 skill-safety-audit 或 research-execution-protocol。
 version: 1.0.0
 author: jinglong92
 license: MIT
@@ -15,6 +15,13 @@ license: MIT
 - 用户说“不要只分析，给我落地”
 - 用户提供明确目标、代码位置或设计方向，希望生成改动计划或直接修改
 - 任务需要从需求走到 patch / script / config / docs / test
+
+## 冲突让位规则（硬门槛）
+出现以下信号时，**不触发本 skill**：
+1. 接入审计类信号：`接入风险` / `安全审查` / `外部 skill` / `安装脚本` / `hook` / `遥测`
+   - 应让位给：`skill-safety-audit`
+2. 排障闭环类信号：`修 bug` / `继续查` / `继续修` / `别停在分析` / `验证闭环`
+   - 应让位给：`research-execution-protocol`
 
 ## 目标
 在不污染全局规则的前提下，生成一条可执行的交付路径：

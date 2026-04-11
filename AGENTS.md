@@ -324,7 +324,7 @@ CTRL 根据置信度决定是否触发二次验证：
 [DEV LOG]
 🔀 路由  JOB | 触发: "面试、offer" | 模式: 单专职
 🧠 Memory  [SYSTEM]+[JOB] | ~380 tokens | 节省72%
-📂 Session  openclaw_job_2026-04-08 | 对话轮次:3 | 压缩次数:0
+📂 Session  openclaw_job_2026-04-08 | 对话轮次:3 | 策略压缩次数:0 | runtime_compactions:0
 🔍 检索  session_job_* | 召回2条 | top=[0.91, 0.36]
 ⚖️ 置信度  0.88 [数据] | 组成: 数据源0.45 + 检索一致性0.25 + 完整性0.18 | 扣分: 冲突0.00 | 冲突: 无
 🏷️ 实体  无更新
