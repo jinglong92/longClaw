@@ -583,3 +583,21 @@ longClaw 是在官方 OpenClaw 软件基础上改造的 workspace。执行层（
 - 不改变全局人格
 - 不常驻污染上下文
 - 优先局部增强、可验证、可回滚
+
+
+---
+
+## 当前工作区约束（patch note）
+
+以下能力若未下沉到 substrate/runtime，则视为 **workspace-level behavior contract**：
+- DEV LOG 显示规则
+- routing presentation override
+- heartbeat silent mode
+- retrieval scope narrowing
+- completion-claim evidence gating
+
+也就是说：
+- 工作区协议层已经定义这些行为
+- 但若运行层未实现对应校验器，CTRL 必须手动遵守
+- 文档中的“可观测性/压缩/检索”应优先理解为：当前 workspace 行为约束 + 部分已实现能力
+
