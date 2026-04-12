@@ -19,9 +19,14 @@
 **🔄 智能会话管理与上下文压缩**
 内置两层压缩策略：token 压力驱动的自动压缩（保护首尾关键消息、清理孤立工具对），以及话题边界触发的归档（结论写入长期记忆）。长对话不再因上下文溢出而丢失关键信息。
 
-**🔍 一键开启 Developer Mode，后台过程完全可见**
+**🔍 可控的 Developer Mode + 证据驱动执行**
 
-在对话中说 **"开启 dev mode"** 即可，每次回复末尾自动附加运行日志：
+在对话中说 **"开启 dev mode"** 后，系统会把 Dev Mode 视为**会话级硬状态**，并优先从 `memory/session-state.json` 读取会话字段。Developer Mode 的目标不是“多打一段日志”，而是把执行闭环变成**可核验产物优先**：
+
+- 没有真实执行证据，不得声称“已执行/已完成/已生效”
+- 没有 verbatim readback，不得声称“已读回校验”
+- public-web 只读证据抓取默认按 session 预授权，不与本地任务混淆
+- web evidence gate 仅拦截外网证据抓取，不得误拦本地文件修改/读回/验证
 
 ```
 [DEV LOG]
@@ -34,7 +39,16 @@
 🏷️ 实体     检测到新实体: Shopee=进行中（2026-04-10）→ 已更新 [JOB]
 ```
 
-可观测的内容包括：**路由决策 · 记忆注入量 · 会话压缩状态 · 检索召回详情 · 专家置信度 · A2A 多代理通信 · 冲突裁决过程 · 实体更新记录**
+可观测的内容包括：**路由决策 · 会话状态 · 记忆注入量 · 检索范围 · 专家置信度 · A2A 多代理通信 · 冲突裁决过程 · 实体更新记录**
+
+**🧱 Workspace Baseline 已收口**
+
+当前 workspace 已把“授权、证据、读回、session 状态、外网检索门禁”固化成一套统一基线：
+
+- `AGENTS.md`：授权模型 / web gate / execution latch / readback validation
+- `memory/session-state.json`：Dev Mode、当前域、待确认动作、最近检索范围
+- `skills/search/public-evidence-fetch/SKILL.md`：公开网页证据抓取 workflow
+- `refactor_workspace_baseline.sh`：一键基线重构脚本
 
 **⚡ Workflow Skill 按需加载**
 把高频复杂任务（JD 分析、论文解读、配置审查、事实核查）固化为独立 SKILL.md，会话启动时只建索引，命中时才加载全文，执行完即退出——不长期占用上下文预算。
@@ -76,7 +90,10 @@ cd /path/to/your-workspace
 python3 tools/memory_entry.py    # 构建索引
 python3 tools/memory_search.py --query "测试" --verbose  # 验证
 
-# 5. 在 OpenClaw 对话中说"开启 dev mode"，验证路由可见
+# 5. 在 OpenClaw 对话中说"开启 dev mode"，验证 Dev Mode 与路由/证据规则
+
+# 6. 可选：同步当前基线脚本
+bash refactor_workspace_baseline.sh
 ```
 
 **需要改成你自己的 3 个文件**：
@@ -197,7 +214,7 @@ $$\text{Injected Memory} = \text{[SYSTEM]} \cup \text{[Relevant Domain]}$$
 - 命中触发条件时才加载完整 `SKILL.md`
 - 执行完成后退出 context，不长期占用 token 预算
 
-当前 9 个 skill（详见 [§ Workflow Skills](#6-workflow-skills)）：
+当前 10 个 skill（详见 [§ Workflow Skills](#6-workflow-skills)）：
 
 | Skill | 触发场景 | 核心输出 |
 |-------|---------|---------|
@@ -210,6 +227,7 @@ $$\text{Injected Memory} = \text{[SYSTEM]} \cup \text{[Relevant Domain]}$$
 | `skill-safety-audit` | 外部 skill/脚本接入审计 | 风险分级、兼容性判断、接入建议 |
 | `session-compression-flow` | 长会话压缩与跨会话衔接 | 压缩触发→摘要落盘→索引重建→新会话连续性 |
 | `multi-agent-bootstrap` | 多代理架构搭建/迁移 | 快速同步初学者友好的多代理配置与可见路由 |
+| `public-evidence-fetch` | 公开网页/论文证据抓取 | exact query + URL + verbatim snippet + 段落位置 |
 
 > ¹ Progressive Disclosure 设计借鉴自 **[Hermes Agent](https://github.com/NousResearch/hermes-agent)**。
 > Hermes 有完整的 skill_manage 工具实现自动 create/patch；longClaw 将其移植为 workspace 协议层约定。
@@ -223,6 +241,7 @@ OpenClaw 原生 `memory_search` 是 FTS-only，词面不重叠就返回空结果
 **第一层：scope filter（先决定搜哪里）**
 
 ```
+Level 1: 当前 session / recent turns
 Level 2: 同域 + 7天内   → 结果 ≥ 2 则停止
 Level 3: 同域 + 全量    → 结果 ≥ 2 则停止
 Level 4: 跨域全量       → 兜底，结果标注[跨域]
@@ -600,4 +619,3 @@ longClaw 是在官方 OpenClaw 软件基础上改造的 workspace。执行层（
 - 工作区协议层已经定义这些行为
 - 但若运行层未实现对应校验器，CTRL 必须手动遵守
 - 文档中的“可观测性/压缩/检索”应优先理解为：当前 workspace 行为约束 + 部分已实现能力
-
