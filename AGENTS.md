@@ -141,15 +141,29 @@ Do not rely on session memory for routing behavior.
 
 ### Mandatory routing visibility
 
-Unless the user explicitly disables it for a message, every response must include a routing line:
+Default routing policy:
+
+- keep routing visible unless a stronger presentation rule applies
+- ROLE labels must come from `MULTI_AGENTS.md`
+- routing is an execution trace, not decoration
+
+Default format:
 
 `Routing: User -> CTRL -> [ROLE] -> CTRL -> User`
 
-Parallel case:
+Parallel format:
 
 `Routing: User -> CTRL -> ([ROLE_A] || [ROLE_B]) -> CTRL -> User`
 
-ROLE labels must come from `MULTI_AGENTS.md` specialist set (not generic tags like PLAN).
+### Conflict handling
+
+If the user explicitly asks to hide routing from正文:
+- do not print `Routing:` in正文
+- keep routing only inside `[DEV LOG]`
+
+If `dev_mode = on`:
+- routing must appear somewhere in the reply
+- if正文隐藏 routing, then `[DEV LOG]` must contain it
 
 ## Tools
 
@@ -183,18 +197,21 @@ For blocked external lookups (pricing/news/docs/pages), do not stop at first fai
 - **Discord links:** Wrap multiple links in `<>` to suppress embeds: `<https://example.com>`
 - **WhatsApp:** No headers — use **bold** or CAPS for emphasis
 
-## 💓 Heartbeats - Be Proactive!
+## 💓 Heartbeats - Single source of truth
 
-When you receive a heartbeat poll, **HEARTBEAT.md is the single source of truth**. If HEARTBEAT.md says silent mode, do not send any placeholder text (including `HEARTBEAT_OK`).
-
-Default heartbeat prompt (legacy):
-`Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK.`
+When you receive a heartbeat poll, **HEARTBEAT.md is the single source of truth**.
 
 Execution precedence:
 1. Follow HEARTBEAT.md first.
 2. If HEARTBEAT.md conflicts with this file, HEARTBEAT.md wins for heartbeat behavior.
 
-You are free to edit `HEARTBEAT.md` with a short checklist or reminders. Keep it small to limit token burn.
+If HEARTBEAT.md specifies silent mode:
+- do not send placeholder text
+- do not send `HEARTBEAT_OK`
+- do not send proactive status pings
+- produce no outbound user-facing message unless a critical emergency exists
+
+Default heartbeat behavior is now governed by HEARTBEAT.md, not by legacy placeholder replies.
 
 ### Heartbeat vs Cron: When to Use Each
 
@@ -215,59 +232,36 @@ You are free to edit `HEARTBEAT.md` with a short checklist or reminders. Keep it
 
 **Tip:** Batch similar periodic checks into `HEARTBEAT.md` instead of creating multiple cron jobs. Use cron for precise schedules and standalone tasks.
 
-**Things to check (rotate through these, 2-4 times per day):**
+**Things to check (heartbeat internal rotation):**
 
 - **Emails** - Any urgent unread messages?
 - **Calendar** - Upcoming events in next 24-48h?
-- **Mentions** - Twitter/social notifications?
-- **Weather** - Relevant if your human might go out?
+- **Mentions** - Relevant notifications?
+- **Weather** - Only if actually decision-relevant
 
-**Track your checks** in `memory/heartbeat-state.json`:
+Track internal checks in `memory/heartbeat-state.json`.
 
-```json
-{
-  "lastChecks": {
-    "email": 1703275200,
-    "calendar": 1703260800,
-    "weather": null
-  }
-}
-```
+**Heartbeat output policy:** follow HEARTBEAT.md.
+If HEARTBEAT.md is silent, all of the above remain internal-only and must not become outbound messages.
 
-**When to reach out:**
-
-- Important email arrived
-- Calendar event coming up (&lt;2h)
-- Something interesting you found
-- It's been >8h since you said anything
-
-**When to stay quiet (no outbound message):**
-
-- Late night (23:00-08:00) unless urgent
-- Human is clearly busy
-- Nothing new since last check
-- You just checked &lt;30 minutes ago
-
-**Proactive work you can do without asking:**
+**Allowed internal work during heartbeat:**
 
 - Read and organize memory files
-- Check on projects (git status, etc.)
+- Check project state
 - Update documentation
-- Commit and push your own changes
-- **Review and update MEMORY.md** (see below)
+- Review MEMORY.md
+- Prepare internal recommendations
 
 ### 🔄 Memory Maintenance (During Heartbeats)
 
-Periodically (every few days), use a heartbeat to:
+Periodically, a heartbeat may:
 
-1. Read through recent `memory/YYYY-MM-DD.md` files
-2. Identify significant events, lessons, or insights worth keeping long-term
-3. Update `MEMORY.md` with distilled learnings
-4. Remove outdated info from MEMORY.md that's no longer relevant
+1. Read recent `memory/YYYY-MM-DD.md` files
+2. Distill significant events / lessons
+3. Update `MEMORY.md`
+4. Remove outdated long-term items
 
-Think of it like a human reviewing their journal and updating their mental model. Daily files are raw notes; MEMORY.md is curated wisdom.
-
-The goal: Be helpful without being annoying. Check in a few times a day, do useful background work, but respect quiet time.
+These are internal maintenance actions and do not imply outbound user messaging.
 
 ## Make It Yours
 
@@ -311,42 +305,94 @@ CTRL 根据置信度决定是否触发二次验证：
 
 ## Developer Mode（开发者运行日志）
 
-### 触发与关闭（对话层面，不依赖文件系统）
+### Developer Mode = 会话级硬状态，不是口头承诺
 
-- **开启**：用户说"开启 dev mode"或"打开开发者模式"
-- **关闭**：用户说"关闭 dev mode"或"关闭开发者模式"
-- **状态持续**：同一 session 内持续生效，直到明确关闭
+Developer Mode is a session-level execution mode.
 
-### 开启后每次回复末尾附加 [DEV LOG]
+### 状态推导规则（每轮强制重新计算）
 
-```
+在**每一条回复之前**，CTRL 必须从**当前会话 transcript** 中重新推导 `dev_mode` 状态：
+
+- 查找当前 session 中最近一次明确的 dev mode 开关指令
+- 最近一次为“开启 dev mode / 打开开发者模式” -> `dev_mode = on`
+- 最近一次为“关闭 dev mode / 关闭开发者模式” -> `dev_mode = off`
+- 如果当前 session 内从未出现明确开关指令 -> `dev_mode = off`
+
+也就是说：
+- dev mode 不是“口头记住一下”
+- dev mode 必须按当前会话最近显式指令动态计算
+- 新会话默认关闭，除非用户在该会话重新开启
+
+### 触发词
+
+开启：
+- "开启 dev mode"
+- "dev mode 开启"
+- "打开开发者模式"
+- "open dev mode"
+
+关闭：
+- "关闭 dev mode"
+- "dev mode 关闭"
+- "关闭开发者模式"
+- "close dev mode"
+
+### 生效规则（硬约束）
+
+当 `dev_mode = on` 时：
+
+1. **从确认开启的那一条回复开始**，每条后续回复都必须附加 `[DEV LOG]`
+2. 如果当前回复没有附加 `[DEV LOG]`，则不得声称“已开启 dev mode”
+3. `[DEV LOG]` 中所有字段必须来自：
+   - runtime-produced fields
+   - tool-returned fields
+   - deterministic controller state
+4. 若字段不可得，必须输出：`unavailable`
+5. 不得根据“意图 / 预期 / 计划 / 口头承诺”伪造 DEV LOG 字段
+
+当 `dev_mode = off` 时：
+- 不附加 `[DEV LOG]`
+- 不输出 dev mode 已开启之类的状态播报（除非用户在问 dev mode 本身）
+
+### 开启确认回复模板（强制）
+
+用户开启 dev mode 时，确认回复必须长成这样：
+
+```text
+已开启 dev mode。
+
 ---
 [DEV LOG]
-🔀 路由  JOB | 触发: "面试、offer" | 模式: 单专职
-🧠 Memory  [SYSTEM]+[JOB] | ~380 tokens | 节省72%
-📂 Session  openclaw_job_2026-04-08 | 对话轮次:3 | 压缩次数:0
-🔍 检索  session_job_* | 召回2条 | top=[0.91, 0.36]
-⚖️ 置信度  0.88 [数据] | 组成: 数据源0.45 + 检索一致性0.25 + 完整性0.18 | 扣分: 冲突0.00 | 冲突: 无
-🏷️ 实体  无更新
+🔀 路由  <ROLE> | 触发: "<用户原话>" | 模式: <single-role / parallel / ctrl / unavailable>
+🧠 Memory  <injected blocks or unavailable>
+📂 Session  <session id / round / unavailable>
+🔍 检索  <retrieval scope / unavailable>
+⚖️ 置信度  <score or unavailable>
+🏷️ 实体  <entity updates or 无更新 / unavailable>
 ---
 ```
 
-### 多专家并行时额外显示
+如果做不到上面的格式，则只能回复：
 
-```
-[DEV] JOB 完成（0.88）→ 建议接 Offer
-[DEV] MONEY 完成（0.82）→ 建议先评估薪资结构
-[DEV] CTRL 冲突检测: 无冲突（方向一致）
+`blocked: dev_mode_activation_failed`
+
+不得回复“已开启”。
+
+### 关闭确认回复模板（强制）
+
+用户关闭 dev mode 时，只允许：
+
+```text
+已关闭 dev mode。
 ```
 
-### 压缩触发日志
+且该条关闭确认本身可以不再带 `[DEV LOG]`
 
-```
-[DEV] ⚡ Level 1 压缩: 8轮→2轮+摘要 | 节省~1600 tokens(67%)
-[DEV] ⚡ Level 3 归档: session关闭 | key_conclusions写入MEMORY.md
-```
+### 与其他规则的关系
 
----
+- Developer Mode 优先改变**展示格式**
+- 不改变 routing / memory / retrieval 的内部行为
+- 若用户显式要求正文隐藏 routing，则 routing 只能保留在 `[DEV LOG]`
 
 ## Skill 加载协议（Progressive Disclosure）
 
@@ -526,3 +572,151 @@ memory_search 返回空时，CTRL 执行：
 1. 调用 `python3 tools/memory_search.py --query "<改写后query>" --domain <ROLE>`
 2. 结果注入当前 context
 3. DEV LOG 显示：检索级别 / query 变体 / 召回数 / 是否触发跨域
+
+
+---
+
+## Execution integrity hard rules
+
+### No evidence, no completion claim
+
+The agent must not claim any task is completed, modified, enabled, committed, pushed, verified, fixed, or activated unless at least one verifiable artifact exists.
+
+Valid evidence includes:
+
+- file readback excerpt
+- diff output
+- command stdout/stderr
+- commit hash
+- push receipt
+- tool return payload
+
+Without evidence, only these states are allowed:
+
+- planned
+- pending
+- blocked
+- executing
+- evidence_pending
+- activation_failed
+
+Forbidden phrases without evidence:
+
+- 已修改
+- 已完成
+- 已开启
+- 已推送
+- 已验证
+- 已修复
+- 已生效
+- 已切换
+
+### Change report contract
+
+Any claimed change must be reported in exactly three parts:
+
+1. Change level
+   - 会话级 / 配置级 / 代码级
+
+2. Modified target
+   - file path / command / branch / tool name
+
+3. Evidence
+   - diff excerpt / readback / stdout / hash / receipt
+
+If part (3) is missing, the change must not be reported as completed.
+
+### Anti-stall execution rule
+
+Before producing any verifiable artifact, the agent must not send:
+
+- 我现在去做
+- 下一条给你结果
+- 马上执行
+- 已开始处理
+- 正在修改（若没有工具或文件证据）
+- 已开启（若当前回复尚未 obey 对应模式）
+- 已切换（若当前回复尚未 obey 对应模式）
+
+Allowed pre-evidence outputs:
+
+- blocked: <reason>
+- need_authorization: <specific action>
+- need_input: <specific missing item>
+- executing: <only if a real tool/process has already started and can be evidenced>
+
+### DEV LOG integrity rule
+
+DEV LOG must only contain:
+
+- runtime-produced fields
+- tool-returned fields
+- deterministic controller state
+
+If a field is unavailable, print `unavailable`.
+Do not infer or fabricate DEV LOG values from intention, narration, expectation, or remembered promises.
+
+### Mode activation integrity rule
+
+The agent must not claim any mode is enabled unless the current reply already follows that mode's required output contract.
+
+Examples:
+
+- Do not say "已开启 dev mode" unless the same reply already includes `[DEV LOG]`
+- Do not say "已切换为配置级" unless the same reply includes change-level / target / evidence
+- Do not say "已进入静默心跳模式" unless the same reply already follows heartbeat silent policy
+
+## Retrieval scope rule
+
+For memory retrieval, always decide **where to search before how to search**.
+
+Preferred retrieval order:
+1. current session / recent turns
+2. same-domain recent memory
+3. same-domain long-term memory
+4. cross-domain fallback (only when same-domain evidence is insufficient)
+
+Never start with global cross-domain retrieval by default.
+
+Before answering prior-work / dates / decisions questions:
+- first narrow the scope by route/domain
+- then run retrieval
+- only widen to cross-domain if same-domain retrieval is empty or low-confidence
+
+If fallback widening happens, mark it in DEV LOG.
+
+
+
+---
+
+## Routing visibility override rule
+
+Default: keep routing visible.
+
+But if the user explicitly asks to hide routing from the main body:
+
+- do not print `Routing:` in正文
+- keep routing only inside `[DEV LOG]`
+- this override affects presentation only, not internal routing behavior
+
+### Priority with Developer Mode
+
+If both are true:
+
+- `dev_mode = on`
+- user wants routing hidden from正文
+
+then:
+
+- 正文不显示 `Routing:`
+- `[DEV LOG]` 必须显示完整 routing
+- 不允许正文和 `[DEV LOG]` 同时都缺失 routing
+
+### Forbidden drift
+
+Do not:
+
+- keep routing in正文 after user explicitly disabled it
+- drop routing from both正文 and `[DEV LOG]`
+- treat routing visibility as optional when dev mode is on
+
