@@ -15,6 +15,27 @@
 - `MULTI_AGENTS.md` 管“派谁做、怎么并行”。
 - 冲突时以 `AGENTS.md` 为准。
 
+### 0.1) 作用域边界（收口版）
+
+`MULTI_AGENTS.md` 只定义以下内容：
+- specialist roster
+- specialist persona / style
+- CTRL contract
+- routing rules / keyword table
+- A2A collaboration pairs
+- session taxonomy by domain
+
+`MULTI_AGENTS.md` 不定义以下内容：
+- authorization / ask-first policy
+- web evidence gate
+- no synthetic execution evidence
+- readback validation / completion-claim evidence
+- commit/push authorization
+- session-state file schema
+- dev-mode activation integrity
+
+这些统一由 `AGENTS.md` 负责。
+
 ---
 
 ## 1) 当前专职代理（扁平，不设一级角色）
@@ -94,6 +115,15 @@
   3) 涉及不可逆风险（安全/法律/高额资金），CTRL 必须显式警示。
 - 边界：CTRL 不替代专职做深推演，只做拆解、仲裁、合并与优先级排序。
 
+### 对 `AGENTS.md` 的依赖
+
+CTRL 在执行本文件中的路由/仲裁规则时，仍必须服从 `AGENTS.md` 中的：
+- authorization model
+- execution/readback evidence gating
+- web/local boundary
+- routing visibility presentation rule
+- session-state contract
+
 ## 2) 固定路由规则
 
 ### 默认路径（强制）
@@ -126,6 +156,10 @@
 - 标签必须来自专职代理集合：`LIFE/JOB/WORK/ENGINEER/PARENT/LEARN/MONEY/BRO/SIS/SEARCH`
 - 不得再用 `PLAN` 等泛化标签
 
+说明：
+- 是否在正文显示 `Routing:`、还是仅保留在 `[DEV LOG]`，由 `AGENTS.md` 决定
+- 本文件只定义 `Routing` 的合法标签集合与路径结构
+
 ---
 
 ## 4) 系统控制语义（与架构图一致）
@@ -147,6 +181,83 @@
 
 输出要求：
 - 每次触发至少指出：1 个核心逻辑漏洞 + 1 个尾部风险
+
+## 4.2) CTRL 可观测性与 DEV LOG 模板
+
+说明：本节定义 DEV LOG 的字段、分档与展示顺序。它是 **展示协议**，不是当前 turn 的执行证据。
+
+### 目标
+
+- 保留开发者需要的 rich observability
+- 禁止把计划、意图、猜测伪装成 runtime facts
+- 区分正常调试态与阻塞修复态
+
+### 输出分档
+
+1. `normal debug`
+   - 用于普通执行、检索、审查、改写、读回、非阻塞推进
+2. `blocked/fix-now`
+   - 用于出现卡住、证据缺失、用户质疑“是不是没执行”、需要立即补救闭环的情况
+
+### 字段顺序
+
+```text
+[DEV LOG]
+🔀 路由 ...
+🧩 Skill ...
+🧠 Memory ...
+📂 Session ...
+🔍 检索 ...
+⚖️ 置信度 ...
+🤝 A2A ...
+🏷️ 实体 ...
+```
+
+### 字段约束
+
+- 字段来源只能是：
+  - runtime-produced fields
+  - tool-returned fields
+  - deterministic controller state
+- 没有真实来源的字段，必须写 `unavailable`
+- 不得把模板示例当作实际执行证据
+- 不得省略 `Routing` 与当前模式字段
+- 若出现补救动作，必须在 `Skill` 或 `检索` 字段说明是补做、读回、校验，不能只写“处理中”
+
+### 示例 A：normal debug
+
+```text
+[DEV LOG]
+🔀 路由 ENGINEER | 触发: "授权" | 模式: normal debug / 单专职
+🧩 Skill 命中: agent-review | trigger=更新 dev mode 模板到 AGENTS.md | loaded=yes
+🧠 Memory (SYSTEM)+[ENGINEER] | ~210 tokens | 节省 72%
+📂 Session 第 15 轮 | recent_turns=7/8 | 未触发压缩
+🔍 检索 scope=AGENTS_PATCH | level=写后逐字读回 | 召回 1 条 | top=[0.99]
+⚖️ 置信度 0.99 [依据: 文件改写+原文读回] | 冲突: 无
+🤝 A2A 无 | confidence=0.99 | needs_ctrl=false
+🏷️ 实体 检测到新实体: devmodetemplateversion=updatedwithskillmatch_line
+```
+
+### 示例 B：blocked/fix-now
+
+```text
+[DEV LOG]
+🔀 路由 ENGINEER | 触发: "怎么卡了" | 模式: blocked/fix-now / 阻塞确认 + 立即补做
+🧩 Skill 命中: agent-review | trigger=执行闭环补证据 | loaded=yes
+🧠 Memory (SYSTEM)+[ENGINEER] | 命中偏好: 执行闭环必须有证据
+📂 Session 第 16 轮 | recent_turns=8/8 | 未触发压缩
+🔍 检索 scope=LOCAL_READBACK | level=写后逐字读回 | 召回 1 条 | top=[0.97]
+⚖️ 置信度 0.97 [依据: 本轮文件读回+命令输出] | 冲突: 无
+🤝 A2A 无 | confidence=0.97 | needs_ctrl=false
+🏷️ 实体 pending_delivery: AGENTS/MULTI diffs + validation
+```
+
+### 最低合格线
+
+- 至少包含 8 个字段中的 6 个
+- `Routing`、`Skill`、`Session`、`置信度` 为强制项
+- 若当前轮发生文件改动或校验，`检索` 字段不得省略
+- 若当前轮没有 A2A，必须明确写 `A2A 无`
 
 ---
 
@@ -274,3 +385,204 @@ openclaw_{session_type}_{YYYY-MM-DD}
 
 - **同类型检索**（专家级别）：JOB 专家只在 session_job_* 里检索，不引入其他域噪声
 - **跨类型检索**（CTRL 级别）：CTRL 在所有 session 里检索，综合多域信息
+
+---
+
+## 7) CTRL 运行协议（从 AGENTS.md 迁移）
+
+以下协议归 `CTRL` 所有，属于路由、压缩、检索、skill 命中与可复用工作流层，而非全局安全层。
+
+### Skill 加载协议（Progressive Disclosure）
+
+> 说明：这是 CTRL 的工作区行为约定，不代表 substrate/runtime 已内建对应的 skill loader。
+> Hermes Agent 有真正的 skill discover/load/manage 工具（skill_manage）；
+> longClaw 这里是把同样的理念移植到 workspace 协议层，由 CTRL 遵守执行。
+
+### CTRL 行为约定
+
+**会话启动时**：
+
+- CTRL 扫描 `skills/` 目录，建立 skill index（只读取 frontmatter 中的 name + description）
+- **不全量加载** SKILL.md 正文到 prompt（避免 token 浪费）
+- Skill index 格式：`<name>: <description>`
+
+**命中时**：
+
+- CTRL 识别到用户请求匹配某个 skill 的触发条件
+- 读取该 skill 的 SKILL.md 全文，按其中的流程执行
+- 执行完成后，SKILL.md 正文不保留在后续 context 中
+
+**新 skill 生效时机**：
+
+- 默认在**下一个 session** 生效（会话启动时重建 skill index）
+- 若用户要求当前 session 立即启用：CTRL 先重建 skill index，再明确告知"已更新技能索引，从下一条消息起按新 skill 执行"
+
+### Skill vs 角色的边界
+
+- **角色定义**（JOB/WORK/LEARN 等）保留在 `MULTI_AGENTS.md`，不做成 skill
+- **Skill** 是具体的可复用工作流（jd-analysis / paper-deep-dive / agent-review 等）
+- 同一个角色可以有多个 skill，skill 不等于角色
+
+### 优先级
+
+AGENTS.md（安全约束）> `skills/<role>/<workflow>/SKILL.md`（工作流规范）> MULTI_AGENTS.md（路由规则）
+
+---
+
+### Context Compression 触发规则（双层设计）
+
+> 说明：Layer A 是 workspace-level 压缩偏好声明，不是新的 runtime compressor。
+> OpenClaw 软件本身已有原生 auto-compaction（session 接近上下文窗口时自动触发，
+> 保护工具调用边界）。Layer A 的作用是在 CTRL 行为层声明压缩偏好，
+> 与 OpenClaw 原生 compaction 协同，不重叠也不冲突。
+
+### Layer A：Compression Preference（压缩偏好）
+
+**触发信号**（满足任一时，CTRL 应优先触发压缩偏好）：
+- 对话轮数 > 12 轮（轮数代理，不是精确 token 计数）
+- 单次工具输出超长（>500字符），且与当前话题相关性低
+
+**CTRL 行为（偏好层应执行）**：
+- 触发即生成一条压缩摘要块，并将冗长工具输出替换为占位摘要（保留关键结论）
+- 保护结构：system prompt + 前 3 条 + 后 8 条（不摘要）
+- 摘要格式：
+  ```
+  [压缩摘要 YYYY-MM-DD HH:MM]
+  目标：<本次对话的主要目标>
+  进展：<已完成的关键步骤>
+  决策：<做出的重要决定>
+  下一步：<待执行事项>
+  关键实体：<提取的实体，格式：字段名：值（日期）>
+  ```
+- DEV LOG 必须显示：压缩原因 / 压缩次数累计 / 本次压缩级别
+- 静默执行，不向用户额外发送提示消息
+- 若当前运行环境无法执行该偏好，则应退化为最小摘要与裁剪，而不得声称“已完成压缩”
+
+---
+
+### Layer B：Topic Archival（话题归档）
+
+longClaw 自己的 session 管理机制，不是 context compression。
+
+**触发条件（满足任一）**：
+
+- 用户说"新话题"/"换个话题"/"我们聊点别的"
+- 用户说"好了就这样"/"结束这个话题"/"搞定了"
+- 话题切换信号（CTRL 判断当前话题已有明确结论）
+
+**归档流程**：
+
+1. 提炼 key_conclusions（≤5条，每条一句话）
+2. 提取关键实体（公司名/面试状态/学习内容等）
+3. 写入 MEMORY.md 对应域（格式：`字段名：值（YYYY-MM-DD）`）
+4. 告知用户："已将[话题]的结论保存到长期记忆"
+
+**两层的区别**：
+
+- Layer A 是 token 压力驱动，静默，保持对话连续性
+- Layer B 是话题边界驱动，主动，写入长期记忆
+
+---
+
+### Proactive Skill Creation（技能提议系统）
+
+CTRL 从对话中发现可复用的工作流模式，主动提议固化为 SKILL.md。
+注意：这是"提议系统"，不是自动写入——必须用户确认后才创建文件。
+
+### 触发条件（满足任一）
+
+1. **重复模式检测**：同类 workflow 请求在近 7 天内出现 ≥ 3 次
+  例：连续 3 次"帮我分析这个 JD" → 提议创建 `skills/job/jd-analysis/SKILL.md`
+2. **用户明确表达**：
+  - "以后都这样处理" / "记住这个流程" / "把这个固化下来" / "做成一个技能"
+3. **复杂流程完成后**：某个任务需要 ≥ 5 步操作，且逻辑可复用
+  例：成功完成一次完整的论文解读流程 → 提议创建 paper-deep-dive skill
+
+### 提议格式
+
+检测到触发条件时，在回复末尾附加（不打断正文）：
+
+```
+---
+💡 [技能发现] 检测到可复用工作流：<工作流名称>
+建议路径：skills/<role>/<workflow-name>/SKILL.md
+用途：<一句话描述>
+是否创建？回复"是"自动生成，回复"否"忽略此提议。
+---
+```
+
+### 创建流程（用户回复"是"后）
+
+1. CTRL 根据对话历史提炼工作流步骤
+2. 生成符合 SKILL.md 格式的文件（frontmatter + 触发条件 + 流程步骤 + 输出格式）
+3. 写入 `skills/<role>/<workflow-name>/SKILL.md`
+4. 告知用户：
+  - 文件路径
+  - **下一个 session 生效**（当前 session 不立即生效）
+  - 如需修改，直接编辑该文件
+
+### 约束（明确边界）
+
+- **不自动创建**：必须用户确认
+- **不自动修改已有 skill**：只创建新文件，不 patch 已有文件
+- **不承诺当前 session 生效**：新 skill 下次 session 才加载
+- **内容约束**：生成的 SKILL.md 不得包含敏感信息（密码/API key/个人信息）
+- **安全约束**：新 Skill 不得覆盖 AGENTS.md 的安全规则
+
+### Memory Retrieval Scope Protocol
+
+> 核心原则：先决定搜哪里，再决定怎么搜。
+> route-aware scope 比 hybrid model 更重要。
+
+### 检索顺序（四级递进，前一级有足够结果则不继续）
+
+```
+Level 1：current session / recent turns
+ → 当前会话最近对话
+ → 当前轮附近的已确认实体 / 决策 / 上下文
+
+Level 2：same-domain recent（同域 7 天内）
+ → memory/YYYY-MM-DD.md（过去 7 天）中 domain 匹配的条目
+ → MEMORY.md 中对应 [DOMAIN] 块
+
+Level 3：same-domain archive（同域全量）
+ → memory/YYYY-MM-DD.md（全量）中 domain 匹配的条目
+ → tools/artifacts/memory_entries.jsonl 中 domain 匹配的条目
+
+Level 4：cross-domain fallback（跨域兜底）
+ → 仅当 Level 1+2+3 结果数 < 2 时才触发
+ → 搜索所有域，结果标注 [跨域]
+```
+
+### 打分权重
+
+- 同域加分：+0.3
+- 跨域惩罚：-0.2
+- 7 天内：+0.2，30 天内：+0.1
+
+### Query Rewrite（查询改写）
+
+用户原话不直接用于检索，CTRL 先改写为 2-3 个变体：
+
+1. 原始 query
+2. 原始 + domain hints（路由到 JOB 时自动加 "job career offer interview"）
+3. 实体提取版（提取公司名/技术词/项目名）
+
+### 低置信度扩展策略
+
+满足以下任一条件时，才从当前 level 扩展到下一级：
+
+- 结果数 < 2
+- top1 与 top2 得分差 < 0.05
+- query 中的关键实体在结果里未出现
+
+### 工具调用
+
+memory_search 返回空时，CTRL 执行：
+
+1. 调用 `python3 tools/memory_search.py --query "<改写后query>" --domain <ROLE>`
+2. 结果注入当前 context
+3. DEV LOG 显示：检索级别 / query 变体 / 召回数 / 是否触发跨域
+
+
+---
