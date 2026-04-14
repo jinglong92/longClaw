@@ -446,11 +446,18 @@ multi-agent-bootstrap | META   | 多代理架构初始化
 命中后 CTRL 必须：
 1. 在 DEV LOG 中标注 `🧩 Skill 命中: <name> | trigger=<匹配原因> | loaded=yes`
 2. 读取该 SKILL.md 全文
-3. 按 SKILL.md 中的流程执行，不得简化或跳步
+3. **当轮立即开始执行 Step 1**，不得说"我将在下一条执行"或"准备执行"后停住
+
+**空转禁止规则（硬规则）**：
+- 禁止在同一回复里既说"开始执行 Skill"又没有任何 Step 的实际输出
+- 禁止说"我现在去执行 Step 1"后等待用户回复才开始
+- 每个 Step 必须在声明执行的同一轮完成并输出结果
+- 若某 Step 依赖工具调用，必须当轮发起工具调用，不得推迟到下轮
 
 **未命中时**：DEV LOG 写 `🧩 Skill 命中: none | 原因: <为什么没命中>`，不得留空。
 
-**执行完成后**：SKILL.md 正文不保留在后续 context 中，但 DEV LOG 的输出不受影响——每轮都必须输出完整 DEV LOG。
+**执行完成后**：SKILL.md 正文不保留在后续 context 中，**但 DEV LOG 强制继续输出，不受 Skill 退出影响**。
+SKILL.md 退出上下文 ≠ DEV LOG 可以省略。每轮必须输出完整 DEV LOG，直到用户结束对话。
 
 **新 skill 生效时机**：
 - 默认在**下一个 session** 生效（会话启动时重建 skill index）

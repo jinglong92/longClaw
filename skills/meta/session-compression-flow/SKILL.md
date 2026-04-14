@@ -10,9 +10,11 @@ description: Trigger and execute session compression plus post-compression hando
 ## 执行入口
 
 当满足任一条件时执行：
-- 用户明确要求“压缩/总结当前会话”
-- 对话轮次超过阈值（当前策略：>12）
+- 用户明确要求”压缩/总结当前会话”
+- CTRL 在更新 session-state.json 时检测到 `round > 12`（每轮写入后主动检查，不等用户提醒）
 - 工具输出冗长且低相关，影响上下文质量
+
+**CTRL 自动检查规则**：每轮写入 session-state.json 后，若 `round > 12` 且 `compression_count` 未在本轮递增，则自动触发本 skill（Layer A 压缩）。不需要用户说”压缩”。
 
 ## 流程
 

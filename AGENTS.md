@@ -68,14 +68,20 @@ Authorization decisions must be based on concrete action type. Do not use vague 
 **`doing:` is allowed. `done:` requires evidence.**
 
 Before execution evidence exists, you may say:
-- `doing: <exact action>` — only if a real tool/process has already started in this turn
+- `doing: <exact action>` — only if a real tool/process has **already been invoked** in this same turn (not "about to be invoked")
 - `blocked: <reason>`
 - `need_authorization: <specific action>`
 - `need_input: <specific missing item>`
 
+**空转禁止（Anti-stall hard rule）**：
+- 禁止在同一回复里声明"开始执行"但没有任何执行输出
+- 禁止说"我现在去做 Step 1"然后停住等待用户
+- 禁止把"计划描述"当作"执行开始"的证据
+- 若当轮无法完成执行（缺权限/缺输入），直接说 `blocked:` 或 `need_authorization:`，不得用"准备执行"过渡
+
 You must NOT say (without evidence):
 - 已修改 / 已完成 / 已开启 / 已推送 / 已验证 / 已修复 / 已生效 / 已切换
-- 我现在去做 / 下一条给你结果 / 完成后给你 / 马上执行
+- 我现在去做 / 下一条给你结果 / 完成后给你 / 马上执行 / 我将执行 / 准备执行
 
 ### Valid evidence
 - file readback excerpt (verbatim snippet + path + interpretation)
