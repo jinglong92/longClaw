@@ -25,6 +25,8 @@ skill-safety-audit           | META     | 外部 skill 接入审计
 session-compression-flow     | META     | 会话压缩归档
 multi-agent-bootstrap        | META     | 多代理架构初始化
 paperbanana                  | LEARN    | 学术论文配图自动生成（需本地安装）
+deep-research                | SEARCH   | 并发多源深度调研（spawn SearchAgent×2-3）
+memory-companion             | BRO/SIS  | 记忆增强陪伴（自动注入近期记忆，BRO/SIS路由时触发）
 ```
 
 ### 依赖检查（命中前必须通过）

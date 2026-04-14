@@ -151,6 +151,11 @@ User -> CTRL -> ([专职A] || [专职B]) -> CTRL -> User
 - `SEARCH` 专职只能使用 `web_fetch`，不得调用 `file_write`
 - `BRO` / `SIS` 不得调用任何文件写入或外部 API
 
+**自动 Subagent 触发规则**：
+- CTRL 路由到 `BRO` 或 `SIS` 时，自动 spawn `memory-agent` 检索近期记忆（后台执行，不打断主流程）
+- CTRL 路由到 `SEARCH` 且问题需要多维度调研时，自动触发 `deep-research` skill（spawn `search-agent` × 2-3）
+- Subagent 超时（memory-agent >10s，search-agent >60s）时静默跳过，主流程正常继续
+
 ---
 
 ## 用户偏好绑定
