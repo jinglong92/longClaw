@@ -43,15 +43,20 @@
 
 **🧱 Workspace Baseline 已收口**
 
-当前 workspace 已把“授权、证据、读回、session 状态、外网检索门禁”固化成一套统一基线：
+当前 workspace 已把”授权、证据、读回、session 状态、外网检索门禁”固化成一套统一基线：
 
-- `AGENTS.md`：授权模型 / web gate / execution latch / readback validation
-- `memory/session-state.json`：Dev Mode、当前域、待确认动作、最近检索范围
-- `skills/search/public-evidence-fetch/SKILL.md`：公开网页证据抓取 workflow
-- `refactor_workspace_baseline.sh`：一键基线重构脚本
+- `AGENTS.md`：Deny > Ask > Allow 三层授权 / Immutable Rules / execution latch / readback validation
+- `.claude/settings.json`：PostCompact / FileChanged / PreToolUse / SessionStart hooks（harness 层强制执行）
+- `memory/session-state.json`：Dev Mode、当前域、待确认动作、压缩次数
 
 **⚡ Workflow Skill 按需加载**
-把高频复杂任务固化为独立 SKILL.md（当前 10 个：JD 分析、论文解读、配置审查、事实核查、工程执行、工程落地、安全审计、会话压缩、多代理初始化、公开证据抓取），会话启动时只建索引，命中触发条件时立即加载全文执行，执行完即退出——不长期占用上下文预算。
+14 个高频任务固化为独立 SKILL.md，会话启动时只建索引，命中触发条件时立即加载全文执行，执行完即退出。每个 skill 声明 `requires` 依赖字段，命中前先检查工具可用性，不满足直接返回 `blocked`。
+
+**🤖 Subagent 并发架构**
+三类专用子代理（model: inherit，继承主 session 的 Codex），各自有独立 context 和最小工具权限：
+- `search-agent`：并发搜索，只有 WebFetch/WebSearch/Read/Grep 权限
+- `memory-agent`：BRO/SIS 路由时后台检索近期记忆，只读权限
+- `heartbeat-agent`：cron 定时巡检，只读 + 写 heartbeat-state.json
 
 **📊 本地训练底座（Local-first）**
 真实交互可沉淀为训练资产：Trace 收集 → Judge 评分 → Dataset 构建 → MLX / LLaMA-Factory 本地训练，全流程在 Mac mini M4 上运行，无需上传数据到云端。
@@ -64,7 +69,7 @@
 | **部分借鉴** | [Hermes Agent](https://github.com/NousResearch/hermes-agent)（Nous Research，MIT 开源，40k ⭐） |
 | **底层 LLM** | Codex（OpenClaw 运行时） |
 | **运行环境** | Mac mini M4（24/7 本地），WhatsApp / Telegram / Discord 交互 |
-| **核心扩展** | 在 OpenClaw 执行层之上，增加了多专家仲裁、分域记忆、向量化检索、训练底座四层能力 |
+| **核心扩展** | 多专家仲裁、分域记忆、向量化检索、Subagent 并发、Harness hooks、训练底座 |
 
 ---
 
@@ -391,7 +396,7 @@ python3 tools/memory_search.py --query "换电站运力" --domain ENGINEER --hyb
 
 ## 5. Workflow Skills
 
-10 个高频任务已固化为 workflow skill，按需加载，不常驻 prompt。命中触发条件即自动执行，无需用户二次提醒。
+14 个高频任务已固化为 workflow skill，按需加载，不常驻 prompt。命中触发条件即自动执行，无需用户二次提醒。每个 skill 有 `requires` 依赖声明，缺少所需工具时直接返回 `blocked`，不空转。
 
 ### jd-analysis
 触发：收到 JD 文本 / 截图 / 链接
@@ -432,6 +437,22 @@ python3 tools/memory_search.py --query "换电站运力" --domain ENGINEER --hyb
 ### public-evidence-fetch
 触发："给我原文片段" / "不要总结，给证据" / "exact query + URL + snippet"
 输出：exact query + URL + verbatim snippet + 段落位置 + 简短解释
+
+### deep-research
+触发："帮我深度调研" / "全面了解一下" / "多角度分析" / 需要多来源的复杂调研
+输出：问题拆解 → 并发 spawn search-agent×2-3 → RRF 融合 → 带来源的综合报告
+
+### memory-companion
+触发：CTRL 路由到 BRO 或 SIS 时自动触发（无需用户说）
+输出：后台 spawn memory-agent 检索近期记忆 → 注入情绪状态/上次话题 → BRO/SIS 带记忆回复
+
+### proactive-heartbeat
+触发：cron 每天 08:30 / 18:00 自动巡检；用户说"检查一下我的待办"
+输出：heartbeat-agent 静默巡检 → 写入 heartbeat-state.json → 用户下次开口时呈现 P0/P1 事项
+
+### paperbanana
+触发："帮我画论文配图" / "生成方法架构图" / 提供方法段落+图注
+输出：Retriever→Planner→Stylist→Visualizer→Critic 五代理流水线生成发表级配图（需本地安装）
 
 ---
 
@@ -484,13 +505,25 @@ python3 tools/memory_search.py --query "上次面试进展" --domain JOB --hybri
 
 | 文件 | 作用 |
 |------|------|
-| [AGENTS.md](AGENTS.md) | 全局行为约束（最高优先级）|
+| [AGENTS.md](AGENTS.md) | 全局行为约束 + Deny/Ask/Allow 三层授权 + Immutable Rules（最高优先级）|
 | [SOUL.md](SOUL.md) | 助手人格契约 |
+| [MULTI_AGENTS.md](MULTI_AGENTS.md) | 专职代理定义 + 路由规则 + A2A 协议 |
+| [CTRL_PROTOCOLS.md](CTRL_PROTOCOLS.md) | CTRL 运行协议：Skill 加载 / 压缩 / 检索 / Skill 提议 |
+| [DEV_LOG.md](DEV_LOG.md) | DEV LOG 9 字段格式规范 + 强制输出规则 |
+| [HEARTBEAT.md](HEARTBEAT.md) | 心跳静默策略 + Proactive Heartbeat Agent 说明 |
 | `USER.md` | 用户画像与偏好（私有，从 USER.md.example 创建，不在 repo 里）|
 | `MEMORY.md` | 长期记忆（分域块，私有，从 MEMORY.md.example 创建，不在 repo 里）|
-| [MULTI_AGENTS.md](MULTI_AGENTS.md) | 路由协议与专职代理配置 |
 | [USER.md.example](USER.md.example) | USER.md 公开模板 |
 | [MEMORY.md.example](MEMORY.md.example) | MEMORY.md 公开模板 |
+
+### Harness 配置（.claude/）
+
+| 文件 | 作用 |
+|------|------|
+| [.claude/settings.json](.claude/settings.json) | PostCompact / FileChanged / PreToolUse / SessionStart hooks |
+| [.claude/agents/search-agent.md](.claude/agents/search-agent.md) | 并发搜索子代理（inherit model，WebFetch+Read+Grep）|
+| [.claude/agents/memory-agent.md](.claude/agents/memory-agent.md) | 记忆检索子代理（inherit model，只读）|
+| [.claude/agents/heartbeat-agent.md](.claude/agents/heartbeat-agent.md) | 心跳巡检子代理（inherit model，只读+写 heartbeat-state.json）|
 
 ### Workflow Skills
 
@@ -506,6 +539,10 @@ python3 tools/memory_search.py --query "上次面试进展" --domain JOB --hybri
 | [skills/meta/session-compression-flow/SKILL.md](skills/meta/session-compression-flow/SKILL.md) | 会话压缩与跨会话衔接流程 |
 | [skills/multi-agent-bootstrap/SKILL.md](skills/multi-agent-bootstrap/SKILL.md) | 多代理架构搭建/迁移 |
 | [skills/search/public-evidence-fetch/SKILL.md](skills/search/public-evidence-fetch/SKILL.md) | 公开网页/论文证据抓取 |
+| [skills/search/deep-research/SKILL.md](skills/search/deep-research/SKILL.md) | 并发多源深度调研（spawn search-agent×2-3）|
+| [skills/companion/memory-companion/SKILL.md](skills/companion/memory-companion/SKILL.md) | 记忆增强陪伴（BRO/SIS 自动触发）|
+| [skills/meta/proactive-heartbeat/SKILL.md](skills/meta/proactive-heartbeat/SKILL.md) | 主动心跳巡检（cron + SessionStart 呈现）|
+| [skills/learn/paperbanana/SKILL.md](skills/learn/paperbanana/SKILL.md) | 学术论文配图自动生成（需本地安装）|
 
 ### Memory 检索工具
 
@@ -524,17 +561,19 @@ python3 tools/memory_search.py --query "上次面试进展" --domain JOB --hybri
 | [openclaw_substrate/dataset_builder.py](openclaw_substrate/dataset_builder.py) | 训练数据集构建 |
 | [openclaw_substrate/shadow_eval.py](openclaw_substrate/shadow_eval.py) | Baseline vs candidate 回放对比 |
 
-### 历史设计资料
+### 学习文档
 
-这些内容继续保留，是演化过程的一部分：
+| 文件 | 内容 |
+|------|------|
+| [docs/subagent-harness-learning-guide.md](docs/subagent-harness-learning-guide.md) | Subagent 架构 + Harness 改造原理（AI搜索/AI陪伴/Proactive Heartbeat 设计思路）|
+| [docs/memory-compression-guide.md](docs/memory-compression-guide.md) | 记忆与压缩机制详解（三层记忆/四级检索/压缩协作/运维命令）|
+
+### 历史设计资料
 
 - [multi-agent/ARCHITECTURE.md](multi-agent/ARCHITECTURE.md)
 - [multi-agent/PROFILE_CONTRACT.md](multi-agent/PROFILE_CONTRACT.md)
-- [multi-agent/UNIFIED_SYNC_2026-03-22.md](multi-agent/UNIFIED_SYNC_2026-03-22.md)
 - [multi-agent/UNIFIED_SYNC_2026-03-25.md](multi-agent/UNIFIED_SYNC_2026-03-25.md)
 - [docs/openclaw-iteration-plan-v1.md](docs/openclaw-iteration-plan-v1.md)
-- [docs/hidden-training-agents-v0.1.md](docs/hidden-training-agents-v0.1.md)
-- NoCode 控制台（可视化预览）：[longClaw 多代理控制台](https://control-system-panel.mynocode.host/#/longclaw)
 
 ---
 
@@ -542,12 +581,14 @@ python3 tools/memory_search.py --query "上次面试进展" --domain JOB --hybri
 
 | 边界 | 说明 |
 |------|------|
-| workspace 改造层 | longClaw 是 OpenClaw workspace 改造，OpenClaw 原生能力（hooks/权限/compaction/skill加载）直接可用；longClaw 新增仲裁、分域记忆、检索、训练四层 |
+| workspace 改造层 | longClaw 是 OpenClaw workspace 改造，原生能力（hooks/权限/compaction/skill加载）直接可用；longClaw 新增仲裁、分域记忆、检索、subagent、harness hooks、训练底座 |
+| Subagent 模型 | subagent 只支持 Claude 模型（inherit/sonnet/opus/haiku），不支持 Codex；当前三个 agent 均设为 inherit 继承主 session |
 | 技能自动生成 | 目前是提议系统（用户确认后才写入），非官方 OpenClaw 式自动写入 |
 | memory 检索质量 | 取决于 MEMORY.md 的事实条目密度；配置规则文本语义区分度有限 |
 | hybrid 增益 | 语料以配置/规则文本为主时 FTS 与 embedding 差距不大；事实型日志积累后优势显现 |
 | openclaw_substrate | 训练底座已定义优化闭环，短期不启用（主用 Codex via OpenClaw） |
-| 并发上限 | 维持 ≤2 专职并行，无执行层配套时不放开 |
+| 并发上限 | 专职并行 ≤2；subagent 并发 ≤3（deep-research 上限）|
+| Proactive Heartbeat | 需在 Mac mini 上手动运行一次 setup_heartbeat_cron.sh 安装 cron job |
 
 ---
 

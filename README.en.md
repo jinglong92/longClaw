@@ -43,15 +43,20 @@ Observable: **routing decisions · session state · memory injection volume · r
 
 **🧱 Workspace Baseline Locked**
 
-Current workspace has hardened "authorization, evidence, readback, session state, web evidence gate" into a unified baseline:
+Current workspace has hardened authorization, evidence, readback, and session state into a unified baseline:
 
-- `AGENTS.md`: authorization model / web gate / execution latch / readback validation / anti-stall rules
-- `memory/session-state.json`: Dev Mode, active domain, pending confirmations, last retrieval scope
-- `skills/search/public-evidence-fetch/SKILL.md`: public web evidence fetch workflow
-- `refactor_workspace_baseline.sh`: one-command baseline rebuild script
+- `AGENTS.md`: Deny > Ask > Allow three-tier authorization / Immutable Rules / execution latch / readback validation
+- `.claude/settings.json`: PostCompact / FileChanged / PreToolUse / SessionStart hooks (harness-layer enforcement)
+- `memory/session-state.json`: Dev Mode, active domain, pending confirmations, compression count
 
 **⚡ Workflow Skills on Demand**
-10 high-frequency complex tasks hardened as SKILL.md files. Session startup builds index only; full SKILL.md loaded on trigger match, executed immediately, exits after completion — no long-term context budget occupation.
+14 high-frequency tasks hardened as SKILL.md files with `requires` dependency declarations. Session startup builds index only; full SKILL.md loaded on trigger match, executed immediately — no long-term context occupation. Missing required tools return `blocked` immediately, no stalling.
+
+**🤖 Subagent Concurrent Architecture**
+Three specialized subagents (model: inherit, uses main session's Codex), each with isolated context and minimal tool permissions:
+- `search-agent`: concurrent search, WebFetch/WebSearch/Read/Grep only
+- `memory-agent`: background memory retrieval for BRO/SIS, read-only
+- `heartbeat-agent`: cron-scheduled inspection, read + write heartbeat-state.json only
 
 **📊 Local Training Substrate (Local-first)**
 Real interactions can be distilled into training assets: Trace collection → Judge scoring → Dataset building → MLX / LLaMA-Factory local training. Full pipeline runs on Mac mini M4, no data upload to cloud.
@@ -64,7 +69,7 @@ Real interactions can be distilled into training assets: Trace collection → Ju
 | **Partially inspired by** | [Hermes Agent](https://github.com/NousResearch/hermes-agent) (Nous Research, MIT, 40k ⭐) |
 | **Underlying LLM** | Codex (via OpenClaw runtime) |
 | **Runtime** | Mac mini M4 (24/7 local), WhatsApp / Telegram / Discord interfaces |
-| **Core extensions** | On top of OpenClaw execution layer: multi-expert arbitration, domain-aware memory, vector retrieval, training substrate |
+| **Core extensions** | Multi-expert arbitration, domain-aware memory, vector retrieval, subagent concurrency, harness hooks, training substrate |
 
 ---
 
