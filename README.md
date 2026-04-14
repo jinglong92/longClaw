@@ -81,9 +81,10 @@ cd longClaw
 cp AGENTS.md SOUL.md MULTI_AGENTS.md /path/to/your-workspace/
 cp -r skills/ /path/to/your-workspace/
 
-# 3. 改成你自己的配置（必须修改这 3 个文件）
-cp USER.md IDENTITY.md MEMORY.md /path/to/your-workspace/
-# 然后编辑它们，替换成你的个人信息
+# 3. 从模板创建你自己的私有配置（这 3 个文件不会被推送到 GitHub）
+cp USER.md.example /path/to/your-workspace/USER.md
+cp MEMORY.md.example /path/to/your-workspace/MEMORY.md
+# 然后编辑 USER.md，填入你的名字、职业、偏好、当前上下文
 
 # 4. 安装 memory 检索工具（可选，增强检索能力）
 cp -r tools/ /path/to/your-workspace/
@@ -97,13 +98,13 @@ python3 tools/memory_search.py --query "测试" --verbose  # 验证
 bash refactor_workspace_baseline.sh
 ```
 
-**需要改成你自己的 3 个文件**：
+**需要自己创建的私有文件**（不在 repo 里，不会推送）：
 
-| 文件 | 要改什么 |
-|------|---------|
-| `USER.md` | 你的名字、职业、偏好、当前上下文 |
-| `IDENTITY.md` | 你的 Agent 名字、性格、头像 |
-| `MEMORY.md` | 清空示例内容，从空白开始积累 |
+| 文件 | 来源 | 要改什么 |
+|------|------|---------|
+| `USER.md` | 从 `USER.md.example` 复制 | 你的名字、职业、偏好、当前上下文、专属术语定义 |
+| `MEMORY.md` | 从 `MEMORY.md.example` 复制 | 从空白开始，随对话积累长期记忆 |
+| `memory/` | 自动生成 | 每日对话日志，由 CTRL 自动写入 |
 
 **可以直接复用（不需要改）**：
 `AGENTS.md` · `SOUL.md` · `MULTI_AGENTS.md` · `skills/` · `tools/`

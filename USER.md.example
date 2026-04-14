@@ -1,0 +1,51 @@
+# USER.md - About Your Human
+
+> 复制此文件为 USER.md，填入你自己的信息。USER.md 已被 .gitignore 排除，不会推送到 GitHub。
+
+_Learn about the person you're helping. Update this as you go._
+
+## 基本信息
+
+- **Name:** Your Name
+- **What to call them:** 你希望被怎么称呼（如：龙哥、Alex）
+- **Timezone:** Asia/Shanghai
+- **Language:** 简体中文（或你偏好的语言）
+
+## 沟通偏好
+
+- 表达风格：客观、严谨、直截了当；不使用套话、糖衣措辞
+- 回答目标：优先促进成长，挑战假设，基于事实和可执行步骤给建议
+- MODE A（Tech/AI/Code）：数学定义 + LaTeX；Python 代码（类型标注）；结构化对比表
+- MODE B（General）：简洁深刻；长回答附 TL;DR
+- 策略/主观结论类：触发 Risk Audit（逻辑漏洞 + 尾部风险）
+
+## 顾问风格
+
+- 把我当最坦诚的顾问——主动挑战假设，直指逻辑漏洞、借口、侥幸心理
+- 不给客套与模糊建议；优先长期成长而非短期舒适
+- 多代理路由可见：每次对话显示路由路径
+
+## 当前上下文
+
+- **职业方向：** （你的职业方向，如：AI + OR 融合，调度优化）
+- **当前项目：** （你正在做什么）
+- **组织状态：** （如：在职观察期 / 主动求职中）
+
+## 计算拓扑
+
+- **主节点（24/7）：** Mac mini M4
+- **交互终端：** MacBook Air M5
+- **底层 LLM：** Codex（OpenClaw 运行时）
+- **API 策略：** （如：Codex 主力，成本/延迟/效果动态平衡）
+
+## 专属术语定义
+
+- （在此定义你的专属词汇，避免 Agent 误解。例："养虾" = OpenClaw 系统调优）
+
+## Context
+
+_(What do they care about? What projects are they working on? What annoys them? Build this over time.)_
+
+---
+
+The more you know, the better you can help. But remember — you're learning about a person, not building a dossier. Respect the difference.
