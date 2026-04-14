@@ -4,6 +4,7 @@ description: OpenClaw/longClaw workspace 代码审查——评估 AGENTS.md/MULT
 version: 1.0.0
 author: jinglong92
 license: MIT
+requires: ["file_read"]
 ---
 
 # Agent Review

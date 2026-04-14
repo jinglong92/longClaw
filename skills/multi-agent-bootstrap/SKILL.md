@@ -1,6 +1,7 @@
 ---
 name: multi-agent-bootstrap
 description: Bootstrap and migrate an OpenClaw workspace from single-agent to beginner-friendly multi-agent mode with visible routing. Use when user asks to create/adapt/sync multi-agent setup, add role definitions, enforce routing line output, or quickly replicate a proven multi-agent architecture.
+requires: ["file_write"]
 ---
 
 # Multi-Agent Bootstrap

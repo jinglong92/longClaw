@@ -1,6 +1,7 @@
 ---
 name: session-compression-flow
 description: Trigger and execute session compression plus post-compression handoff for next-session continuity. Use when user asks to compress long conversations, enforce compression thresholds, or standardize how compressed summaries are written into daily memory and MEMORY.md for later recall.
+requires: ["file_write"]
 ---
 
 # Session Compression Flow

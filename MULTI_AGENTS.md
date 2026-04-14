@@ -434,9 +434,26 @@ multi-agent-bootstrap | META   | 多代理架构初始化
 
 只读取 frontmatter 中的 name + description，不全量加载正文。
 
+### 依赖检查（命中前必须通过）
+
+SKILL.md frontmatter 中的 `requires` 字段声明该 skill 运行所需的工具能力。
+CTRL 在命中触发条件后、加载 SKILL.md 全文前，先检查 requires：
+
+```
+requires: []               → 无依赖，直接执行
+requires: [web_fetch]      → 检查当前 runtime 是否有 WebFetch 能力
+requires: [file_write]     → 检查当前 runtime 是否有文件写入能力
+requires: [web_fetch, file_write] → 两项都需要满足
+```
+
+**依赖不满足时**：
+- 返回 `blocked: missing_tool(<tool_name>)`
+- 不得假装执行，不得空转
+- 可提供降级建议（如：`web_fetch` 不可用时提示用户提供直链或 PDF）
+
 ### 命中即触发（硬规则）
 
-**只要用户输入匹配 SKILL.md 中的任一触发条件，CTRL 必须立即加载并执行该 skill，不得跳过、降级为普通回答或等待用户二次确认。**
+**只要用户输入匹配 SKILL.md 中的任一触发条件，且依赖检查通过，CTRL 必须立即加载并执行该 skill，不得跳过、降级为普通回答或等待用户二次确认。**
 
 匹配判断标准（满足任一即命中）：
 - 用户输入包含 SKILL.md `## 触发条件` 中列出的关键词或语义
@@ -538,12 +555,14 @@ CTRL 从对话中发现可复用的工作流模式，主动提议固化为 SKILL
 
 ### 触发条件（满足任一）
 
-1. **重复模式检测**：同类 workflow 请求在近 7 天内出现 ≥ 3 次
-  例：连续 3 次"帮我分析这个 JD" → 提议创建 `skills/job/jd-analysis/SKILL.md`
+1. **复杂流程完成后（主要触发）**：任务完成且满足以下全部条件时，当轮末尾自动提议：
+  - 任务步骤 ≥ 3 步
+  - 逻辑可复用（不是一次性特殊任务）
+  - 当前 skills/ 目录中不存在覆盖该工作流的 skill
+  例：成功完成一次论文解读 → 提议创建 paper-deep-dive skill
 2. **用户明确表达**：
   - "以后都这样处理" / "记住这个流程" / "把这个固化下来" / "做成一个技能"
-3. **复杂流程完成后**：某个任务需要 ≥ 5 步操作，且逻辑可复用
-  例：成功完成一次完整的论文解读流程 → 提议创建 paper-deep-dive skill
+3. **重复模式检测（辅助触发）**：同类 workflow 请求在近 7 天内出现 ≥ 2 次（从 3 次降低）
 
 ### 提议格式
 

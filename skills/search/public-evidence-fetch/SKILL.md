@@ -4,6 +4,7 @@ description: 对公开网页/论文执行只读检索与证据摘录，返回 ex
 version: 2.0.0
 author: jinglong92
 license: MIT
+requires: ["web_fetch"]
 ---
 
 # Public Evidence Fetch
