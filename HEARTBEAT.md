@@ -32,6 +32,43 @@ These actions must remain silent unless a critical emergency exists.
 
 ---
 
+## Proactive Heartbeat Agent
+
+longClaw 扩展：在静默策略基础上增加"发现 → 准备 → 等用户开口时呈现"机制。
+
+### 运行方式
+
+**巡检**（cron 驱动，Mac mini M4 后台）：
+- 每天 08:30 和 18:00 自动触发
+- spawn `heartbeat-agent` 子代理执行只读巡检
+- 结果写入 `memory/heartbeat-state.json`
+- 全程静默，不发任何消息
+
+**呈现**（SessionStart hook 驱动）：
+- 每次用户开启新 session 时，hook 检查 `heartbeat-state.json`
+- 有 P0/P1 未展示事项 → 在本轮回复开头简短呈现
+- 呈现后标记为 `shown: true`，不重复提醒
+
+### 巡检优先级
+
+| 级别 | 内容 | 是否呈现给用户 |
+|------|------|--------------|
+| P0 | 今日/明日截止（面试/deadline） | ✅ 开口即提醒 |
+| P1 | 近7天跟进事项（投递无回复等） | ✅ 开口即提醒 |
+| P2 | 系统健康（日志缺失/压缩异常） | ❌ 只写日志 |
+
+### 状态文件
+
+`memory/heartbeat-state.json` — 巡检结果，SessionStart hook 读取
+
+### 安装 cron
+
+```bash
+bash setup_heartbeat_cron.sh
+```
+
+---
+
 ## What Counts as a Critical Emergency
 
 A user-facing alert is allowed **only** if immediate human action is required to prevent one of the following:

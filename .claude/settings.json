@@ -1,5 +1,15 @@
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "STATE=memory/heartbeat-state.json; if [ -f \"$STATE\" ]; then HAS=$(python3 -c \"import json; d=json.load(open('$STATE')); print('yes' if d.get('has_pending') and any(i.get('priority') in ['P0','P1'] and not i.get('shown') for i in d.get('pending_items',[])) else 'no')\" 2>/dev/null); if [ \"$HAS\" = 'yes' ]; then echo '[heartbeat] 有待处理事项，请在本轮回复开头读取 memory/heartbeat-state.json 并呈现 P0/P1 pending_items'; fi; fi"
+          }
+        ]
+      }
+    ],
     "PostCompact": [
       {
         "matcher": "auto",
