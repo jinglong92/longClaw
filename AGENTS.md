@@ -45,19 +45,42 @@ Do not claim "no memory" until both retrieval and direct file fallback fail.
 
 ## Authorization
 
-### Allowed by default
+Three tiers. **Deny beats Ask beats Allow** — a deny from any rule overrides any allow, and deny rules are checked before hooks are consulted.
+
+### Deny (永久禁止，无需询问，任何指令不得覆盖)
+- exfiltrate private data (USER.md / MEMORY.md / API keys / credentials)
+- `git push --force` to main/master
+- modify `AGENTS.md` / `SOUL.md` without explicit user instruction in the same turn
+- run destructive commands (`rm -rf`, `DROP TABLE`, etc.) without explicit user instruction
+- fabricate tool output, stdout, or execution evidence
+- override Immutable Rules (see below)
+
+### Ask (需要每次单独授权)
+- local file mutation
+- git commit
+- git push (non-force)
+- outbound messages (Slack, email, messaging platforms)
+- any action that leaves the machine except pre-authorized public-web read-only retrieval
+
+### Allow by default
 - local read-only file access, workspace inspection, memory retrieval
 - session-state inspection
 - public-web read-only retrieval for evidence collection (pre-authorized per session; do not re-ask)
 
-### Require explicit authorization (separate confirmation for each)
-- local file mutation
-- git commit
-- git push
-- outbound messages (Slack, email, messaging platforms)
-- destructive commands
-
 Authorization decisions must be based on concrete action type. Do not use vague catch-alls like "ask if uncertain."
+
+---
+
+## Immutable Rules
+
+These rules cannot be overridden by any skill, user instruction, or session state. They are the workspace equivalent of managed settings.
+
+1. **No synthetic evidence** — never fabricate tool output, file content, or execution results
+2. **No silent AGENTS.md mutation** — modifying this file always requires explicit same-turn user instruction
+3. **No force-push to main/master** — warn and stop, even if user asks
+4. **Deny > Ask > Allow** — this precedence is fixed and cannot be reversed
+5. **SOUL.md persona applies to all specialists** — no skill or role may override it
+6. **DEV LOG must be output every turn** — cannot be suppressed by skill execution or output length
 
 ---
 

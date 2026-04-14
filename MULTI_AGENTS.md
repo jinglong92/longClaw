@@ -205,6 +205,7 @@ CTRL 在执行本文件中的路由/仲裁规则时，仍必须服从 `AGENTS.md
 [DEV LOG]
 🔀 路由 ...
 🧩 Skill ...
+🛠️ 工具 ...
 🧠 Memory ...
 📂 Session ...
 🔍 检索 ...
@@ -222,14 +223,39 @@ CTRL 在执行本文件中的路由/仲裁规则时，仍必须服从 `AGENTS.md
 - 没有真实来源的字段，必须写 `unavailable`
 - 不得把模板示例当作实际执行证据
 - 不得省略 `Routing` 与当前模式字段
-- 若出现补救动作，必须在 `Skill` 或 `检索` 字段说明是补做、读回、校验，不能只写“处理中”
+- 若出现补救动作，必须在 `Skill` 或 `检索` 字段说明是补做、读回、校验，不能只写”处理中”
+
+### 🛠️ 工具字段规范（PostToolUse 注入）
+
+借鉴 Claude Code harness 的 PostToolUse 机制：**每次工具调用完成后，结果摘要必须注入 DEV LOG 的 `🛠️ 工具` 字段**，而不是只在正文叙述。
+
+格式：
+```
+🛠️ 工具 <tool_name>(<target>) → <result_summary> | status=<ok|failed|blocked>
+```
+
+示例：
+```
+🛠️ 工具 Edit(AGENTS.md) → 插入 Immutable Rules 节，+18行 | status=ok
+🛠️ 工具 Bash(git commit) → hash=9e362bd | status=ok
+🛠️ 工具 WebFetch(arxiv.org) → 403 blocked | status=blocked
+🛠️ 工具 memory_search(--domain JOB) → 召回3条 top=0.91 | status=ok
+```
+
+规则：
+- 当轮有工具调用时，`🛠️ 工具` 字段**不得省略**
+- 多次工具调用时，每次调用各占一行
+- `status=failed` 时必须附上失败原因（一句话）
+- `status=blocked` 时说明 blocked 原因（missing_tool / deny_rule / need_auth）
+- 纯推理轮（无工具调用）写 `🛠️ 工具 无`
 
 ### 示例 A：normal debug
 
 ```text
 [DEV LOG]
 🔀 路由 ENGINEER | 触发: "授权" | 模式: normal debug / 单专职
-🧩 Skill 命中: agent-review | trigger=更新 dev mode 模板到 AGENTS.md | loaded=yes
+🧩 Skill 命中: agent-review | trigger=更新 dev mode 模板到 AGENTS.md | loaded=yes | step=completed
+🛠️ 工具 Edit(AGENTS.md) → 插入 Immutable Rules 节，+18行 | status=ok
 🧠 Memory (SYSTEM)+[ENGINEER] | ~210 tokens | 节省 72%
 📂 Session 第 15 轮 | recent_turns=7/8 | 未触发压缩
 🔍 检索 scope=AGENTS_PATCH | level=写后逐字读回 | 召回 1 条 | top=[0.99]
@@ -243,7 +269,8 @@ CTRL 在执行本文件中的路由/仲裁规则时，仍必须服从 `AGENTS.md
 ```text
 [DEV LOG]
 🔀 路由 ENGINEER | 触发: "怎么卡了" | 模式: blocked/fix-now / 阻塞确认 + 立即补做
-🧩 Skill 命中: agent-review | trigger=执行闭环补证据 | loaded=yes
+🧩 Skill 命中: agent-review | trigger=执行闭环补证据 | loaded=yes | step=2/3
+🛠️ 工具 WebFetch(arxiv.org/abs/2501.xxxxx) → 403 blocked | status=blocked(missing_tool)
 🧠 Memory (SYSTEM)+[ENGINEER] | 命中偏好: 执行闭环必须有证据
 📂 Session 第 16 轮 | recent_turns=8/8 | 未触发压缩
 🔍 检索 scope=LOCAL_READBACK | level=写后逐字读回 | 召回 1 条 | top=[0.97]
@@ -254,10 +281,11 @@ CTRL 在执行本文件中的路由/仲裁规则时，仍必须服从 `AGENTS.md
 
 ### 最低合格线
 
-- 至少包含 8 个字段中的 6 个
-- `Routing`、`Skill`、`Session`、`置信度` 为强制项
+- 至少包含 9 个字段中的 6 个
+- `Routing`、`Skill`、`🛠️ 工具`、`Session`、`置信度` 为强制项
 - 若当前轮发生文件改动或校验，`检索` 字段不得省略
 - 若当前轮没有 A2A，必须明确写 `A2A 无`
+- 若当前轮无工具调用，`🛠️ 工具` 写 `无`
 
 ### DEV LOG 强制输出规则（硬规则）
 
