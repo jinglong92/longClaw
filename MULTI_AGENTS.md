@@ -259,6 +259,25 @@ CTRL 在执行本文件中的路由/仲裁规则时，仍必须服从 `AGENTS.md
 - 若当前轮发生文件改动或校验，`检索` 字段不得省略
 - 若当前轮没有 A2A，必须明确写 `A2A 无`
 
+### DEV LOG 强制输出规则（硬规则）
+
+**以下情况下 DEV LOG 不得省略、不得缩减、不得只输出部分字段：**
+
+1. Skill 执行期间（从命中到执行结束的每一轮）
+2. 复杂任务执行中（涉及多步操作、文件修改、工具调用的每一轮）
+3. 用户质疑"是不是没执行"或"为什么没做"时
+4. 发生阻塞、证据缺失、需要补救时
+
+**Skill 执行期间的额外要求：**
+- `🧩 Skill` 字段必须显示当前执行到第几步（例：`step 2/5`）
+- 若 Skill 内部有子步骤，每个子步骤完成后更新 `🧩 Skill` 字段
+- Skill 执行完成后最后一轮，`🧩 Skill` 字段写 `completed | output=<输出摘要>`
+
+**禁止的省略行为：**
+- 不得以"输出太长"为由省略 DEV LOG
+- 不得以"Skill 已执行完"为由省略 DEV LOG
+- 不得只输出 Routing 而跳过其他字段
+
 ---
 
 ## 5) 用户偏好绑定（当前）
@@ -395,25 +414,45 @@ openclaw_{session_type}_{YYYY-MM-DD}
 ### Skill 加载协议（Progressive Disclosure）
 
 > 说明：这是 CTRL 的工作区行为约定，不代表 substrate/runtime 已内建对应的 skill loader。
-> Hermes Agent 有真正的 skill discover/load/manage 工具（skill_manage）；
-> longClaw 这里是把同样的理念移植到 workspace 协议层，由 CTRL 遵守执行。
 
-### CTRL 行为约定
+### Skill Index（会话启动时建立）
 
-**会话启动时**：
+CTRL 在会话启动时扫描 `skills/` 目录，建立 skill index，格式如下：
 
-- CTRL 扫描 `skills/` 目录，建立 skill index（只读取 frontmatter 中的 name + description）
-- **不全量加载** SKILL.md 正文到 prompt（避免 token 浪费）
-- Skill index 格式：`<name>: <description>`
+```
+paper-deep-dive     | LEARN    | 论文深度解读
+jd-analysis         | JOB      | 分析岗位 JD，匹配度评级
+agent-review        | ENGINEER | workspace 配置审查
+research-build      | ENGINEER | 需求→实现闭环
+research-execution-protocol | ENGINEER | 复杂排障/修 bug
+fact-check-latest   | SEARCH   | 核查最新信息
+public-evidence-fetch | SEARCH | 公开网页证据摘录
+skill-safety-audit  | META     | 外部 skill 接入审计
+session-compression-flow | META | 会话压缩归档
+multi-agent-bootstrap | META   | 多代理架构初始化
+```
 
-**命中时**：
+只读取 frontmatter 中的 name + description，不全量加载正文。
 
-- CTRL 识别到用户请求匹配某个 skill 的触发条件
-- 读取该 skill 的 SKILL.md 全文，按其中的流程执行
-- 执行完成后，SKILL.md 正文不保留在后续 context 中
+### 命中即触发（硬规则）
+
+**只要用户输入匹配 SKILL.md 中的任一触发条件，CTRL 必须立即加载并执行该 skill，不得跳过、降级为普通回答或等待用户二次确认。**
+
+匹配判断标准（满足任一即命中）：
+- 用户输入包含 SKILL.md `## 触发条件` 中列出的关键词或语义
+- 用户请求的任务类型与 skill description 高度吻合（相似度判断，不要求逐字匹配）
+- 路由到某专职后，该专职对应 skill 存在且任务类型吻合
+
+命中后 CTRL 必须：
+1. 在 DEV LOG 中标注 `🧩 Skill 命中: <name> | trigger=<匹配原因> | loaded=yes`
+2. 读取该 SKILL.md 全文
+3. 按 SKILL.md 中的流程执行，不得简化或跳步
+
+**未命中时**：DEV LOG 写 `🧩 Skill 命中: none | 原因: <为什么没命中>`，不得留空。
+
+**执行完成后**：SKILL.md 正文不保留在后续 context 中，但 DEV LOG 的输出不受影响——每轮都必须输出完整 DEV LOG。
 
 **新 skill 生效时机**：
-
 - 默认在**下一个 session** 生效（会话启动时重建 skill index）
 - 若用户要求当前 session 立即启用：CTRL 先重建 skill index，再明确告知"已更新技能索引，从下一条消息起按新 skill 执行"
 

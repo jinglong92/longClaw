@@ -1,126 +1,118 @@
-# TOOLS.md - Local Notes
+# TOOLS.md - Local Capability Bindings
 
-Skills define _how_ tools work. This file is for _your_ specifics — the stuff that's unique to your setup.
-
-## Role In The System
-
-`TOOLS.md` is the bridge between generic workflows and this actual workspace.
-
-Separation of concerns:
-
-- `SKILL.md`: reusable workflow logic
-- `TOOLS.md`: local capability bindings, aliases, paths, caveats, and operator notes
-- `AGENTS.md`: safety and execution policy
-- `MULTI_AGENTS.md`: routing and CTRL protocol
-
-If a skill answers "what should be done", `TOOLS.md` should answer:
-
-- with which local command or app
-- against which local path or service
-- under which caveat or limitation
-- with which fallback if the preferred tool is absent
-
-## What Goes Here
-
-Things like:
-
-- Camera names and locations
-- SSH hosts and aliases
-- Preferred voices for TTS
-- Speaker/room names
-- Device nicknames
-- Anything environment-specific
-
-Also include:
-
-- local command aliases that skills rely on
-- which public-web or browser tools are actually available
-- local workspace paths used by recurring workflows
-- tool-specific failure modes worth remembering
-- environment constraints that affect readback, patching, testing, or browser automation
-
-## Skill Bindings
-
-Use this section to bind reusable skills to local execution reality.
-
-Suggested format:
-
-```markdown
-### <skill-name>
-- Primary toolchain:
-- Workspace paths:
-- Required binaries:
-- Known caveats:
-- Verification command:
-```
-
-Current skill families in this workspace:
-
-- `skills/engineer/agent-review`
-- `skills/engineer/research-build`
-- `skills/engineer/research-execution-protocol`
-- `skills/job/jd-analysis`
-- `skills/learn/paper-deep-dive`
-- `skills/meta/session-compression-flow`
-- `skills/meta/skill-safety-audit`
-- `skills/search/fact-check-latest`
-- `skills/search/public-evidence-fetch`
-- `skills/multi-agent-bootstrap`
-
-## Capability Registry Template
-
-```markdown
-### Browser / Web
-- Public web fetch:
-- Browser automation:
-- Notes:
-
-### Git / Repo
-- Default remote:
-- Push policy:
-- Notes:
-
-### Node / Python / CLI
-- Node:
-- Python:
-- Key CLIs:
-- Notes:
-```
-
-## Examples
-
-```markdown
-### Cameras
-
-- living-room → Main area, 180° wide angle
-- front-door → Entrance, motion-triggered
-
-### SSH
-
-- home-server → 192.168.1.100, user: admin
-
-### TTS
-
-- Preferred voice: "Nova" (warm, slightly British)
-- Default speaker: Kitchen HomePod
-```
-
-## Maintenance Rule
-
-When a skill repeatedly fails or degrades because of this machine's setup:
-
-- update `TOOLS.md`
-- do not patch the shared skill first unless the workflow itself is wrong
-
-When a workflow changes for everyone:
-
-- update the relevant `SKILL.md`
-- keep `TOOLS.md` focused on local bindings only
-
-## Why Separate?
-
-Skills are shared. Your setup is yours. Keeping them apart means you can update skills without losing your notes, and share skills without leaking your infrastructure.
+本文件绑定 longClaw skills 到 Mac mini M4 的实际命令、路径和能力边界。
+更新规则：skill 反复失败时先更新本文件，不改 SKILL.md。
 
 ---
 
-Add whatever helps you do your job. This is your cheat sheet.
+## 环境概览
+
+- 设备：Mac mini M4（24/7 在线）
+- 系统：macOS（Apple Silicon，arm64）
+- Shell：zsh
+- Python：`uv` 管理（`~/.local/bin/uv`），系统 python3 备用
+- Node：Node 20（via Homebrew，`node` / `npm` 可直接调用）
+- 包管理：Homebrew（`/opt/homebrew/bin/brew`）
+
+---
+
+## Skill 本机绑定
+
+### paper-deep-dive
+- 触发路由：LEARN
+- 依赖工具：无外部工具，纯 LLM 推理
+- 论文获取：若用户给 arXiv 链接，可用 `curl` 或 WebFetch 获取摘要页
+- 已知限制：无法直接下载 PDF 正文；若需全文，请用户提供 PDF 或粘贴关键段落
+
+### jd-analysis
+- 触发路由：JOB
+- 依赖工具：无外部工具，纯 LLM 推理
+- 输入支持：JD 文本 / 截图文字 / 招聘网站链接（需 WebFetch 能力）
+
+### agent-review
+- 触发路由：ENGINEER
+- 依赖工具：本地文件读取（`Read` / `cat`）
+- 工作路径：`~/longClaw/`（当前 workspace 根目录）
+- 核心文件：`AGENTS.md` / `MULTI_AGENTS.md` / `skills/**/SKILL.md`
+
+### research-build / research-execution-protocol
+- 触发路由：ENGINEER
+- 依赖工具：文件读写、shell 命令执行
+- Python 执行：优先 `uv run python` 或 `python3`
+- Node 执行：`node` / `npx`
+- 验证命令：`python3 -c "..."` 或直接运行脚本
+
+### fact-check-latest / public-evidence-fetch
+- 触发路由：SEARCH
+- 依赖工具：WebFetch / WebSearch（需运行时支持）
+- 若 WebFetch 不可用：返回 `blocked: no_public_web_fetch_tool`，提示用户提供直链或 PDF
+
+### skill-safety-audit
+- 触发路由：META / ENGINEER
+- 依赖工具：本地文件读取、可选 WebFetch（审查外部仓库时）
+- 冲突优先级最高：与其他 engineer skill 同时命中时，先执行本 skill
+
+### session-compression-flow
+- 触发路由：META / CTRL
+- 依赖工具：文件读写（写入 `memory/YYYY-MM-DD.md` 和 `MEMORY.md`）
+- 压缩落盘路径：`memory/` 目录
+
+### multi-agent-bootstrap
+- 触发路由：META / CTRL
+- 依赖工具：文件读写
+- 核心目标文件：`AGENTS.md` / `MULTI_AGENTS.md`
+
+---
+
+## 能力注册表
+
+### Browser / Web
+- Public web fetch：依赖运行时 WebFetch 工具，不保证可用
+- Browser automation：Playwright 已安装（`npx playwright`）
+- 注意：WebFetch 不可用时不要反复询问授权，直接返回 `blocked: no_public_web_fetch_tool`
+
+### Git / Repo
+- 默认 remote：`origin`（GitHub）
+- Push 策略：需单独授权（不随文件修改授权自动生效）
+- 常用命令：`git status` / `git diff` / `git add` / `git commit` / `git push`
+
+### Python
+- 优先：`uv run python` 或 `python3`（系统 python3 在 `/usr/bin/python3`）
+- 包管理：`uv pip install` 或 `pip3 install`
+- 训练相关：`openclaw_substrate` 模块在 `~/longClaw/openclaw_substrate/`
+
+### Node / npm
+- Node 20（Homebrew）：`node --version` 应输出 v20.x
+- 全局包：`@anthropic-ai/claude-code`、`@openai/codex`、`@playwright/cli`
+- 运行：`node script.js` / `npx <tool>`
+
+### 内存工具
+- 索引构建：`python3 tools/memory_entry.py`
+- 检索：`python3 tools/memory_search.py --query "..." --domain <DOMAIN>`
+- 混合检索（需 Ollama）：加 `--hybrid` 参数
+- Ollama：若已安装，`ollama serve` 启动，模型 `nomic-embed-text`
+
+### 文件系统
+- workspace 根：`~/longClaw/`（即 `/Users/daijinglong/longClaw/` 或安装位置）
+- memory 目录：`memory/`（相对 workspace 根）
+- session state：`memory/session-state.json`
+- skill 目录：`skills/`
+
+---
+
+## 已知失败模式
+
+| 场景 | 失败原因 | 处理方式 |
+|------|---------|---------|
+| WebFetch 返回 302 / 认证错误 | 目标页需登录（如美团 KM） | 使用本地 `km` CLI：`~/.local/bin/km -f plain get <DOC_ID>` |
+| `uv` 找不到 | PATH 未包含 `~/.local/bin` | 用 `~/.local/bin/uv` 全路径，或 `python3` 备用 |
+| Playwright 失败 | 浏览器未安装 | `npx playwright install chromium` |
+| memory_search 返回空 | index 未构建 | 先运行 `python3 tools/memory_entry.py` |
+
+---
+
+## 维护规则
+
+- skill 反复失败 → 先更新本文件的"已知失败模式"，不改 SKILL.md
+- 本机路径/工具变更 → 只改本文件，SKILL.md 保持通用
+- 新增本机工具 → 在"能力注册表"中登记
