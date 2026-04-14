@@ -1,7 +1,7 @@
 ---
 name: heartbeat-agent
 description: 主动心跳子代理——定期扫描记忆、日历、待办、系统状态，发现有价值信息时写入 heartbeat-state.json 等待下次用户开口时呈现。不主动打断用户，遵守 HEARTBEAT.md 静默策略。
-model: haiku
+model: inherit
 tools:
   - Read
   - Glob

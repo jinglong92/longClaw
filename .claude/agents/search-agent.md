@@ -1,7 +1,7 @@
 ---
 name: search-agent
 description: 并发搜索子代理——执行单一搜索任务，返回结构化证据。由 deep-research skill 的编排层 spawn，不直接面向用户。
-model: haiku
+model: inherit
 tools:
   - WebFetch
   - WebSearch

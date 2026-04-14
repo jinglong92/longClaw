@@ -1,7 +1,7 @@
 ---
 name: memory-agent
 description: 记忆注入子代理——在 BRO/SIS 回复前检索近期对话记忆，提取情绪状态和关注点，注入上下文。只读权限。
-model: haiku
+model: inherit
 tools:
   - Read
   - Grep
