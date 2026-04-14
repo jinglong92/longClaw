@@ -422,7 +422,7 @@ python3 tools/memory_search.py --query "换电站运力" --domain ENGINEER --hyb
 输出：风险分级（P0-P2）、兼容性判断、接入建议；冲突优先级最高
 
 ### session-compression-flow
-触发：对话轮次 >12 / 用户明确要求压缩 / 话题切换信号
+触发：对话轮次 >20（CTRL 自动检测）/ 用户明确要求压缩 / 话题切换信号
 输出：压缩触发 → 摘要落盘（memory/YYYY-MM-DD.md）→ key_conclusions 写入 MEMORY.md → 新会话连续性
 
 ### multi-agent-bootstrap
@@ -486,9 +486,11 @@ python3 tools/memory_search.py --query "上次面试进展" --domain JOB --hybri
 |------|------|
 | [AGENTS.md](AGENTS.md) | 全局行为约束（最高优先级）|
 | [SOUL.md](SOUL.md) | 助手人格契约 |
-| [USER.md](USER.md) | 用户画像与偏好 |
-| [MEMORY.md](MEMORY.md) | 长期记忆（分域块）|
+| `USER.md` | 用户画像与偏好（私有，从 USER.md.example 创建，不在 repo 里）|
+| `MEMORY.md` | 长期记忆（分域块，私有，从 MEMORY.md.example 创建，不在 repo 里）|
 | [MULTI_AGENTS.md](MULTI_AGENTS.md) | 路由协议与专职代理配置 |
+| [USER.md.example](USER.md.example) | USER.md 公开模板 |
+| [MEMORY.md.example](MEMORY.md.example) | MEMORY.md 公开模板 |
 
 ### Workflow Skills
 
