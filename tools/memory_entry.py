@@ -8,6 +8,10 @@ from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
+# MEMORY.md 域块标记格式约束：
+# - 必须单独成行，格式严格为 [DOMAIN] 或 (SYSTEM)
+# - 不得加 # 前缀（如 ## [JOB] 会被解析器漏掉）
+# - BRO 和 SIS 共用 [BRO/SIS] 块（路由注入时 BRO/SIS 均读此块）
 DOMAIN_MARKERS = {
     "(SYSTEM)": "SYSTEM",
     "[JOB]": "JOB",
@@ -107,9 +111,11 @@ def parse_memory_md(path: Path) -> list[dict]:
             )
 
     for line in text.split("\n"):
+        stripped = line.strip()
         matched = None
         for marker, name in DOMAIN_MARKERS.items():
-            if f"## {marker}" in line:
+            # 支持两种格式：单独成行的 [JOB] 或带 ## 前缀的 ## [JOB]
+            if stripped == marker or stripped == f"## {marker}" or stripped == f"# {marker}":
                 matched = name
                 break
         if matched:
@@ -189,6 +195,15 @@ def stats(output: Path) -> None:
         print(f"\n{label}：")
         for k, n in sorted(Counter(e[key] for e in entries).items(), key=lambda x: -x[1]):
             print(f" {k:<15} {n}")
+
+    # 老化检测：importance < 0.4 且超过 90 天未更新
+    from datetime import timedelta
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=90)).strftime("%Y-%m-%d")
+    stale = [e for e in entries if float(e.get("importance", 0.5)) < 0.4 and e.get("created_at", "9999") < cutoff]
+    if stale:
+        print(f"\n[stale] 检测到 {len(stale)} 条可能过期条目（importance<0.4 且 >90天）：")
+        for e in stale[:10]:
+            print(f" [{e['domain']}] {e['created_at']} imp={e['importance']} | {e['text'][:80]}")
 
 
 def main() -> None:

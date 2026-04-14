@@ -174,9 +174,14 @@ Route/domain labels must match `MULTI_AGENTS.md` exactly.
 
 Maintain `memory/session-state.json` as source of truth for session-scoped metadata.
 
-Minimum fields: `session_id`, `round`, `dev_mode`, `routing_visibility`, `active_domain`, `current_topic`, `last_retrieval_scope`, `last_retrieval_query_variants`, `pending_confirmation`, `read_only_web_authorized`, `authorized_scopes`, `updated_at`
+Minimum fields: `session_id`, `round`, `dev_mode`, `routing_visibility`, `active_domain`, `current_topic`, `last_retrieval_scope`, `last_retrieval_query_variants`, `pending_confirmation`, `read_only_web_authorized`, `authorized_scopes`, `compression_count`, `last_compression_at`, `updated_at`
 
-CTRL updates this file on every user turn: increment `round`, recompute `dev_mode`, update domain/topic/retrieval fields, set/clear `pending_confirmation`.
+**session_id 生成规则**：`openclaw_{domain}_{YYYY-MM-DD}`，与 MULTI_AGENTS.md Session 命名规则对齐。
+示例：`openclaw_job_2026-04-14` / `openclaw_main`（跨域永久会话）
+
+**写入时机**：CTRL 生成回复后、输出给用户前写入。不在生成回复前读写（避免循环依赖）。
+
+CTRL updates this file on every user turn: increment `round`, recompute `dev_mode`, update domain/topic/retrieval fields, set/clear `pending_confirmation`, increment `compression_count` when compression fires.
 
 If file exists: DEV LOG uses it as primary source for session fields.
 If file missing: DEV LOG outputs `Session unavailable`.

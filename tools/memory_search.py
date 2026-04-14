@@ -61,11 +61,29 @@ def scope(entries: list[dict], domain: Optional[str], level: int) -> list[dict]:
     return entries
 
 
+ENTITY_PATTERNS = [
+    r"(?:敦煌网|美团|字节|阿里|腾讯|百度|华为|京东|滴滴|快手|小红书|Shopee|longClaw|OpenClaw|openclaw)",
+    r"(?:offer|Offer|OFFER)",
+    r"(?:GRPO|PPO|DPO|SFT|LoRA|RAG|GNN|GAT|LLM|Codex|codex)",
+    r"(?:Tesla|Mac\s*mini|MacBook)",
+    r"[A-Z][a-z]+[A-Z]\w*",          # camelCase / PascalCase 混合词，如 longClaw
+    r"[A-Z]{2,}(?:[A-Z][a-z]+)+",    # 全大写前缀词，如 SFT、GRPO
+    r"\d{4}-\d{2}-\d{2}",
+]
+
+
+def extract_entities_from_query(query: str) -> list[str]:
+    entities: list[str] = []
+    for p in ENTITY_PATTERNS:
+        entities.extend(re.findall(p, query))
+    return sorted(set(entities))
+
+
 def rewrite(query: str, domain: Optional[str]) -> list[str]:
     variants = [query]
     if domain and domain in DOMAIN_HINTS:
         variants.append(f"{query} {' '.join(DOMAIN_HINTS[domain][:3])}")
-    entities = re.findall(r"[A-Z]{2,}|[\u4e00-\u9fa5]{2,4}(?:网|公司|站|院|所)", query)
+    entities = extract_entities_from_query(query)
     if entities:
         variants.append(" ".join(entities))
     return list(dict.fromkeys(variants))
@@ -216,8 +234,11 @@ def search(query: str, domain: Optional[str] = None, top_k: int = 5, hybrid: boo
                     e["id"], e["source"], e["domain"], e["created_at"],
                     e["text"], e.get("entities", []), s, level, ["fts"])
 
-        if level == 3 and len(candidates) >= 2:
-            break
+        # 扩展条件：结果数 >= 2 且 top1 分数 >= 0.3 时停止（绝对低置信度判断，避免差值过敏感）
+        if len(candidates) >= 2:
+            top_score = max(h.score for h in candidates.values())
+            if top_score >= 0.3:
+                break
 
     sorted_hits = sorted(candidates.values(), key=lambda h: (-h.score, h.level))
     return sorted_hits[:top_k]
