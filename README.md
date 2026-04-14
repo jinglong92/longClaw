@@ -51,7 +51,7 @@
 - `refactor_workspace_baseline.sh`：一键基线重构脚本
 
 **⚡ Workflow Skill 按需加载**
-把高频复杂任务（JD 分析、论文解读、配置审查、事实核查）固化为独立 SKILL.md，会话启动时只建索引，命中时才加载全文，执行完即退出——不长期占用上下文预算。
+把高频复杂任务固化为独立 SKILL.md（当前 10 个：JD 分析、论文解读、配置审查、事实核查、工程执行、工程落地、安全审计、会话压缩、多代理初始化、公开证据抓取），会话启动时只建索引，命中触发条件时立即加载全文执行，执行完即退出——不长期占用上下文预算。
 
 **📊 本地训练底座（Local-first）**
 真实交互可沉淀为训练资产：Trace 收集 → Judge 评分 → Dataset 构建 → MLX / LLaMA-Factory 本地训练，全流程在 Mac mini M4 上运行，无需上传数据到云端。
@@ -389,37 +389,47 @@ python3 tools/memory_search.py --query "换电站运力" --domain ENGINEER --hyb
 
 ## 5. Workflow Skills
 
-4 个高频任务已固化为 workflow skill，按需加载，不常驻 prompt。
+10 个高频任务已固化为 workflow skill，按需加载，不常驻 prompt。命中触发条件即自动执行，无需用户二次提醒。
 
 ### jd-analysis
-
 触发：收到 JD 文本 / 截图 / 链接
-
 输出：岗位解码（硬技能 / 软技能 / 隐含要求）→ 匹配度评级（A/B+/B/C）→ 简历叙事建议 → 本周行动清单
 
 ### paper-deep-dive
-
 触发：发送论文标题 / 链接 / 摘要 / 方法片段
-
 输出（8 个模块）：Essence → Methodology（公式 + 伪代码）→ SOTA 对比 → Reviewer#2 批判 → 工业落地评估 → Insights → Decision Card → 可复述摘要
 
 ### agent-review
-
 触发："帮我 review workspace" / "检查配置有没有问题"
-
 输出：规则一致性（AGENTS.md vs MULTI_AGENTS.md 冲突）→ Token 效率分析 → 逻辑漏洞清单（P0/P1/P2）
 
 ### fact-check-latest
-
 触发：询问最新价格 / 资讯 / 技术动态
-
 输出：`[F]` 确定信息（≥2 个独立来源）/ `[I]` 推断信息（1 个来源）→ 时效说明 + 来源列表
 
 ### research-execution-protocol
-
 触发：复杂实现、排障、配置修复、实验验证、多轮失败后闭环推进
-
 输出：`[FACT]/[HYP]/[TEST]/[RESULT]/[NEXT]` 结构化执行链；强调先证据后判断、先验证后宣称完成、失败后换路
+
+### research-build
+触发："直接帮我实现" / 用户提供明确目标和代码位置，希望生成改动计划或直接修改
+输出：验收标准 → 最小改动计划 → 立即验证 → 明确回滚点
+
+### skill-safety-audit
+触发：用户给出 GitHub 仓库 / SKILL.md / shell script 让你评估；准备引入新的自动化/hook/daemon
+输出：风险分级（P0-P2）、兼容性判断、接入建议；冲突优先级最高
+
+### session-compression-flow
+触发：对话轮次 >12 / 用户明确要求压缩 / 话题切换信号
+输出：压缩触发 → 摘要落盘（memory/YYYY-MM-DD.md）→ key_conclusions 写入 MEMORY.md → 新会话连续性
+
+### multi-agent-bootstrap
+触发：用户要求创建/迁移多代理架构、添加角色定义、强制路由可见
+输出：快速同步初学者友好的多代理配置 + 可见路由 + 变更摘要
+
+### public-evidence-fetch
+触发："给我原文片段" / "不要总结，给证据" / "exact query + URL + snippet"
+输出：exact query + URL + verbatim snippet + 段落位置 + 简短解释
 
 ---
 
@@ -491,6 +501,7 @@ python3 tools/memory_search.py --query "上次面试进展" --domain JOB --hybri
 | [skills/meta/skill-safety-audit/SKILL.md](skills/meta/skill-safety-audit/SKILL.md) | 外部技能接入安全审计 |
 | [skills/meta/session-compression-flow/SKILL.md](skills/meta/session-compression-flow/SKILL.md) | 会话压缩与跨会话衔接流程 |
 | [skills/multi-agent-bootstrap/SKILL.md](skills/multi-agent-bootstrap/SKILL.md) | 多代理架构搭建/迁移 |
+| [skills/search/public-evidence-fetch/SKILL.md](skills/search/public-evidence-fetch/SKILL.md) | 公开网页/论文证据抓取 |
 
 ### Memory 检索工具
 
@@ -589,19 +600,15 @@ longClaw 是在官方 OpenClaw 软件基础上改造的 workspace。执行层（
 
 详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-## Skills Roadmap v1 (local extension)
+## Skills 扩展原则
 
-本地新增三类增强 skill：
-
-- `skill-safety-audit`：评估外部 skill / 仓库 / 安装脚本的接入风险
-- `research-execution-protocol`：复杂工程任务的证据驱动执行协议
-- `research-build`：从需求到实现闭环的最小交付 workflow
-
-原则：
-- 不替代 CTRL
+新增 skill 必须满足：
+- 不替代 CTRL（skill 是 workflow，不是角色）
 - 不改变全局人格
-- 不常驻污染上下文
+- 不常驻污染上下文（执行完即退出）
 - 优先局部增强、可验证、可回滚
+
+新增方式：在 `skills/<domain>/<skill-name>/` 下新建 `SKILL.md`，参考现有格式（frontmatter + 触发条件 + 流程步骤 + 输出格式）。
 
 
 ---

@@ -10,7 +10,7 @@ Create or update a workspace to a stable multi-agent baseline for beginners.
 ## Workflow
 
 1. Read current files first: `AGENTS.md`, `USER.md`, `MULTI_AGENTS.md` (if exists), `MEMORY.md` (if main session).
-2. If `MULTI_AGENTS.md` is missing, create it from `references/MULTI_AGENTS.template.md`.
+2. If `MULTI_AGENTS.md` is missing, create a minimal version with CTRL contract + 4 core roles.
 3. Ensure role set includes at least: `LIFE/WORK/LEARN/ENGINEER`.
 4. Ensure routing visibility rule is explicit in both `AGENTS.md` and `MULTI_AGENTS.md`:
    - `Routing: User -> CTRL -> [ROLE] -> CTRL -> User`
@@ -22,8 +22,8 @@ Create or update a workspace to a stable multi-agent baseline for beginners.
 6. If user asks “固化/记住”, persist in both:
    - `MULTI_AGENTS.md` (source of truth)
    - `MEMORY.md` (preference continuity)
-7. Run `scripts/check_multi_agent.sh` to validate required fields/rules.
-8. If validation passes, summarize changes and recommend 3 smoke tests from `references/smoke-tests.md`.
+7. Run `tools/check_skill_pack.sh` to validate required fields/rules (if available).
+8. If validation passes, summarize changes and recommend 3 smoke tests.
 
 ## Editing Rules
 

@@ -14,7 +14,7 @@ Owner: CTRL
 ## System Topology
 - Node（24/7）：Mac mini M4
 - Interface：MacBook Air M5
-- Model/API routing：Codex
+- Model/API routing：Claude（claude.ai/code + Claude API）
 - 目标：在成本、延迟、效果之间做动态平衡。
 
 ## Risk Priorities (Global)

@@ -1,74 +1,23 @@
-# Multi-Agent System v1
+# Multi-Agent System
 
-## Core Policy
-- Default single-agent execution.
-- If user does not `@` mention a role, the controller auto-routes.
-- Controller must always show routing path before final answer.
-- Parallel execution is exception-only: cross-domain dependency, max 2 specialist agents.
-- Low-frequency, high-quality output. Avoid noisy updates.
+> ⚠️ 本目录为历史设计资料和可视化文档。
+> **权威配置已迁移至根目录 `MULTI_AGENTS.md`**，以该文件为准。
 
-## Roles
-- CTRL: controller/router/synthesizer
-- LIFE: life assistant
-- JOB: job search assistant
-- WORK: workplace advisor
-- PARENT: parenting advisor
-- LEARN: learning coach
-- MONEY: finance advisor
-- BRO: 闲聊哥们（风趣幽默、轻松陪聊）
+## 本目录文件说明
 
-## User Interaction Rules
-1. If user explicitly `@ROLE` -> direct route to that specialist (controller still wraps final output).
-2. If user does not `@ROLE` -> controller auto-detects domain and routes.
-3. Controller always reports route path in this format:
+| 文件 | 状态 | 说明 |
+|------|------|------|
+| `ARCHITECTURE.md` | ✅ 同步维护 | 架构图（与 MULTI_AGENTS.md 保持一致） |
+| `PROFILE_CONTRACT.md` | ✅ 有效 | 用户背景、风险优先级、简历快照，各专职代理解释口径以此为准 |
+| `role-prompts.md` | 📦 历史存档 | 内容已迁移至 MULTI_AGENTS.md §1.1，保留作演化参考 |
+| `controller-template.md` | 📦 历史存档 | 早期 CTRL 输出模板，已被 MULTI_AGENTS.md §4.2 DEV LOG 模板取代 |
+| `LEARNING_GUIDE_FOR_JINGLONG.md` | 📚 学习文档 | 多代理系统设计原理学习手册，长期有效 |
+| `UNIFIED_SYNC_*.md` | 📋 会议纪要 | 历次全体代理同步记录，不修改 |
 
-`Routing: User -> CTRL -> [ROLE1] (-> [ROLE2] if needed) -> CTRL -> User`
+## 快速导航
 
-4. If confidence is low, controller asks 1-2 clarifying questions.
-5. Specialist responses follow fixed 4-block output:
-   - Conclusion
-   - Actions (<=3)
-   - Risks/Blocks (<=2)
-   - Need CTRL Decision (Yes/No)
-6. BRO role is for lightweight banter only; it must avoid unsafe, abusive, privacy-leaking, or externally impersonating content.
-
-## Trigger Keywords (soft, flexible)
-- LIFE: 日程, 出行, 购物, 健康, 家务
-- JOB: 求职, 简历, 面试, offer, 投递
-- WORK: 晋升, 职场, 沟通, 团队, 管理
-- PARENT: 孩子, 育儿, 教育, 亲子
-- LEARN: 学习, 备考, 阅读, 路径, 复盘
-- MONEY: 理财, 预算, 投资, 保险, 税务
-- BRO: 闲扯, 聊天, 吐槽, 打趣, 放松, 段子
-- SIS: 女生怎么看, 女性视角, 恋爱沟通, 关系反馈, 约会复盘
-
-## Priority Order (when conflicts occur)
-1. Safety/health/legal deadlines
-2. Hard deadlines within 24h
-3. Family critical commitments
-4. Career-critical events
-5. Optimization tasks
-
-## Daily/Weekly Cadence
-- Daily: one consolidated summary by CTRL
-- Weekly: one review + next-week strategy by CTRL
-
-## Expansion Gate
-Add a new specialist only if all are true for 2+ weeks:
-- recurring unmet domain demand >20%
-- current domain boundaries are stable
-- conflict resolution remains within 24h
-- output volume remains manageable
-
-## Hidden Training Layer (Internal)
-
-This workspace now contains an internal-only optimization subsystem:
-
-- `optimization/`: runtime instrumentation, trace aggregation, replay, evaluators, registry
-- `hidden-agents/`: ROUTER_AGENT / PLANNER_AGENT / MEMORY_AGENT / CRITIC_AGENT / EVAL_AGENT / PATCH_AGENT / SAFETY_AGENT
-
-Important boundaries:
-
-- hidden agents are not user-facing route labels
-- visible route labels remain `LIFE/JOB/WORK/PARENT/LEARN/MONEY/BRO/SIS`
-- hidden layer defaults to observe-only and cannot auto-mutate visible routing protocol
+- 专职代理定义 → [`MULTI_AGENTS.md` §1](../MULTI_AGENTS.md)
+- 路由规则 → [`MULTI_AGENTS.md` §2-3](../MULTI_AGENTS.md)
+- DEV LOG 模板 → [`MULTI_AGENTS.md` §4.2](../MULTI_AGENTS.md)
+- Skill 加载协议 → [`MULTI_AGENTS.md` §7](../MULTI_AGENTS.md)
+- 全局授权与执行约束 → [`AGENTS.md`](../AGENTS.md)
