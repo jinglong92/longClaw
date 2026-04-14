@@ -62,6 +62,7 @@
 |---|---|
 | **基于** | [OpenClaw](https://github.com/openclaw/openclaw)（Peter Steinberger，MIT 开源，353k ⭐） |
 | **部分借鉴** | [Hermes Agent](https://github.com/NousResearch/hermes-agent)（Nous Research，MIT 开源，40k ⭐） |
+| **底层 LLM** | Codex（OpenClaw 运行时） |
 | **运行环境** | Mac mini M4（24/7 本地），WhatsApp / Telegram / Discord 交互 |
 | **核心扩展** | 在 OpenClaw 执行层之上，增加了多专家仲裁、分域记忆、向量化检索、训练底座四层能力 |
 
@@ -542,7 +543,7 @@ python3 tools/memory_search.py --query "上次面试进展" --domain JOB --hybri
 | 技能自动生成 | 目前是提议系统（用户确认后才写入），非官方 OpenClaw 式自动写入 |
 | memory 检索质量 | 取决于 MEMORY.md 的事实条目密度；配置规则文本语义区分度有限 |
 | hybrid 增益 | 语料以配置/规则文本为主时 FTS 与 embedding 差距不大；事实型日志积累后优势显现 |
-| openclaw_substrate | 训练底座已定义优化闭环，短期不启用（主用 Claude API） |
+| openclaw_substrate | 训练底座已定义优化闭环，短期不启用（主用 Codex via OpenClaw） |
 | 并发上限 | 维持 ≤2 专职并行，无执行层配套时不放开 |
 
 ---

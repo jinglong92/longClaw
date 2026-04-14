@@ -83,8 +83,9 @@
 
 ### Node / npm
 - Node 20（Homebrew）：`node --version` 应输出 v20.x
-- 全局包：`@anthropic-ai/claude-code`、`@openai/codex`、`@playwright/cli`
+- 全局包：`@openai/codex`（主 LLM，OpenClaw 底层）、`@anthropic-ai/claude-code`（辅助工具）、`@playwright/cli`
 - 运行：`node script.js` / `npx <tool>`
+- 主 LLM：Codex（`@openai/codex`），OpenClaw 通过此包路由到 Codex API
 
 ### 内存工具
 - 索引构建：`python3 tools/memory_entry.py`
