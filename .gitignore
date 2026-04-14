@@ -16,5 +16,6 @@ USER.md
 .openclaw/
 .skill_pack_backup_*/
 artifacts/
-.claude/
+.claude/settings.local.json
+.claude/todos.json
 openclaw_substrate/configs/local.runtime.json
