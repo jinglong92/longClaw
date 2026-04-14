@@ -1,11 +1,11 @@
 # CTRL Output Template — 📦 历史存档
 
-> 早期 5 段式 CTRL 输出模板，已被 `MULTI_AGENTS.md` §4.2 DEV LOG 模板取代。
+> 早期 5 段式 CTRL 输出模板，已被 `DEV_LOG.md` 取代。
 > 本文件保留作演化参考，不再更新。
 
 ---
 
-## 当前专职输出协议（固定 4 段，见 MULTI_AGENTS.md §7）
+## 当前专职输出协议（固定 4 段，见 MULTI_AGENTS.md）
 
 1. 结论（1句定调）
 2. 本域行动项（最多3条）

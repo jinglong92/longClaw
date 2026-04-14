@@ -16,8 +16,7 @@
 
 ## 快速导航
 
-- 专职代理定义 → [`MULTI_AGENTS.md` §1](../MULTI_AGENTS.md)
-- 路由规则 → [`MULTI_AGENTS.md` §2-3](../MULTI_AGENTS.md)
-- DEV LOG 模板 → [`MULTI_AGENTS.md` §4.2](../MULTI_AGENTS.md)
-- Skill 加载协议 → [`MULTI_AGENTS.md` §7](../MULTI_AGENTS.md)
+- 专职代理定义 + 路由规则 → [`MULTI_AGENTS.md`](../MULTI_AGENTS.md)
+- CTRL 运行协议（Skill加载/压缩/检索）→ [`CTRL_PROTOCOLS.md`](../CTRL_PROTOCOLS.md)
+- DEV LOG 格式 → [`DEV_LOG.md`](../DEV_LOG.md)
 - 全局授权与执行约束 → [`AGENTS.md`](../AGENTS.md)
