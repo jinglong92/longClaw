@@ -542,7 +542,7 @@ python3 tools/memory_search.py --query "上次面试进展" --domain JOB --hybri
 
 | 边界 | 说明 |
 |------|------|
-| workspace 层协议 | v3.2a 是 workspace-level 行为约定，不是完整 runtime 自动装载器 |
+| workspace 改造层 | longClaw 是 OpenClaw workspace 改造，OpenClaw 原生能力（hooks/权限/compaction/skill加载）直接可用；longClaw 新增仲裁、分域记忆、检索、训练四层 |
 | 技能自动生成 | 目前是提议系统（用户确认后才写入），非官方 OpenClaw 式自动写入 |
 | memory 检索质量 | 取决于 MEMORY.md 的事实条目密度；配置规则文本语义区分度有限 |
 | hybrid 增益 | 语料以配置/规则文本为主时 FTS 与 embedding 差距不大；事实型日志积累后优势显现 |
@@ -575,7 +575,7 @@ longClaw 是在官方 OpenClaw 软件基础上改造的 workspace。执行层（
 | 借鉴点 | Hermes 原始设计 | longClaw 的实现与调整 |
 |--------|---------------|---------------------|
 | **Skill 格式（SKILL.md）** | 结构化 frontmatter，粒度为具体 workflow（arxiv-search、github-pr-workflow 等） | 沿用格式和粒度原则，为 4 个高频任务建 SKILL.md；角色定义保留在 MULTI_AGENTS.md |
-| **Progressive Disclosure** | 启动时只加载 skill name+description，命中时才读完整内容，有 skill_manage 工具支撑 | 移植为 workspace 协议层约定，由 CTRL 遵守执行（无 runtime 自动装载） |
+| **Progressive Disclosure** | 启动时只加载 skill name+description，命中时才读完整内容，有 skill_manage 工具支撑 | OpenClaw 运行时原生支持；longClaw 在此基础上扩展了 requires 依赖检查和强制触发规则 |
 | **Context Compression** | 50% token threshold 触发，四阶段算法（清理冗长输出→划定边界→生成摘要→清理孤立工具对） | 分两层：Layer A 为压缩偏好声明（与 OpenClaw 原生 compaction 协同），Layer B 为话题归档 |
 | **FTS + embedding 检索** | SQLite FTS5 + session 血缘追踪，mode=fts-only | 增加 route-aware scope filter + Ollama 本地 embedding rerank + RRF fusion |
 | **Proactive Troubleshooting** | 外部查询失败时主动尝试备用路径，不直接问用户 | 沿用理念，修正 fallback 路径（Google Cache 已下线 → Wayback Machine） |
@@ -617,16 +617,30 @@ longClaw 是在官方 OpenClaw 软件基础上改造的 workspace。执行层（
 
 ---
 
-## 当前工作区约束（patch note）
+## 架构分层说明
 
-以下能力若未下沉到 substrate/runtime，则视为 **workspace-level behavior contract**：
-- DEV LOG 显示规则
-- routing presentation override
-- heartbeat silent mode
-- retrieval scope narrowing
-- completion-claim evidence gating
+longClaw 是运行在 Mac mini M4 上的 **OpenClaw workspace 改造层**，不是独立运行时。
 
-也就是说：
-- 工作区协议层已经定义这些行为
-- 但若运行层未实现对应校验器，CTRL 必须手动遵守
-- 文档中的“可观测性/压缩/检索”应优先理解为：当前 workspace 行为约束 + 部分已实现能力
+### OpenClaw 原生提供（直接可用，无需在 workspace 里重新实现）
+
+| 能力 | 说明 |
+|------|------|
+| Hooks 系统 | PreToolUse / PostToolUse / SessionStart / Stop 等事件，harness 层自动执行 |
+| 权限模型 | Deny > Ask > Allow 三层，settings.json 配置，harness 强制执行 |
+| 工具调用生命周期 | 工具发现、调用、结果注入，由 OpenClaw 运行时管理 |
+| Context compaction | session 接近上下文窗口时自动触发，保护工具调用边界 |
+| SKILL.md 加载 | Progressive Disclosure，会话启动时扫描 skills/，命中时加载全文 |
+| CLAUDE.md 加载 | 项目根目录 + 父目录递归加载，compaction 后自动重读 |
+| Session 生命周期 | 会话创建、恢复、结束，由 OpenClaw 管理 |
+
+### longClaw workspace 层新增（本仓库的改造内容）
+
+| 能力 | 说明 |
+|------|------|
+| CTRL 多专家仲裁 | 10 个专职代理 + P0-P4 冲突裁决，定义在 MULTI_AGENTS.md |
+| 分域记忆注入 | MEMORY.md 按 [DOMAIN] 分块，CTRL 按路由只注入必要片段 |
+| route-aware 检索 | tools/memory_search.py，4 级作用域 + FTS + Hybrid Embedding |
+| Skill 依赖声明 | requires 字段，命中前检查工具可用性 |
+| Layer B 话题归档 | 话题结束时提炼结论写入 MEMORY.md，跨 session 可检索 |
+| DEV LOG 格式 | 9 字段可观测日志，含 🛠️ 工具 PostToolUse 注入 |
+| openclaw_substrate | 本地训练底座，Trace→Judge→Dataset→MLX（设计完成，待激活） |

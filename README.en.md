@@ -516,7 +516,7 @@ Shows: same-domain priority + entity-hit weighted ranking + hybrid semantic gap-
 
 | Boundary | Notes |
 |----------|-------|
-| Workspace-layer protocol | Behavior contracts, not a full runtime auto-loader |
+| Workspace extension layer | longClaw is an OpenClaw workspace extension. OpenClaw native capabilities (hooks / permissions / compaction / skill loading) are available out of the box; longClaw adds arbitration, domain-aware memory, retrieval, and training on top |
 | Skill auto-generation | Proposal system (user confirms before writing), not OpenClaw-style auto-write |
 | Memory retrieval quality | Depends on MEMORY.md factual entry density; config/rule text has limited semantic differentiation |
 | Hybrid retrieval benefit | Minimal when corpus is mostly config/rule text; significant once factual daily logs accumulate |
@@ -546,7 +546,7 @@ This repo is the workspace configuration layer, extending:
 | Borrowed concept | Hermes original | longClaw implementation |
 |-----------------|-----------------|------------------------|
 | **SKILL.md format** | Structured frontmatter, workflow-level granularity | Same format and granularity; role definitions stay in MULTI_AGENTS.md |
-| **Progressive Disclosure** | Startup loads name+description only; full content on match; skill_manage tool | Ported as workspace protocol contract, executed by CTRL (no runtime auto-loader) |
+| **Progressive Disclosure** | Startup loads name+description only; full content on match; skill_manage tool | OpenClaw runtime natively supports this; longClaw extends it with `requires` dependency checks and forced-trigger rules |
 | **Context Compression** | 50% token threshold, 4-phase algorithm | Two layers: Layer A = compression preference (syncs with OpenClaw native compaction), Layer B = topic archival |
 | **FTS + embedding retrieval** | SQLite FTS5 + session lineage | Added route-aware scope filter + Ollama local embedding rerank + RRF fusion |
 | **Proactive troubleshooting** | Auto-tries fallback paths on failure | Same principle; updated fallback (Google Cache removed → Wayback Machine) |
