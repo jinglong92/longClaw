@@ -430,6 +430,7 @@ public-evidence-fetch | SEARCH | 公开网页证据摘录
 skill-safety-audit  | META     | 外部 skill 接入审计
 session-compression-flow | META | 会话压缩归档
 multi-agent-bootstrap | META   | 多代理架构初始化
+paperbanana           | LEARN  | 学术论文配图自动生成（需本地安装）
 ```
 
 只读取 frontmatter 中的 name + description，不全量加载正文。
