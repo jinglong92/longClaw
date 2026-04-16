@@ -6,6 +6,8 @@ Language / 语言: [简体中文](README.md) | **English**
 > upgrades a single AI assistant into a **scalable multi-expert collaboration runtime**
 > with industrial-grade memory retrieval, session management, and full developer observability.
 
+**🌐 Visual Overview**: [longClaw Introduction Site](https://htmlpreview.github.io/?https://gist.githubusercontent.com/jinglong92/7ce7fefa4803914cd7e07e43dc120c12/raw/longclaw-site.html) — Start here for a visual walkthrough of the architecture and capabilities.
+
 ---
 
 ## What You Can Do With It

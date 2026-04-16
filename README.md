@@ -6,6 +6,8 @@
 > 把单个 AI 助手升级为**可扩展的多专家协作运行时**，
 > 带工业级记忆检索、会话管理和完整的开发者可观测性。
 
+**🌐 快速概览页面**：[longClaw 介绍站点](https://htmlpreview.github.io/?https://gist.githubusercontent.com/jinglong92/7ce7fefa4803914cd7e07e43dc120c12/raw/longclaw-site.html) — 可视化展示系统架构与核心能力，建议先看这里。
+
 ---
 
 ## 你可以用它做什么
