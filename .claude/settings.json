@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "MSG=$(echo \"$CLAUDE_USER_PROMPT\" | tr -d '\\n' | xargs); if [ \"$MSG\" = \"/new\" ]; then printf '\\n[SLASH_NEW] User requested a new session. Do the following immediately: (1) Run Layer B topic archival - extract key conclusions and write to MEMORY.md. (2) Reset session-state.json with a new session_id and round=0. (3) Reply to user with a brief confirmation that the new session has started and the previous topic has been archived.\\n' >> \"$CLAUDE_ENV_FILE\"; fi"
+            "command": "MSG=$(echo \"$CLAUDE_USER_PROMPT\" | tr -d '\\n' | xargs); if [ \"$MSG\" = \"/new\" ]; then openclaw gateway restart; fi"
           }
         ]
       }
