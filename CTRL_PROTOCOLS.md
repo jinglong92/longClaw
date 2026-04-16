@@ -64,18 +64,29 @@ requires: ["file_write", "shell_exec"] → 两项都需满足
 
 ---
 
-## Context Compression（双层）
+## Context Compression（三层）
 
-OpenClaw 原生 compaction 优先。若原生已在本轮触发，Layer A 跳过，只执行 Layer B。
+优先级：原生 compaction > Layer 0（实时截断）> Layer A（轮数摘要）。Layer B 独立触发，不受前三层影响。
+
+### Layer 0：工具输出实时截断（借鉴 Claude Code Tool Result Budgeting）
+
+**触发**：任意一条工具输出 > 500 字符，当轮立即执行，无需等待轮数累积。
+
+**执行**：
+- 保留工具输出前 500 字符
+- 追加截断尾注：`[截断：原始输出 N 字符，已保留前 500 字符。如需完整内容请说"展开上一条工具输出"。]`
+- 静默执行，不写入 session-state.json，不计入 compression_count
+
+**设计理由**：换电诊断工具返回通常为结构化 JSON，500 字符可覆盖关键字段（故障码/时间戳/车辆ID）。实时截断比等到 round > 20 更轻量，防止单条超长输出污染后续检索上下文。
 
 ### Layer A：轻量摘要（token 压力驱动，静默）
 
 **触发**（满足任一，且原生 compaction 未触发）：
 - 对话轮数 > 20
-- 单次工具输出 > 500 字符且与当前话题低相关
+- （注：单次工具输出 > 500 字符已由 Layer 0 处理，不再作为 Layer A 触发条件）
 
 **执行**：
-- 生成压缩摘要块替换冗长输出，保留关键结论
+- 生成压缩摘要块替换中间历史，保留关键结论
 - 保护：system prompt + 前 3 条 + 后 8 条不摘要
 - 摘要格式：`目标 / 进展 / 决策 / 下一步 / 关键实体（字段名：值（日期））`
 - 写入 session-state.json：`compression_count += 1`，`last_compression_at = <ISO>`

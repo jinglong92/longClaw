@@ -277,90 +277,223 @@ Mode: fts-only
 
 ---
 
-## 五、压缩机制：三层协作
+## 五、压缩机制：四层协作
 
-### 全景图
+### 5.0 全景图（更新版）
 
 ```
-对话进行中
+每条工具调用返回
     │
-    ├── 每轮：CTRL 检查 round > 20？
-    │         是 → Layer A 轻量摘要（静默）
+    └── 工具输出 > 500 字符？
+          是 → Layer 0：实时截断（当轮立即，静默）
+
+对话进行中（每轮检查）
     │
-    ├── 话题结束：Layer B 归档（主动写入 MEMORY.md）
+    ├── round > 20？
+    │     是 → Layer A：轻量摘要（静默）
     │
-    └── context 接近上限：OpenClaw 原生 compaction（自动）
-              └── 触发后：PostCompact hook 重注入 CTRL_PROTOCOLS.md + DEV_LOG.md
+    ├── 话题结束信号？
+    │     是 → Layer B：归档写入 MEMORY.md（主动告知用户）
+    │
+    └── context 接近上限（200K tokens）？
+              是 → OpenClaw 原生 compaction（自动）
+                    └── PostCompact hook 重注入 CTRL_PROTOCOLS.md + DEV_LOG.md
 ```
 
-### OpenClaw 原生 Compaction（底层，自动）
-
-**触发条件**：context window 接近上限（默认 200K tokens）
-
-**保留的内容**（压缩后自动重注入）：
-- 项目根目录 `CLAUDE.md` ✅
-- `MEMORY.md` 前 200 行或 25KB ✅
-- 已调用的 SKILL.md（每个 ≤5K token，总 ≤25K）✅
-- System prompt ✅
-
-**丢失的内容**（压缩后消失）：
-- 对话历史 → 替换为结构化摘要（保留意图/技术概念/文件片段/错误修复/待办）
-- 子目录 CLAUDE.md → 重新进入该目录时才重读
-- `CTRL_PROTOCOLS.md` / `DEV_LOG.md` → **PostCompact hook 补救**
-- path-scoped rules → 匹配文件时才重读
-- 未调用的 skill 描述 → 下次 session 重建 index
-
-**压缩效率**：约 58 轮对话（~9600 tokens）→ 摘要（~1140 tokens），压缩率约 88%
-
-**PostCompact hook 的作用**：
-```json
-// .claude/settings.json
-"PostCompact": [{
-  "matcher": "auto",
-  "hooks": [{"type": "command",
-    "command": "cat CTRL_PROTOCOLS.md DEV_LOG.md >> \"$CLAUDE_ENV_FILE\""}]
-}]
-```
-原生压缩后，CTRL_PROTOCOLS.md 和 DEV_LOG.md 会丢失。PostCompact hook 在压缩完成后立即把这两个文件重注入，确保 CTRL 不会"忘记"检索协议和 DEV LOG 格式规则。
+**优先级**：原生 compaction > Layer 0 > Layer A。Layer B 独立触发，不受其他层影响。
 
 ---
 
-### Layer A：轻量摘要（longClaw 扩展，token 压力驱动）
+### 5.1 Layer 0：工具输出实时截断（新增，借鉴 Claude Code）
 
-**定位**：在原生 compaction 触发之前，提前做轻量的业务层摘要，减少噪声积累。
+**触发**：任意一条工具输出 > 500 字符，当轮立即执行。
 
-**触发条件**（满足任一，且原生 compaction 本轮未触发）：
+**执行**：
+```
+原始工具输出（1240字符）：
+{"vehicle_id":"V123","status":"unassigned","reason":"capacity_limit",
+ "station_id":"S456","battery_level":12,"last_dispatch":"2026-04-14T08:30:00",
+ "operator_notes":"连续3次派单失败，运力不足区域...（后续900字符省略）}
+
+截断后：
+{"vehicle_id":"V123","status":"unassigned","reason":"capacity_limit",
+ "station_id":"S456","battery_level":12,"last_dispatch":"2026-04-14T08:30:00",
+ "operator_notes":"连续3次派单失败，运力不足区域...
+
+[截断：原始输出 1240 字符，已保留前 500 字符。如需完整内容请说"展开上一条工具输出"。]
+```
+
+**不写入 session-state.json**，不计入 compression_count，纯粹的上下文清洁操作。
+
+**设计理由**（对标 Claude Code Layer 1 Tool Result Budgeting）：
+- Claude Code：API 调用前批量扫描历史消息，对所有工具结果统一设 token 上限
+- longClaw Layer 0：工具返回当轮实时截断，更简单，不需要扫描历史
+- 两者效果等价，longClaw 的实时方式更符合 workspace 协议层的定位
+
+---
+
+### 5.2 Layer A：轻量摘要（token 压力驱动，静默）
+
+**定位**：在原生 compaction 触发之前，提前做业务层摘要，减少历史噪声积累。
+
+**触发条件**（原生 compaction 未触发时）：
 - 对话轮数 > 20
-- 单次工具输出 > 500 字符且与当前话题低相关
 
 **执行内容**：
 ```
-生成压缩摘要块，替换冗长的工具输出：
+压缩前（中间部分）：
+  [消息4]  tool_result: [截断后的500字工具输出]
+  [消息5]  assistant: 根据结果分析...
+  [消息6]  tool_call: 调用第二个工具
+  [消息7]  tool_result: [截断后的500字工具输出]
+  ...（多轮）
 
-[压缩摘要 2026-04-14 15:30]
-目标：调研 Agent+OR 融合的最新进展
-进展：已完成 arXiv 搜索（3篇相关论文）、GitHub 搜索（2个项目）
-决策：重点关注 EoH 和 SIRL 两个方向
-下一步：整理面试叙事
-关键实体：EoH=2026-03（arxiv），SIRL=2025-11（arxiv）
+压缩后（替换为摘要块）：
+  [压缩摘要 2026-04-16 10:30]
+  目标：诊断车辆V123未派发原因
+  进展：已查询派单记录、运力状态、站点容量
+  决策：根因为S456站点容量限制，建议扩容或调配
+  下一步：生成诊断报告
+  关键实体：V123=未派发（2026-04-16），S456=容量不足
 ```
 
-**保护结构**：system prompt + 前 3 条消息 + 后 8 条消息不摘要，只摘要中间部分。
+**保护结构**：system prompt + 前 3 条 + 后 8 条不摘要，只摘要中间部分。
 
 **写入 session-state.json**：
 ```json
 {
   "compression_count": 3,
-  "last_compression_at": "2026-04-14T15:30:00Z"
+  "last_compression_at": "2026-04-16T10:30:00Z"
 }
 ```
 
-**Layer A vs 原生 compaction 的关系**：
-```
-原生 compaction：OpenClaw 在快到上限时触发，全量压缩，不可控
-Layer A：longClaw 在 20 轮时提前触发，轻量摘要，保留业务上下文
+---
 
-优先级：原生 compaction 优先。若原生已触发，Layer A 跳过。
+### 5.3 OpenClaw 原生 Compaction（底层，自动）
+
+**触发条件**：context window 接近上限（默认 200K tokens）
+
+**压缩后 context 形态**：
+
+```
+压缩前：
+┌─────────────────────────────────┐
+│ system prompt                   │
+│ MEMORY.md（前200行）             │
+│ [消息1] user                    │
+│ [消息2] assistant               │
+│ [消息3] tool_call               │
+│ [消息4] tool_result（已截断）    │
+│ ...（数十轮）                    │
+│ [消息N-2] user                  │
+│ [消息N-1] assistant             │
+│ [消息N] user（最新）             │
+└─────────────────────────────────┘
+         ~9600 tokens
+
+压缩后：
+┌─────────────────────────────────┐
+│ system prompt          ← 保留   │
+│ MEMORY.md（重新读磁盘）← 保留   │
+│ [结构化摘要]           ← 新生成  │
+│   · 你的意图                    │
+│   · 讨论过的技术概念             │
+│   · 查看过的文件及关键片段        │
+│   · 遇到的错误和修复             │
+│   · 待办事项                    │
+│ [消息N-4] user         ← 保留   │
+│ [消息N-3] assistant    ← 保留   │
+│ [消息N-2] user         ← 保留   │
+│ [消息N-1] assistant    ← 保留   │
+│ [消息N] user（最新）   ← 保留   │
+└─────────────────────────────────┘
+         ~1140 tokens（压缩率 88%）
+```
+
+**保留 vs 丢失**：
+
+| 内容 | 压缩后状态 |
+|------|-----------|
+| system prompt | ✅ 保留 |
+| MEMORY.md（前200行） | ✅ 重新从磁盘读入 |
+| 已调用的 SKILL.md | ✅ 重注入（≤5K/个，总≤25K） |
+| CTRL_PROTOCOLS.md / DEV_LOG.md | ❌ 丢失 → PostCompact hook 补救 |
+| 对话历史 | ❌ 替换为结构化摘要 |
+| 最近几条消息 | ✅ 保留（原样） |
+
+**PostCompact hook**：
+```json
+"PostCompact": [{"matcher": "auto", "hooks": [{"type": "command",
+  "command": "cat CTRL_PROTOCOLS.md DEV_LOG.md >> \"$CLAUDE_ENV_FILE\""}]}]
+```
+
+---
+
+### 5.4 Layer B：话题归档（话题边界驱动，主动）
+
+**定位**：不是 context 压缩，而是**跨 session 的知识沉淀**。
+
+**触发**（满足任一）：
+- 用户说"新话题" / "搞定了" / "好了就这样"
+- CTRL 判断当前话题已有明确结论
+- 用户连续 2 轮未追问上一话题
+
+**执行**：提炼 key_conclusions（≤5条）→ 提取关键实体 → 写入 MEMORY.md 对应域 → 告知用户
+
+---
+
+### 5.5 四层对比表
+
+| | Layer 0 | Layer A | 原生 compaction | Layer B |
+|---|---|---|---|---|
+| **触发条件** | 工具输出 > 500字符 | round > 20 | context 接近上限 | 话题边界信号 |
+| **触发时机** | 当轮立即 | 轮数累积后 | 被动，不可控 | 话题结束时 |
+| **操作对象** | 单条工具输出 | 中间历史 | 全部历史 | 无（写入外部） |
+| **操作方式** | 截断 + 尾注 | 替换为摘要块 | 替换为结构化摘要 | 写入 MEMORY.md |
+| **信息损失** | 极小（保留前500字符） | 小（保留关键结论） | 中（保留摘要语义） | 无损（主动归档） |
+| **对用户可见** | 否 | 否 | 否 | ✅ 告知用户 |
+| **跨 session** | ❌ | ❌ | ❌ | ✅ |
+| **compression_count** | 不计入 | +1 | 不计入 | 不计入 |
+
+---
+
+### 5.6 与 Claude Code 压缩设计对比
+
+Claude Code 采用**四层渐进式**压缩（每次 API 调用前按需触发）：
+
+| Claude Code | longClaw 对应 | 差异 |
+|-------------|--------------|------|
+| Layer 1：Tool Result Budgeting（批量截断历史工具结果） | **Layer 0**（实时截断当轮输出） | CC 批量处理历史；longClaw 实时处理，更简单 |
+| Layer 2：Snip Compacting（物理删除旧消息） | **Layer A**（替换为摘要块） | CC 直接删；longClaw 保留摘要，信息损失更小 |
+| Layer 3：Microcompacting（删除已完成工具结果） | Layer A 覆盖部分 | longClaw 未单独实现此层 |
+| Layer 4：Auto-compacting（subagent 生成摘要） | **原生 compaction** | 机制类似，CC 用专用 subagent，longClaw 用 OpenClaw 内置 |
+| 无 | **Layer B**（话题归档） | longClaw 独有，跨 session 知识沉淀 |
+
+**核心差异**：
+- Claude Code 是**预防式**：每次 API 调用前检查，能不压就不压，从最轻到最重渐进
+- longClaw 是**混合式**：Layer 0 实时预防 + Layer A/B 阈值触发 + 原生 compaction 兜底
+
+**压缩后 context 形态对比**：
+
+```
+Claude Code（Layer 2 后）：        longClaw（Layer A 后）：
+┌──────────────────────┐           ┌──────────────────────┐
+│ system prompt        │           │ system prompt        │
+│ [消息1-3] 保护区     │           │ [消息1-3] 保护区     │
+│ （中间消息已删除）    │           │ [压缩摘要块]         │
+│ [消息N-5到N]         │           │ [消息N-8到N]         │
+└──────────────────────┘           └──────────────────────┘
+  中间完全删除，无摘要               中间替换为摘要，保留语义
+
+Claude Code（Layer 4 后）：        longClaw（原生 compaction 后）：
+┌──────────────────────┐           ┌──────────────────────┐
+│ system prompt        │           │ system prompt        │
+│ MEMORY.md            │           │ MEMORY.md（重读磁盘）│
+│ [结构化摘要]         │           │ [结构化摘要]         │
+│ [最近几条]           │           │ [最近几条]           │
+└──────────────────────┘           └──────────────────────┘
+  基本一致，区别在于 CC 用专用        PostCompact hook 补救
+  summarizer subagent 生成摘要       CTRL_PROTOCOLS.md 丢失问题
 ```
 
 ---
