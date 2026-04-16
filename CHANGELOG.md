@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.4.1] — 2026-04-16
+
+### Added
+- **`/new` 命令支持**：微信发 `/new` 触发 `openclaw gateway restart`，真正清空 context window，等价于原生 `/new` 命令。推荐用法：需要归档时先手动要求归档，再发 `/new` 开启干净新会话。
+
+---
+
 ## [v0.4.0] — 2026-04-16
 
 ### Added
