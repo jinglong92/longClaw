@@ -64,8 +64,8 @@
 │  生命周期：当前 session，关闭即消失                          │
 │  内容：最近对话 / 工具调用结果 / 当前轮决策                   │
 │  访问：直接在 context 里，无需检索工具                       │
-│  触发：→ 超过 20 轮 → Layer A 压缩                         │
-│       → 话题结束信号 → Layer B 归档                        │
+│  触发：→ 超过 20 轮 → Layer 2（Summarize）压缩                         │
+│       → 话题结束信号 → Layer 4 归档                        │
 └──────────────────────────────────────────────────────────┘
                           ↓
 ┌──────────────────────────────────────────────────────────┐
@@ -197,9 +197,9 @@ ENTITY_PATTERNS = [
 对话进行中
     │
     ├── 每轮：CTRL 检查 round > 20？
-    │     是 → Layer A 轻量摘要（静默，不通知用户）
+    │     是 → Layer 2（Summarize）轻量摘要（静默）
     │
-    ├── 话题结束信号：Layer B 归档（主动写入 MEMORY.md，告知用户）
+    ├── 话题结束信号：Layer 4 归档（主动写入 MEMORY.md，告知用户）
     │
     └── context 接近上限（200K tokens）：
           OpenClaw 原生 compaction（自动触发）
@@ -231,7 +231,7 @@ ENTITY_PATTERNS = [
 }]
 ```
 
-### 2.3 Layer A：轻量摘要（longClaw 扩展）
+### 2.3 Layer 2：Summarize（轻量摘要）（longClaw 扩展）
 
 **定位**：在原生 compaction 触发之前，提前做业务层摘要，减少噪声积累。
 
@@ -251,7 +251,7 @@ ENTITY_PATTERNS = [
 
 **保护结构**：system prompt + 前 3 条 + 后 8 条不摘要，只摘要中间部分。
 
-### 2.4 Layer B：话题归档（longClaw 扩展）
+### 2.4 Layer 4：Archive（话题归档）（longClaw 扩展）
 
 **定位**：不是 context 压缩，而是**跨 session 的知识沉淀**。
 
@@ -272,7 +272,7 @@ Step 4：告知用户"已将[话题]的结论保存到长期记忆"
 
 ### 2.5 三层对比
 
-| | OpenClaw 原生 | Layer A | Layer B |
+| | OpenClaw 原生（Layer 3） | Layer 2（Summarize） | Layer 4（Archive） |
 |---|---|---|---|
 | 触发 | context 接近上限 | round > 20 | 话题边界 |
 | 可控性 | 不可控 | 可配置阈值 | 可配置触发词 |
@@ -284,9 +284,9 @@ Step 4：告知用户"已将[话题]的结论保存到长期记忆"
 
 ```
 Claude Code Layer 1（Tool Result Budgeting）← longClaw 待实现
-Claude Code Layer 2（Snip Compacting）      ← longClaw Layer A 对应
-Claude Code Layer 3（Microcompacting）      ← longClaw Layer A 对应
-Claude Code Layer 4（Auto-compacting）      ← longClaw Layer B 对应（语义上）
+Claude Code Layer 2（Snip Compacting）      ← longClaw Layer 2（Summarize）对应
+Claude Code Layer 3（Microcompacting）      ← longClaw Layer 2（Summarize）部分覆盖
+Claude Code Layer 4（Auto-compacting）      ← longClaw Layer 3（Compact，原生）对应
 ```
 
 ---
@@ -662,16 +662,16 @@ Shadow Eval（openclaw_substrate/shadow_eval.py）
 - 缓解：model: inherit，继承主 session 的 Codex
 
 **决策 5：压缩三层协作 vs 单一策略**
-- 选择：原生 compaction + Layer A（token压力）+ Layer B（话题边界）
+- 选择：原生 compaction + Layer 2（Summarize，token压力）+ Layer 4（Archive，话题边界）
 - 理由：不同触发条件解决不同问题，层层递进
 - 代价：配置复杂，三层之间的优先级需要明确
-- 缓解：原生 compaction 优先，Layer A 跳过，Layer B 独立触发
+- 缓解：原生 compaction 优先，Layer 2 跳过，Layer 4 独立触发
 
 ### 7.2 与 Claude Code 内部设计的对应
 
 | Claude Code 设计 | longClaw 实现 | 差距/下一步 |
 |-----------------|--------------|-----------|
-| 4-Layer Compression | Layer A + Layer B + 原生 compaction | 缺 Layer 1（工具结果 token 预算） |
+| 4-Layer Compression | Layer 1（Trim）+ Layer 2（Summarize）+ Layer 3（Compact）+ Layer 4（Archive） | 已补 Layer 1（Trim，工具输出实时截断） |
 | LLM 侧查询记忆检索 | FTS + Hybrid Embedding | 升级方向：用 Codex 做语义检索 |
 | Fork Agent 缓存共享 | 无 | A2A 并行可引入，节省 90% token |
 | Speculative Execution | 无 | code-agent 工具并发可引入 |
@@ -687,7 +687,7 @@ Shadow Eval（openclaw_substrate/shadow_eval.py）
 | 原生 compaction 压缩率 | ~88% | 9600 tokens → 1140 tokens |
 | 检索扩展阈值 | top1 < 0.3 | 绝对分数，避免差值过敏感 |
 | 实体命中加分 | +0.4 × N | N=命中实体数 |
-| Layer A 触发阈值 | round > 20 | session-state.json 追踪 |
+| Layer 2 触发阈值 | round > 20 | session-state.json 追踪 |
 | Subagent 并发上限 | 3（deep-research） | OpenClaw 并行限制 |
 | code-agent 重试上限 | 2次 | 第3次停止报告 blocked |
 | SWE-bench-lite 目标 | resolved rate > baseline | M4 里程碑 |

@@ -66,9 +66,9 @@ requires: ["file_write", "shell_exec"] → 两项都需满足
 
 ## Context Compression（三层）
 
-优先级：原生 compaction > Layer 0（实时截断）> Layer A（轮数摘要）。Layer B 独立触发，不受前三层影响。
+优先级：原生 compaction > Layer 1（Trim）> Layer 2（Summarize）。Layer 4（Archive）独立触发，不受前三层影响。
 
-### Layer 0：工具输出实时截断（借鉴 Claude Code Tool Result Budgeting）
+### Layer 1：Trim（工具输出实时截断）（借鉴 Claude Code Tool Result Budgeting）
 
 **触发**：任意一条工具输出 > 500 字符，当轮立即执行，无需等待轮数累积。
 
@@ -79,11 +79,11 @@ requires: ["file_write", "shell_exec"] → 两项都需满足
 
 **设计理由**：换电诊断工具返回通常为结构化 JSON，500 字符可覆盖关键字段（故障码/时间戳/车辆ID）。实时截断比等到 round > 20 更轻量，防止单条超长输出污染后续检索上下文。
 
-### Layer A：轻量摘要（token 压力驱动，静默）
+### Layer 2：Summarize（轻量摘要）（token 压力驱动，静默）
 
 **触发**（满足任一，且原生 compaction 未触发）：
 - 对话轮数 > 20
-- （注：单次工具输出 > 500 字符已由 Layer 0 处理，不再作为 Layer A 触发条件）
+- （注：单次工具输出 > 500 字符已由 Layer 1（Trim）处理，不再作为 Layer 2 触发条件）
 
 **执行**：
 - 生成压缩摘要块替换中间历史，保留关键结论
@@ -93,7 +93,7 @@ requires: ["file_write", "shell_exec"] → 两项都需满足
 - DEV LOG 显示：压缩原因 / 累计次数 / 级别
 - 失败时退化为最小裁剪，不得声称"已完成压缩"
 
-### Layer B：话题归档（话题边界驱动，主动）
+### Layer 4：Archive（话题归档）（话题边界驱动，主动）
 
 **触发**（满足任一）：
 - 用户说"新话题" / "换个话题" / "搞定了" / "好了就这样"
@@ -183,7 +183,7 @@ DEV LOG 显示：检索级别 / query 变体 / 召回数 / 是否触发跨域
 session_id 命名：`openclaw_{domain}_{YYYY-MM-DD}`（如 `openclaw_job_2026-04-14`）
 
 三层状态：
-- Layer 1（短期）：recent_turns，超 20 轮触发 Layer A 压缩
+- Layer 1（短期）：recent_turns，超 20 轮触发 Layer 2（Summarize）压缩
 - Layer 2（中期）：summary + entities，LLM 摘要 + 关键实体
 - Layer 3（长期）：key_conclusions，写入 MEMORY.md，跨 session 可检索
 
