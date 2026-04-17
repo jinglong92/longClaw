@@ -51,16 +51,23 @@
 ```
 🧠 Memory <domains> | ~<N> tokens | 节省 <X>%
 ```
+- 若 MEMORY.md 未加载（SEARCH 域等），写 `🧠 Memory (SYSTEM) only`
+- 若 token 数未知，写 `~ephemeral`（不写 unavailable）
 
 ### 📂 Session
 ```
-📂 Session 第 <N> 轮 | recent_turns=<n/8> | <未触发压缩|Layer A 已触发>
+📂 Session 第 <N> 轮 | recent_turns=<n/8> | <未触发压缩|Layer 2 已触发>
 ```
+- `第 <N> 轮` 指本次 session 内的轮次（ephemeral，不跨 session 累积）
+- 若 session-state.json 不存在或未写入，写 `ephemeral session`（不写 unavailable）
+- 跨 session 统计由 heartbeat-agent 负责，不在此字段体现
 
 ### 🔍 检索
 ```
 🔍 检索 scope=<DOMAIN> | level=<同域近期|同域归档|跨域> | 召回 <N> 条 | top=[<scores>]
 ```
+- 若未触发检索工具（Level 1 context 已足够），写 `🔍 检索 scope=context | level=L1 | 无需工具`
+- 若分数未知，写 `top=ephemeral`（不写 unavailable）
 
 ### ⚖️ 置信度
 ```

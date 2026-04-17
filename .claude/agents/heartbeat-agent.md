@@ -39,21 +39,35 @@ tools:
 - memory/ 目录：今天的日志文件是否存在
 - session-state.json：compression_count 是否异常高（>10）
 
+**P2 — 跨 session 统计（聚合，不依赖单次 session 落盘）**
+- 统计 memory/YYYY-MM-DD.md 文件数量（近 7 天活跃天数）
+- 统计各域 MEMORY.md 条目数（来自 tools/artifacts/memory_entries.jsonl）
+- 统计 deep-research / memory-companion 等 skill 触发频率（从 daily logs 关键词匹配）
+- 写入 heartbeat-state.json 的 `session_stats` 字段（仅内部用，不向用户呈现）
+
 ### Step 3：写入 heartbeat-state.json
 
 ```json
 {
   "last_check": "YYYY-MM-DDTHH:MM:SSZ",
-  "has_pending": true/false,
+  "has_pending": true,
   "pending_items": [
     {
       "priority": "P0|P1|P2",
       "type": "deadline|followup|system",
       "content": "一句话描述",
       "action": "建议用户做什么（可选）",
-      "expires_at": "YYYY-MM-DD"
+      "expires_at": "YYYY-MM-DD",
+      "shown": false,
+      "shown_count": 0
     }
   ],
+  "session_stats": {
+    "active_days_7d": 5,
+    "memory_entry_count": {"JOB": 12, "LEARN": 8, "ENGINEER": 15},
+    "skill_triggers_7d": {"deep-research": 3, "memory-companion": 7, "jd-analysis": 2},
+    "updated_at": "YYYY-MM-DDTHH:MM:SSZ"
+  },
   "check_summary": "本次巡检摘要（内部用）"
 }
 ```
