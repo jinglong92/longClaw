@@ -40,6 +40,8 @@ graph TD
     style IDX fill:#f3f4f6,stroke:#9ca3af
 ```
 
+> **🖼️ PPT 高清版**：![图1：三层记忆架构总览](images/fig1-three-layer-memory.png)
+
 ### 文字说明（原始结构）
 
 ```
@@ -159,6 +161,8 @@ graph LR
     style MONEY fill:#f3f4f6,stroke:#d1d5db
     style OTHER fill:#f3f4f6,stroke:#d1d5db
 ```
+
+> **🖼️ PPT 高清版**：![图2：分域注入原理](images/fig2-route-aware-injection.png)
 
 ### 格式约束（重要）
 
@@ -325,6 +329,8 @@ flowchart TD
     style TOPK fill:#f3f4f6,stroke:#6b7280
 ```
 
+> **🖼️ PPT 高清版**：![图3：四级 Route-Aware 检索流程](images/fig3-four-level-retrieval.png)
+
 ### 检索架构：4 级作用域 + 混合评分
 
 ```
@@ -467,6 +473,8 @@ flowchart TD
     style L4A fill:#dcfce7,stroke:#22c55e
     style PHC fill:#f3e8ff,stroke:#a855f7
 ```
+
+> **🖼️ PPT 高清版**：![图4：四层压缩协作全景](images/fig4-four-layer-compression.png)
 
 **优先级**：Layer 3（原生）> Layer 1（Trim）> Layer 2（Summarize）。Layer 4（Archive）独立触发。
 
@@ -652,13 +660,13 @@ flowchart TD
 
 Claude Code 采用**四层渐进式**压缩（每次 API 调用前按需触发）：
 
-| Claude Code | longClaw 对应 | 差异 |
-|-------------|--------------|------|
-| Layer 1：Tool Result Budgeting（批量截断历史工具结果） | **Layer 1**（实时截断当轮输出） | CC 批量处理历史；longClaw 实时处理，更简单 |
-| Layer 2：Snip Compacting（物理删除旧消息） | **Layer 2**（替换为摘要块） | CC 直接删；longClaw 保留摘要，信息损失更小 |
-| Layer 3：Microcompacting（删除已完成工具结果） | Layer 2（Summarize）覆盖部分 | longClaw 未单独实现此层 |
-| Layer 4：Auto-compacting（subagent 生成摘要） | **原生 compaction** | 机制类似，CC 用专用 subagent，longClaw 用 OpenClaw 内置 |
-| 无 | **Layer 4**（话题归档） | longClaw 独有，跨 session 知识沉淀 |
+| Claude Code                               | longClaw 对应            | 差异                                          |
+| ----------------------------------------- | ---------------------- | ------------------------------------------- |
+| Layer 1：Tool Result Budgeting（批量截断历史工具结果） | **Layer 1**（实时截断当轮输出）  | CC 批量处理历史；longClaw 实时处理，更简单                 |
+| Layer 2：Snip Compacting（物理删除旧消息）          | **Layer 2**（替换为摘要块）    | CC 直接删；longClaw 保留摘要，信息损失更小                 |
+| Layer 3：Microcompacting（删除已完成工具结果）        | Layer 2（Summarize）覆盖部分 | longClaw 未单独实现此层                            |
+| Layer 4：Auto-compacting（subagent 生成摘要）    | **原生 compaction**      | 机制类似，CC 用专用 subagent，longClaw 用 OpenClaw 内置 |
+| 无                                         | **Layer 4**（话题归档）      | longClaw 独有，跨 session 知识沉淀                  |
 
 **核心差异**：
 - Claude Code 是**预防式**：每次 API 调用前检查，能不压就不压，从最轻到最重渐进

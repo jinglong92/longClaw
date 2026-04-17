@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>图1：三层记忆架构总览</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f0f4f8;
+    padding: 48px 56px;
+    width: 1920px;
+    height: 1080px;
+  }
+  h1 {
+    font-size: 30px;
+    font-weight: 700;
+    color: #1e293b;
+    text-align: center;
+    margin-bottom: 32px;
+    letter-spacing: 1px;
+  }
+
+  /* 横向三列布局 */
+  .layers-row {
+    display: flex;
+    gap: 24px;
+    align-items: stretch;
+    margin-bottom: 20px;
+  }
+  .layer-card {
+    flex: 1;
+    border-radius: 18px;
+    padding: 24px 28px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .layer-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 5px;
+  }
+
+  /* Layer 1 */
+  .layer-1 {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 2px solid #93c5fd;
+  }
+  .layer-1::before { background: #3b82f6; }
+
+  /* Layer 2 */
+  .layer-2 {
+    background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+    border: 2px solid #fde047;
+  }
+  .layer-2::before { background: #eab308; }
+
+  /* Layer 3 */
+  .layer-3 {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 2px solid #86efac;
+  }
+  .layer-3::before { background: #22c55e; }
+
+  .layer-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .layer-badge {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 4px 16px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+  .layer-name {
+    font-size: 19px;
+    font-weight: 700;
+    color: #1e293b;
+  }
+  .layer-detail {
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.8;
+  }
+  .layer-detail .label {
+    font-weight: 600;
+    color: #334155;
+  }
+
+  /* 中间连接箭头区域 */
+  .arrow-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 60px;
+    padding: 0 4px;
+  }
+  .arrow-right-sm {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  .arrow-line-r {
+    width: 28px;
+    height: 3px;
+    background: #94a3b8;
+    position: relative;
+  }
+  .arrow-line-r::after {
+    content: '';
+    position: absolute;
+    right: -7px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 9px solid #94a3b8;
+  }
+  .arrow-label-r {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 600;
+    writing-mode: vertical-rl;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #f0f4f8;
+    padding: 4px 2px;
+    white-space: nowrap;
+  }
+
+  .arrow-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .arrow-text {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 600;
+    background: #e2e8f0;
+    padding: 3px 10px;
+    border-radius: 10px;
+    white-space: nowrap;
+  }
+
+  /* 底部 Index 行 */
+  .index-row {
+    display: flex;
+    gap: 24px;
+  }
+  .index-card {
+    flex: 1;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border: 2px solid #d1d5db;
+    border-radius: 18px;
+    padding: 18px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .index-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 5px;
+    background: #6b7280;
+  }
+  .index-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .index-badge {
+    font-size: 16px;
+  }
+  .index-name {
+    font-size: 19px;
+    font-weight: 700;
+    color: #1e293b;
+  }
+  .index-detail {
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.7;
+  }
+  .index-detail .label {
+    font-weight: 600;
+    color: #334155;
+  }
+
+  /* 生命条 */
+  .lifecycle-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 10px;
+  }
+  .lifecycle-icon {
+    font-size: 13px;
+  }
+  .lifecycle-text {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<h1>三层记忆架构总览</h1>
+
+<div class="layers-row">
+  <!-- Layer 1 -->
+  <div class="layer-card layer-1">
+    <div class="layer-header">
+      <span class="layer-badge" style="background:#3b82f6;">L1</span>
+      <span class="layer-name">上下文窗口 · 当前 Session</span>
+    </div>
+    <div class="layer-detail">
+      <div><span class="label">内容：</span>最近对话 / 工具调用结果 / 当前轮决策</div>
+      <div><span class="label">访问：</span>直接在 context，无需检索</div>
+    </div>
+    <div class="lifecycle-bar">
+      <span class="lifecycle-icon">⏱️</span>
+      <span class="lifecycle-text">生命周期：Session 关闭即消失</span>
+    </div>
+  </div>
+
+  <!-- Arrow 1→2 -->
+  <div class="arrow-col">
+    <div class="arrow-item">
+      <span class="arrow-text">round > 20 → 压缩</span>
+      <div class="arrow-right-sm"><div class="arrow-line-r"></div></div>
+    </div>
+    <div class="arrow-item">
+      <span class="arrow-text">话题结束 → 归档</span>
+      <div class="arrow-right-sm"><div class="arrow-line-r"></div></div>
+    </div>
+  </div>
+
+  <!-- Layer 2 -->
+  <div class="layer-card layer-2">
+    <div class="layer-header">
+      <span class="layer-badge" style="background:#eab308;">L2</span>
+      <span class="layer-name">每日日志 · YYYY-MM-DD.md</span>
+    </div>
+    <div class="layer-detail">
+      <div><span class="label">内容：</span>对话流水 / 决策记录 / 实体更新</div>
+      <div><span class="label">访问：</span>memory_search.py Level 2/3</div>
+    </div>
+    <div class="lifecycle-bar">
+      <span class="lifecycle-icon">📅</span>
+      <span class="lifecycle-text">生命周期：天 ~ 周，手动清理</span>
+    </div>
+  </div>
+
+  <!-- Arrow 2→3 -->
+  <div class="arrow-col">
+    <div class="arrow-item">
+      <span class="arrow-text">key_conclusions → 提炼</span>
+      <div class="arrow-right-sm"><div class="arrow-line-r"></div></div>
+    </div>
+  </div>
+
+  <!-- Layer 3 -->
+  <div class="layer-card layer-3">
+    <div class="layer-header">
+      <span class="layer-badge" style="background:#22c55e;">L3</span>
+      <span class="layer-name">长期记忆 · MEMORY.md 分域块</span>
+    </div>
+    <div class="layer-detail">
+      <div><span class="label">内容：</span>稳定偏好 / 重要结论 / 长期关注</div>
+      <div><span class="label">访问：</span>启动时按域注入 + 检索</div>
+    </div>
+    <div class="lifecycle-bar">
+      <span class="lifecycle-icon">📆</span>
+      <span class="lifecycle-text">生命周期：月 ~ 年，主动维护</span>
+    </div>
+  </div>
+</div>
+
+<!-- 底部 Index -->
+<div class="index-row">
+  <div class="index-card">
+    <div class="index-header">
+      <span class="index-badge">📋</span>
+      <span class="index-name">JSONL 索引 · memory_entries.jsonl</span>
+    </div>
+    <div class="index-detail">
+      <span class="label">内容：</span>每条记忆的结构化元数据（域 / 实体 / 重要性 / 日期）&nbsp;&nbsp;&nbsp;
+      <span class="label">访问：</span>memory_search.py 的底层数据源&nbsp;&nbsp;&nbsp;
+      <span class="label">来源：</span>L3 → memory_entry.py 构建索引
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

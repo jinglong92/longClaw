@@ -393,10 +393,10 @@ docs/
 
 ## 七、里程碑
 
-| 里程碑 | 目标 | 验证方式 |
-|--------|------|---------|
-| M1（已完成）| repo-explorer + code-agent 基础版 | 能自主探索 longClaw 自身的 codebase 并修改 |
-| M2（2周）| repo-map 工具（tree-sitter） | repo-explorer 能生成 500 token 内的代码地图 |
-| M3（4周）| git worktree 隔离 | code-agent 任务在独立分支执行，失败可安全丢弃 |
-| M4（6周）| openclaw_substrate 评估接入 | 能跑 10 个 SWE-bench-lite issue，有 resolved rate 数据 |
-| M5（持续）| 迭代优化 | resolved rate 持续提升 |
+| 里程碑     | 目标                             | 验证方式                                            |
+| ------- | ------------------------------ | ----------------------------------------------- |
+| M1（已完成） | repo-explorer + code-agent 基础版 | 能自主探索 longClaw 自身的 codebase 并修改                 |
+| M2（2周）  | repo-map 工具（tree-sitter）       | repo-explorer 能生成 500 token 内的代码地图              |
+| M3（4周）  | git worktree 隔离                | code-agent 任务在独立分支执行，失败可安全丢弃                    |
+| M4（6周）  | openclaw_substrate 评估接入        | 能跑 10 个 SWE-bench-lite issue，有 resolved rate 数据 |
+| M5（持续）  | 迭代优化                           | resolved rate 持续提升                              |

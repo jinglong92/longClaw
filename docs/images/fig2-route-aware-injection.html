@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>图2：分域注入原理</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f0f4f8;
+    padding: 48px 56px;
+    width: 1920px;
+    height: 1080px;
+  }
+  h1 {
+    font-size: 30px;
+    font-weight: 700;
+    color: #1e293b;
+    text-align: center;
+    margin-bottom: 32px;
+    letter-spacing: 1px;
+  }
+
+  .diagram {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+  }
+
+  .stage {
+    border-radius: 18px;
+    padding: 22px 28px;
+    text-align: center;
+  }
+  .stage-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Request */
+  .stage-request {
+    background: #1e293b;
+    border: 2px solid #475569;
+    min-width: 200px;
+  }
+  .stage-request .example {
+    font-size: 18px;
+    font-weight: 600;
+    color: #f1f5f9;
+    font-style: italic;
+  }
+
+  /* CTRL */
+  .stage-ctrl {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border: 2px solid #93c5fd;
+    min-width: 180px;
+  }
+  .ctrl-route {
+    font-size: 24px;
+    font-weight: 800;
+    color: #3b82f6;
+  }
+
+  /* Memory */
+  .stage-memory {
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    min-width: 380px;
+    padding: 18px 20px;
+  }
+  .mem-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .mem-row.injected {
+    background: #dcfce7;
+    border: 2px solid #86efac;
+    color: #166534;
+  }
+  .mem-row.skipped {
+    background: #f3f4f6;
+    border: 1.5px solid #e5e7eb;
+    color: #9ca3af;
+    font-weight: 500;
+  }
+  .mem-token {
+    font-size: 12px;
+    opacity: 0.6;
+  }
+  .mem-icon {
+    margin-left: 8px;
+  }
+
+  /* Inject */
+  .stage-inject {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border: 2px solid #86efac;
+  }
+  .inject-item {
+    background: #fff;
+    padding: 10px 20px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #166534;
+    border: 2px solid #86efac;
+  }
+  .inject-total {
+    font-size: 14px;
+    color: #166534;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+
+  /* Save */
+  .stage-save {
+    background: linear-gradient(135deg, #fefce8, #fef9c3);
+    border: 2px solid #fde047;
+  }
+  .save-number {
+    font-size: 48px;
+    font-weight: 900;
+    color: #ca8a04;
+  }
+  .save-label {
+    font-size: 16px;
+    color: #a16207;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  .save-detail {
+    font-size: 13px;
+    color: #92400e;
+    margin-top: 8px;
+    line-height: 1.6;
+  }
+
+  /* Arrows */
+  .arrow-r {
+    display: flex;
+    align-items: center;
+  }
+  .arrow-line-r {
+    width: 36px;
+    height: 3px;
+    background: #94a3b8;
+    position: relative;
+  }
+  .arrow-line-r::after {
+    content: '';
+    position: absolute;
+    right: -7px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
+    border-left: 10px solid #94a3b8;
+  }
+</style>
+</head>
+<body>
+
+<h1>分域注入原理（Route-Aware Memory Injection）</h1>
+
+<div class="diagram">
+
+  <!-- Step 1 -->
+  <div class="stage stage-request">
+    <div class="stage-title">用户请求</div>
+    <div class="example">"帮我分析这个 JD"</div>
+  </div>
+
+  <div class="arrow-r"><div class="arrow-line-r"></div></div>
+
+  <!-- Step 2 -->
+  <div class="stage stage-ctrl">
+    <div class="stage-title">CTRL 路由</div>
+    <div class="ctrl-route">→ JOB</div>
+  </div>
+
+  <div class="arrow-r"><div class="arrow-line-r"></div></div>
+
+  <!-- Step 3: MEMORY.md -->
+  <div class="stage stage-memory">
+    <div class="stage-title" style="color:#334155;">MEMORY.md 全量 ~5000t</div>
+    <div class="mem-row injected">(SYSTEM) ~300t <span class="mem-icon">✅</span></div>
+    <div class="mem-row injected">[JOB] ~500t <span class="mem-icon">✅</span></div>
+    <div class="mem-row skipped">[WORK] ~400t <span class="mem-icon">❌</span></div>
+    <div class="mem-row skipped">[LEARN] ~600t <span class="mem-icon">❌</span></div>
+    <div class="mem-row skipped">[ENGINEER] ~500t <span class="mem-icon">❌</span></div>
+    <div class="mem-row skipped">[MONEY] ~400t <span class="mem-icon">❌</span></div>
+    <div class="mem-row skipped">[LIFE/PARENT/BRO/META] ~1800t <span class="mem-icon">❌</span></div>
+  </div>
+
+  <div class="arrow-r"><div class="arrow-line-r"></div></div>
+
+  <!-- Step 4 -->
+  <div class="stage stage-inject">
+    <div class="stage-title" style="color:#166534;">注入 Context</div>
+    <div class="inject-item">(SYSTEM) ✅</div>
+    <div class="inject-item">[JOB] ✅</div>
+    <div class="inject-total">~800 tokens</div>
+  </div>
+
+  <div class="arrow-r"><div class="arrow-line-r"></div></div>
+
+  <!-- Step 5 -->
+  <div class="stage stage-save">
+    <div class="stage-title" style="color:#a16207;">Token 节省</div>
+    <div class="save-number">84%</div>
+    <div class="save-detail">~4200t 未注入<br/>按域精准注入 vs 全量注入</div>
+  </div>
+
+</div>
+
+</body>
+</html>
