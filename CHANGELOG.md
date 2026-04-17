@@ -7,8 +7,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [v0.5.0] — 2026-04-17
 
-### Changed
-- **README 图片策略调整**：回退 fig1/fig2/fig3 图片替换，恢复 §2.2 分域注入、§2.4 route-aware 检索、§4 Memory 检索系统的详细文字描述；仅保留 §3.2 四层压缩协作（fig4-four-layer-compression.png）作为架构图补充
+### Added
+- **个人知识摄入管道（inbox/）**：新增 `inbox/` 目录作为知识摄入入口，支持 `.md`/`.txt` 文件，可通过 YAML frontmatter 指定域/标签/重要性
+- **`tools/inbox_processor.py`**：
+  - 解析 inbox 文件 → 提取域/实体/重要性 → 分块（400 token，80 token 重叠）
+  - 写入 `tools/artifacts/knowledge_entries.jsonl`（追加，不覆盖）
+  - 处理完自动移动到 `inbox/processed/`
+  - 支持 `--dry-run` / `--stats`
+- **memory_search 双索引合并**：`tools/memory_search.py` 新增 `load_all()`，检索时自动合并 `memory_entries.jsonl`（对话记忆）和 `knowledge_entries.jsonl`（inbox 知识库）
+- **heartbeat-agent 自动处理**：P2 系统健康巡检新增 inbox/ 扫描步骤，发现新文件自动触发处理
 
 ---
 
