@@ -151,10 +151,23 @@ User -> CTRL -> ([专职A] || [专职B]) -> CTRL -> User
 - `SEARCH` 专职只能使用 `web_fetch`，不得调用 `file_write`
 - `BRO` / `SIS` 不得调用任何文件写入或外部 API
 
-**自动 Subagent 触发规则**：
-- CTRL 路由到 `BRO` 或 `SIS` 时，自动 spawn `memory-agent` 检索近期记忆（后台执行，不打断主流程）
-- CTRL 路由到 `SEARCH` 且问题需要多维度调研时，自动触发 `deep-research` skill（spawn `search-agent` × 2-3）
-- Subagent 超时（memory-agent >10s，search-agent >60s）时静默跳过，主流程正常继续
+**强制 Subagent 执行规则（硬规则，不得跳过）**：
+
+路由到 `BRO` 时，CTRL 必须在 BRO 回复前执行：
+```
+Agent(memory-agent): 检索近 3 天记忆，提取情绪状态和上次话题，注入 BRO 上下文
+```
+路由到 `SIS` 时，同上。
+
+路由到 `SEARCH` 且用户说"深度调研"/"多个来源"/"多角度"时，CTRL 必须执行：
+```
+Agent(search-agent): <维度A>
+Agent(search-agent): <维度B>
+Agent(search-agent): <维度C>
+```
+
+**超时处理**：memory-agent > 10s、search-agent > 60s 时静默跳过，BRO/SIS 正常回复，不报错。
+**未执行时**：DEV LOG 的 `🛠️ 工具` 字段必须写 `Agent(memory-agent) → 跳过 | 原因: <超时/失败>`，不得留空。
 
 ---
 
