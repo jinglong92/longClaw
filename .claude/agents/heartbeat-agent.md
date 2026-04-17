@@ -39,6 +39,9 @@ tools:
 **P2 — 系统健康**
 - memory/ 目录：今天的日志文件是否存在
 - session-state.json：compression_count 是否异常高（>10）
+- **inbox/ 扫描**：检查 inbox/ 目录是否有新文件（.md/.txt，排除 README.md）
+  - 有新文件 → 执行 `python3 tools/inbox_processor.py`
+  - 无新文件 → 跳过
 - **索引新鲜度检查**：运行 `python3 tools/memory_entry.py --check-stale`
   - 若输出包含 `[stale]` → 索引过期，自动重建（`--check-stale` 会自动触发重建）
   - 若输出包含 `[fresh]` → 索引是最新的，跳过

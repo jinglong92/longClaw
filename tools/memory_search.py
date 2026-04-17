@@ -183,9 +183,23 @@ def rrf(fts_list: list[dict], sem_list: list[dict], k: int = 60) -> list[tuple[d
     return sorted([(v["e"], v["s"], v["m"]) for v in scores.values()], key=lambda x: -x[1])
 
 
+KNOWLEDGE_ENTRIES = Path("tools/artifacts/knowledge_entries.jsonl")
+
+
+def load_all(entries_path: Path = DEFAULT_ENTRIES) -> list[dict]:
+    """加载 memory + knowledge 两个索引，合并返回"""
+    entries = load(entries_path)
+    if KNOWLEDGE_ENTRIES.exists() and KNOWLEDGE_ENTRIES != entries_path:
+        kb = [json.loads(l) for l in KNOWLEDGE_ENTRIES.read_text(encoding="utf-8").splitlines() if l.strip()]
+        entries = entries + kb
+        if entries:
+            pass  # verbose 由调用层控制
+    return entries
+
+
 def search(query: str, domain: Optional[str] = None, top_k: int = 5, hybrid: bool = False,
            entries_path: Path = DEFAULT_ENTRIES, verbose: bool = False, debug_embed: bool = False) -> list[Hit]:
-    all_entries = load(entries_path)
+    all_entries = load_all(entries_path)
     if not all_entries:
         print(f"[WARN] {entries_path} 不存在或为空，请先运行: python3 tools/memory_entry.py")
         return []
