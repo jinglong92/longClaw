@@ -206,16 +206,49 @@ def stats(output: Path) -> None:
             print(f" [{e['domain']}] {e['created_at']} imp={e['importance']} | {e['text'][:80]}")
 
 
+def check_stale(workspace: Path, output: Path) -> bool:
+    """检查索引是否需要重建：memory/ 或 MEMORY.md 比索引文件更新则返回 True"""
+    if not output.exists():
+        print("[stale] 索引不存在，需要构建")
+        return True
+
+    index_mtime = output.stat().st_mtime
+
+    # 检查 MEMORY.md
+    mem_md = workspace / "MEMORY.md"
+    if mem_md.exists() and mem_md.stat().st_mtime > index_mtime:
+        print(f"[stale] MEMORY.md 比索引新（{datetime.fromtimestamp(mem_md.stat().st_mtime).strftime('%Y-%m-%d %H:%M:%S')}），需要重建")
+        return True
+
+    # 检查 memory/*.md
+    mem_dir = workspace / "memory"
+    if mem_dir.exists():
+        for f in mem_dir.glob("*.md"):
+            if f.stat().st_mtime > index_mtime:
+                print(f"[stale] {f.name} 比索引新，需要重建")
+                return True
+
+    print(f"[fresh] 索引是最新的（{datetime.fromtimestamp(index_mtime).strftime('%Y-%m-%d %H:%M:%S')}）")
+    return False
+
+
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--workspace", type=Path, default=Path("."))
     p.add_argument("--output", type=Path, default=Path("tools/artifacts/memory_entries.jsonl"))
     p.add_argument("--rebuild", action="store_true")
     p.add_argument("--stats", action="store_true")
+    p.add_argument("--check-stale", action="store_true", help="检查索引是否过期，过期则自动重建")
     args = p.parse_args()
 
     if args.stats:
         stats(args.output)
+        return
+
+    if args.check_stale:
+        if check_stale(args.workspace, args.output):
+            print("[构建] 索引过期，自动重建...")
+            build(args.workspace, args.output, rebuild=True)
         return
 
     print("[构建] Memory entries...")

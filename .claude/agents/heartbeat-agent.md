@@ -7,6 +7,7 @@ tools:
   - Glob
   - Grep
   - Write
+  - Bash
 ---
 
 # Heartbeat Agent
@@ -38,6 +39,10 @@ tools:
 **P2 — 系统健康**
 - memory/ 目录：今天的日志文件是否存在
 - session-state.json：compression_count 是否异常高（>10）
+- **索引新鲜度检查**：运行 `python3 tools/memory_entry.py --check-stale`
+  - 若输出包含 `[stale]` → 索引过期，自动重建（`--check-stale` 会自动触发重建）
+  - 若输出包含 `[fresh]` → 索引是最新的，跳过
+  - 重建完成后在 check_summary 里记录"索引已重建"
 
 **P2 — 跨 session 统计（聚合，不依赖单次 session 落盘）**
 - 统计 memory/YYYY-MM-DD.md 文件数量（近 7 天活跃天数）
