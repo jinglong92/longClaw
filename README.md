@@ -55,10 +55,11 @@
 14 个高频任务固化为独立 SKILL.md，会话启动时只建索引，命中触发条件时立即加载全文执行，执行完即退出。每个 skill 声明 `requires` 依赖字段，命中前先检查工具可用性，不满足直接返回 `blocked`。
 
 **🤖 Subagent 并发架构**
-三类专用子代理（model: inherit，继承主 session 的 Codex），各自有独立 context 和最小工具权限：
+四类专用子代理（model: inherit，继承主 session 的 Codex），各自有独立 context 和最小工具权限：
 - `search-agent`：并发搜索，只有 WebFetch/WebSearch/Read/Grep 权限
-- `memory-agent`：BRO/SIS 路由时后台检索近期记忆，只读权限
-- `heartbeat-agent`：cron 定时巡检，只读 + 写 heartbeat-state.json
+- `memory-agent`：BRO/SIS 路由时后台检索近期记忆，只读权限；回复中明确标注 `[本轮]`/`[记忆]`/`[判断]` 三种来源
+- `heartbeat-agent`：cron 定时巡检，只读 + 写 heartbeat-state.json + 自动检查索引新鲜度
+- `repo-explorer`：code-agent 触发时自主探索 codebase，返回结构化文件地图，只读
 
 **📊 本地训练底座（Local-first）**
 真实交互可沉淀为训练资产：Trace 收集 → Judge 评分 → Dataset 构建 → MLX / LLaMA-Factory 本地训练，全流程在 Mac mini M4 上运行，无需上传数据到云端。
@@ -522,10 +523,11 @@ python3 tools/memory_search.py --query "上次面试进展" --domain JOB --hybri
 
 | 文件 | 作用 |
 |------|------|
-| [.claude/settings.json](.claude/settings.json) | PostCompact / FileChanged / PreToolUse / SessionStart hooks |
+| [.claude/settings.json](.claude/settings.json) | UserPromptSubmit（/new 重启）/ PostCompact / FileChanged / PreToolUse / SessionStart hooks |
 | [.claude/agents/search-agent.md](.claude/agents/search-agent.md) | 并发搜索子代理（inherit model，WebFetch+Read+Grep）|
 | [.claude/agents/memory-agent.md](.claude/agents/memory-agent.md) | 记忆检索子代理（inherit model，只读）|
-| [.claude/agents/heartbeat-agent.md](.claude/agents/heartbeat-agent.md) | 心跳巡检子代理（inherit model，只读+写 heartbeat-state.json）|
+| [.claude/agents/heartbeat-agent.md](.claude/agents/heartbeat-agent.md) | 心跳巡检子代理（inherit model，只读+写 heartbeat-state.json+自动索引重建）|
+| [.claude/agents/repo-explorer.md](.claude/agents/repo-explorer.md) | Codebase 探索子代理（inherit model，只读，返回结构化文件地图）|
 
 ### Workflow Skills
 
@@ -567,15 +569,17 @@ python3 tools/memory_search.py --query "上次面试进展" --domain JOB --hybri
 
 | 文件 | 内容 |
 |------|------|
-| [docs/subagent-harness-learning-guide.md](docs/subagent-harness-learning-guide.md) | Subagent 架构 + Harness 改造原理（AI搜索/AI陪伴/Proactive Heartbeat 设计思路）|
-| [docs/memory-compression-guide.md](docs/memory-compression-guide.md) | 记忆与压缩机制详解（三层记忆/四级检索/压缩协作/运维命令）|
+| [docs/longclaw-design.md](docs/longclaw-design.md) | 系统设计与 Claude Code 对比（架构/记忆/压缩/协同/Harness，含设计决策矩阵）|
+| [docs/longclaw-practice.md](docs/longclaw-practice.md) | 实践经验与踩坑（5类常见问题解法、演进历程、已知问题）|
+| [docs/memory-compression-guide.md](docs/memory-compression-guide.md) | 记忆与压缩机制详解 + Mermaid 原理图（PPT 专用）|
+| [docs/claude-code-internals.md](docs/claude-code-internals.md) | Claude Code 内部架构逆向分析（sourcemap，10个核心设计模式）|
+| [docs/coding-agent-learning-plan.md](docs/coding-agent-learning-plan.md) | Coding Agent 学习路径（SWE-agent/Aider/SWE-bench，5个里程碑）|
 
 ### 历史设计资料
 
 - [multi-agent/ARCHITECTURE.md](multi-agent/ARCHITECTURE.md)
 - [multi-agent/PROFILE_CONTRACT.md](multi-agent/PROFILE_CONTRACT.md)
 - [multi-agent/UNIFIED_SYNC_2026-03-25.md](multi-agent/UNIFIED_SYNC_2026-03-25.md)
-- [docs/openclaw-iteration-plan-v1.md](docs/openclaw-iteration-plan-v1.md)
 
 ---
 
@@ -584,9 +588,12 @@ python3 tools/memory_search.py --query "上次面试进展" --domain JOB --hybri
 | 边界 | 说明 |
 |------|------|
 | workspace 改造层 | longClaw 是 OpenClaw workspace 改造，原生能力（hooks/权限/compaction/skill加载）直接可用；longClaw 新增仲裁、分域记忆、检索、subagent、harness hooks、训练底座 |
-| Subagent 模型 | subagent 只支持 Claude 模型（inherit/sonnet/opus/haiku），不支持 Codex；当前三个 agent 均设为 inherit 继承主 session |
+| Subagent 模型 | subagent 只支持 Claude 模型（inherit/sonnet/opus/haiku），不支持 Codex；当前四个 agent 均设为 inherit 继承主 session |
+| Session 连续性 | 微信 bot 每条消息触发新 session（ephemeral），DEV LOG 的 round 是本次运行内轮次；跨 session 统计由 heartbeat-agent 负责 |
+| memory-agent 来源标注 | BRO/SIS 回复中必须区分 [本轮]/[记忆]/[判断] 三种来源；memory-agent 超时时禁止把当前会话信息包装成记忆检索结果 |
+| FileChanged hook 时效 | 只感知进程运行中的文件变更；启动前的变更需重启 OpenClaw 或 /new 后生效 |
 | 技能自动生成 | 目前是提议系统（用户确认后才写入），非官方 OpenClaw 式自动写入 |
-| memory 检索质量 | 取决于 MEMORY.md 的事实条目密度；配置规则文本语义区分度有限 |
+| memory 检索质量 | 取决于 MEMORY.md 的事实条目密度；heartbeat-agent 每天自动检查索引新鲜度并按需重建 |
 | hybrid 增益 | 语料以配置/规则文本为主时 FTS 与 embedding 差距不大；事实型日志积累后优势显现 |
 | openclaw_substrate | 训练底座已定义优化闭环，短期不启用（主用 Codex via OpenClaw） |
 | 并发上限 | 专职并行 ≤2；subagent 并发 ≤3（deep-research 上限）|

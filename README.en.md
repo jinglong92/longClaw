@@ -48,17 +48,18 @@ Observable: **routing decisions · session state · memory injection volume · r
 Current workspace has hardened authorization, evidence, readback, and session state into a unified baseline:
 
 - `AGENTS.md`: Deny > Ask > Allow three-tier authorization / Immutable Rules / execution latch / readback validation
-- `.claude/settings.json`: PostCompact / FileChanged / PreToolUse / SessionStart hooks (harness-layer enforcement)
+- `.claude/settings.json`: UserPromptSubmit (/new restart) / PostCompact / FileChanged / PreToolUse / SessionStart hooks (harness-layer enforcement)
 - `memory/session-state.json`: Dev Mode, active domain, pending confirmations, compression count
 
 **⚡ Workflow Skills on Demand**
 14 high-frequency tasks hardened as SKILL.md files with `requires` dependency declarations. Session startup builds index only; full SKILL.md loaded on trigger match, executed immediately — no long-term context occupation. Missing required tools return `blocked` immediately, no stalling.
 
 **🤖 Subagent Concurrent Architecture**
-Three specialized subagents (model: inherit, uses main session's Codex), each with isolated context and minimal tool permissions:
+Four specialized subagents (model: inherit, uses main session's Codex), each with isolated context and minimal tool permissions:
 - `search-agent`: concurrent search, WebFetch/WebSearch/Read/Grep only
-- `memory-agent`: background memory retrieval for BRO/SIS, read-only
-- `heartbeat-agent`: cron-scheduled inspection, read + write heartbeat-state.json only
+- `memory-agent`: background memory retrieval for BRO/SIS, read-only; replies explicitly label `[current-session]`/`[memory]`/`[inference]` sources
+- `heartbeat-agent`: cron-scheduled inspection, read + write heartbeat-state.json + auto index freshness check
+- `repo-explorer`: codebase exploration for code-agent, read-only, returns structured file map
 
 **📊 Local Training Substrate (Local-first)**
 Real interactions can be distilled into training assets: Trace collection → Judge scoring → Dataset building → MLX / LLaMA-Factory local training. Full pipeline runs on Mac mini M4, no data upload to cloud.
