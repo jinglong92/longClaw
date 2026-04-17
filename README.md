@@ -208,9 +208,13 @@ $$\text{Final Answer} = \text{CTRL}(\text{route},\ \text{specialist outputs},\ \
 
 ### 2.2 分域记忆注入
 
-<img src="docs/images/fig2-route-aware-injection.png" width="700" alt="分域注入原理"/>
+`MEMORY.md` 按 `[SYSTEM] / [JOB] / [LEARN] / [ENGINEER] / ... / [META]` 分块，CTRL 按路由只注入必要片段：
 
-`MEMORY.md` 按域分块，CTRL 按路由只注入必要片段：$\text{Injected} = \text{[SYSTEM]} \cup \text{[Domain]}$，节省约 **80% token**。官方 OpenClaw 全量注入；longClaw 是三系统中唯一做到分域注入的。
+$$\text{Injected Memory} = \text{[SYSTEM]} \cup \text{[Relevant Domain]}$$
+
+相比全量注入，每次节省约 **80% token**，同时避免历史噪声污染当前请求。
+
+**与官方 OpenClaw / Hermes 的差异**：官方 OpenClaw 全量注入 MEMORY.md；Hermes 的 FTS 检索是全局范围。longClaw 在注入前先按路由域过滤，是三系统中唯一做到分域注入的。
 
 ### 2.3 Workflow Skill（借鉴 Hermes，有所调整）
 
@@ -242,9 +246,24 @@ $$\text{Final Answer} = \text{CTRL}(\text{route},\ \text{specialist outputs},\ \
 
 ### 2.4 route-aware Memory 检索
 
-<img src="docs/images/fig3-four-level-retrieval.png" width="700" alt="四级检索流程"/>
+OpenClaw 原生 `memory_search` 是 FTS-only，词面不重叠就返回空结果。longClaw 在此基础上增加了两层：
 
-四级递进：L1 context → L2 同域7天 → L3 同域全量 → L4 跨域兜底。评分：$S = S_{\text{fts}} + 0.4 N_{\text{entity}} + \text{domain bonus}$，可选 Hybrid（Ollama RRF fusion）。Hermes 是全库检索；longClaw 先按路由域收敛，再 FTS + embedding rerank。
+**第一层：scope filter（先决定搜哪里）**
+
+```
+Level 1: 当前 session / recent turns
+Level 2: 同域 + 7天内   → 结果 ≥ 2 则停止
+Level 3: 同域 + 全量    → 结果 ≥ 2 则停止
+Level 4: 跨域全量       → 兜底，结果标注[跨域]
+```
+
+**第二层：hybrid rerank（再决定怎么搜）**
+
+$$S(q,d) = S_{\text{fts}} + 0.4 \cdot N_{\text{entity}} + 0.05 \cdot \text{imp}(d) + 0.05 \cdot \mathbf{1}_{\text{daily}}(d)$$
+
+可选 Hybrid 模式：FTS candidate → Ollama nomic-embed-text（768 维）→ RRF fusion
+
+**与 Hermes 的差异**：Hermes 的 FTS 是全库统一检索；longClaw 先按路由域收敛范围，再做 FTS + embedding rerank，解决了"更聪明地召回不该召回的东西"的问题。
 
 ### 2.5 本地训练底座（openclaw_substrate）
 
@@ -266,15 +285,13 @@ $$\text{Interaction} \rightarrow \text{Trace} \rightarrow \text{Judge} \rightarr
 
 ![longClaw 多代理控制系统架构图](docs/architecture-dashboard-zh-v5.png)
 
-### 3.2 三层记忆架构
+![longClaw Agent v3 路线架构图](docs/architecture-dashboard-zh-v3-agent.jpg)
 
-<img src="docs/images/fig1-three-layer-memory.png" width="700" alt="三层记忆架构"/>
-
-### 3.3 四层压缩协作
+### 3.2 四层压缩协作
 
 <img src="docs/images/fig4-four-layer-compression.png" width="700" alt="四层压缩协作"/>
 
-### 3.4 当前六层结构
+### 3.3 当前六层结构
 
 ```mermaid
 flowchart TD
@@ -301,7 +318,7 @@ flowchart TD
     RET --> RE3["Ollama nomic-embed-text（可选）"]
 ```
 
-### 3.3 请求流动时序
+### 3.4 请求流动时序
 
 ```mermaid
 sequenceDiagram
@@ -333,14 +350,38 @@ sequenceDiagram
 
 ## 4. Memory 检索系统
 
-> 独立于 `openclaw_substrate`，放在 `tools/` 目录，无外部依赖（FTS 部分）。同时检索 `memory_entries.jsonl`（对话记忆）和 `knowledge_entries.jsonl`（inbox 知识库）。
+> 2026-04-10 新增，独立于 `openclaw_substrate`，放在 `tools/` 目录，无外部依赖（FTS 部分）。
 
 ### 检索架构
 
-<img src="docs/images/fig3-four-level-retrieval.png" width="700" alt="四级 Route-Aware 检索流程"/>
-
-**评分公式**：`S = S_fts + 0.4·N_entity + 0.05·imp + 0.3·同域 - 0.2·跨域`
-**扩展条件**：结果数 < 2 或 top1 < 0.3 或关键实体未命中 → 进入下一级
+```
+用户 query
+    │
+    ▼
+Query Rewrite（3 个变体）
+  ① 原始 query
+  ② + domain hints（路由到 JOB 自动加 "job career offer interview"）
+  ③ + 实体提取版（公司名 / 技术词 / 项目名）
+    │
+    ▼
+Route-Aware Scope Filter
+  Level 2: 同域 + 7天内  →  结果 ≥ 2 则停止
+  Level 3: 同域 + 全量   →  结果 ≥ 2 则停止
+  Level 4: 跨域全量      →  兜底，标注[跨域]
+    │
+    ▼
+FTS Scoring（BM25-like，纯 Python，无外部依赖）
+  实体精确命中 +0.4 · N_entity
+  daily 条目（事实性更强）+0.05
+  全局按分数重排（不受 level 顺序限制）
+    │
+    ├── FTS-only → Top-K
+    │
+    └── Hybrid（--hybrid，需 Ollama）
+          nomic-embed-text（768 维，M4 本地推理，无需 GPU）
+          → RRF fusion（FTS rank + embedding rank）
+          → Top-K
+```
 
 ### 快速上手
 
