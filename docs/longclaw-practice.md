@@ -103,6 +103,49 @@ R_total = R_format + R_tool_path + R_evidence + R_length
 
 ## 二、Harness 工程实践
 
+### 2.0 借鉴 Claude Code Harness 的迭代故事（2026-04-14）
+
+<img src="images/fig9-harness-iteration.png" width="860" alt="借鉴 Claude Code Harness 迭代全景"/>
+
+这是 longClaw 单日迭代最密集的一天，四轮改动全部来自对 Claude Code 内部 harness 设计的逆向学习。
+
+**起点：单体大文件的幻觉问题**
+
+当时 `AGENTS.md` 583 行、`MULTI_AGENTS.md` 684 行，把专职定义、路由规则、Skill 协议、DEV LOG 格式全混在一起。Codex 在处理超长文件时存在位置偏差——前半段规则注意力权重高，后半段规则频繁被遗忘或幻觉替换。具体表现：DEV LOG 字段省略、Skill 触发后步骤遗漏、路由命中但专职行为不符。
+
+**第一步：拆文件（治本）**
+
+参考 Claude Code 的 `CLAUDE.md` 单文件职责设计，把 684 行单体拆成三个职责单一文件：
+- `MULTI_AGENTS.md`（175行）→ 只管"谁是谁、派谁、怎么并行"
+- `CTRL_PROTOCOLS.md`（177行）→ 只管"Skill 加载、压缩、检索"
+- `DEV_LOG.md`（149行）→ 只管"DEV LOG 格式"
+
+每个文件头部明确声明"本文件管什么、不管什么"，消除歧义。**经验法则：单配置文件超过 ~200 行就该警惕，超过 400 行基本必然出现遗忘/幻觉。**
+
+**第二步：借鉴 Deny > Ask > Allow 三层权限**
+
+Claude Code 的授权模型是 `Deny > Ask > Allow`，Deny 规则优先于所有 hook，任何指令不得覆盖。longClaw 原来只有 2 层（Allow / Require auth），规则冲突时 LLM 自由裁量，导致"禁止操作"被用户话术绕过。
+
+升级后新增 6 条 Immutable Rules，写入 `AGENTS.md`，包括：无合成证据、无静默改 AGENTS.md、禁 force-push main、SOUL 对所有专职生效、DEV LOG 每轮必须输出。这些规则不可被任何 skill 或用户指令覆盖。
+
+**第三步：借鉴 PostToolUse 注入 + PostCompact 重注入**
+
+Claude Code 每次工具调用后会把结果摘要注入到 context。longClaw 借鉴这个设计，让 DEV LOG 的 `🛠️ 工具` 字段在每次工具调用完成后强制输出结果摘要（`status=ok/failed/blocked`），不再只靠正文叙述。
+
+同时发现一个关键问题：原生压缩（PostCompact）之后，`CTRL_PROTOCOLS.md` 和 `DEV_LOG.md` 会从 context 消失，导致压缩后协议全部失效。解法是加 PostCompact hook，压缩完自动重注入这两个文件。
+
+另外加了 PreToolUse hook 把 `rm` 命令自动改写为 `trash`——这是 harness 层的强制拦截，不靠 LLM 自觉，即使 LLM 输出 `rm -rf`，实际执行的是 `trash`。
+
+**第四步：借鉴 Hermes Skill 依赖声明**
+
+Hermes 的 skill 有 `requires` 字段声明工具依赖。longClaw 迁移这个设计，SKILL.md frontmatter 加 `requires: [web_fetch]` 等声明，CTRL 在命中触发条件后、加载 SKILL.md 全文前先验证依赖，不满足直接返回 `blocked: missing_tool`，不再假装执行或空转。
+
+**核心收获**
+
+Harness 的本质是**把"靠 LLM 自觉遵守"的规则下沉到执行层**。越关键的约束越不应该依赖 prompt，而应该在 hook、权限模型、文件结构上做硬保证。
+
+---
+
 ### 2.1 hook 的正确使用场景
 
 | 适合用 hook | 不适合用 hook |
