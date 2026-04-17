@@ -13,9 +13,15 @@ requires: ["file_read"]
 核心目标：发现规则冲突、token 浪费、逻辑漏洞，给出可执行改进建议。
 
 ## 触发条件
-- 用户说"帮我 review 一下 workspace"
-- 用户说"检查配置有没有问题"
-- 用户提交 AGENTS.md / MULTI_AGENTS.md / SKILL.md 变更后
+
+**硬触发关键词（出现任一即命中）**：
+- "review workspace" / "review 配置" / "审查一下"
+- "检查配置" / "配置有没有问题" / "规则有没有冲突"
+- "agent-review" / "/review"
+- 用户刚修改了 AGENTS.md / MULTI_AGENTS.md / SKILL.md 并说"帮我看看"
+
+**软触发（ENGINEER 路由后 CTRL 判断）**：
+- 用户描述了 CTRL 行为异常（如 DEV LOG 格式乱、路由不对、skill 不触发）
 
 ## 审查维度
 
