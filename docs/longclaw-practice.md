@@ -251,6 +251,38 @@ echo "trash file.txt"
 
 ## 三、记忆系统实践
 
+### 3.0 inbox 知识摄入管道的设计故事
+
+<img src="images/fig13-inbox-pipeline.png" width="860" alt="inbox 知识摄入管道全景"/>
+
+**痛点：学到的东西无法被检索**
+
+longClaw 的记忆系统最初只有一个轨道：对话记忆（`memory_entries.jsonl`）。每次对话结束后，CTRL 会把"发生了什么"写入 MEMORY.md 和 daily logs，heartbeat-agent 定期重建索引。
+
+但有一类内容始终无法进入检索范围——论文笔记、技术文章、学习总结。这些内容不是"对话中发生的事"，而是"主动摄入的知识"。用户看完一篇论文，手动整理成 Markdown，但 CTRL 在检索时找不到它，因为它从来没有进入过任何索引。
+
+**解法：双轨索引 + inbox 摄入入口**
+
+设计思路很简单：在对话记忆之外增加一条知识库轨道，两条轨道共用同一套检索机制。
+
+`inbox/` 目录是摄入入口，支持 `.md` / `.txt`，可选 YAML frontmatter 指定 domain / tags / importance。`inbox_processor.py` 负责处理：解析 frontmatter → 自动推断域（关键词匹配，无 frontmatter 时默认 LEARN）→ 按段落分块（400 token / 块，80 token 重叠）→ 提取实体 → 写入 `knowledge_entries.jsonl` → 原文件移入 `inbox/processed/`。
+
+`memory_search.py` 新增 `load_all()` 方法，检索时自动合并两个索引。对 CTRL 来说，检索入口没有变化，只是召回范围扩大了。
+
+**自动化：heartbeat-agent P2 扫描**
+
+inbox 处理被集成到 heartbeat-agent 的 P2 系统健康检查中。每天 08:30 / 18:00，heartbeat-agent 扫描 inbox/ 目录，发现新文件自动运行处理器，无需人工干预。这延续了"把运维工作自动化"的设计思路——用户只需要把文件拖进 inbox/，其余的系统自己完成。
+
+**设计细节：importance 自动估算**
+
+知识条目的 importance 影响检索时的打分权重。frontmatter 里可以显式指定（high=0.9 / low=0.3），不指定时自动估算：包含"决策"、"关键"、"P0"等关键词的内容自动提升权重，包含"草稿"、"TBD"的内容自动降低权重。这样高价值的结论性内容在检索时会排在前面。
+
+**条目结构与对话记忆的区别**
+
+knowledge_entry 比 memory_entry 多一个 `source_type: knowledge` 字段，检索时可以通过这个字段区分来源。其余字段（domain、entities、importance、status）完全对齐，共用同一套 FTS + 实体打分机制，不需要维护两套检索逻辑。
+
+---
+
 ### 3.1 MEMORY.md 的格式约束
 
 ```markdown
