@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.4.2] — 2026-04-17
+
+### Changed
+- **DEV LOG `unavailable` → `ephemeral`**：语义修正，反映"临时会话字段未持久化"的预期行为而非系统异常；`📂 Session` 加注释说明 ephemeral session 为本次运行内轮次，跨 session 统计由 heartbeat-agent 负责
+- **压缩层重命名**：Layer 0/A/B 统一改为数字编号（Layer 1 Trim / Layer 2 Summarize / Layer 3 Compact / Layer 4 Archive），含义更直觉
+
+### Added
+- **heartbeat-agent 跨 session 统计**：P2 巡检新增聚合统计（近 7 天活跃天数、各域 memory 条目数、skill 触发频率），写入 `heartbeat-state.json` 的 `session_stats` 字段
+- **记忆机制 Mermaid 原理图**（`docs/memory-compression-guide.md`）：三层记忆架构总览、分域注入原理、四级检索流程、四层压缩协作全景，可直接截图放 PPT
+- **Skill 触发条件优化**：`deep-research` 加硬触发关键词（"深度调研"/"多个来源"等），`memory-companion` 收紧为仅 BRO/SIS 路由时触发
+
+---
+
 ## [v0.4.1] — 2026-04-16
 
 ### Added
