@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.5.0] — 2026-04-17
+
+### Changed
+- **README 图片策略调整**：回退 fig1/fig2/fig3 图片替换，恢复 §2.2 分域注入、§2.4 route-aware 检索、§4 Memory 检索系统的详细文字描述；仅保留 §3.2 四层压缩协作（fig4-four-layer-compression.png）作为架构图补充
+
+---
+
 ## [v0.4.2] — 2026-04-17
 
 ### Changed
