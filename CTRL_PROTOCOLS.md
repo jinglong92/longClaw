@@ -207,6 +207,26 @@ python3 tools/model_mode.py set fallback
 
 之后调用 `tools/llm_fallback.py` 时，即使 payload 不带 `force_fallback`，脚本也会先读 session-state 并按 `model_mode` 执行。
 
+#### C. 主会话（OpenClaw Chat）与 `model_mode` 闭环
+
+**事实边界**：只改 `memory/session-state.json` 的 `model_mode`，**不会**改变 OpenClaw / Codex **内置主会话**实际调用的 HTTP 上游；主会话不经过 `tools/llm_fallback.py`，除非你显式调用该脚本。
+
+**闭环做法**（让「主回答」也被 `model_mode` 接管）：
+
+1. 在本机常驻运行 `python3 tools/llm_fallback_proxy.py`（配置见 `runtime/model-router.json`）。
+2. 在 OpenClaw 侧把**主模型 provider** 的 `base_url` 指到代理（例如 `http://127.0.0.1:18080/v1`），`model` 仍写你逻辑上的主模型名（如 `gpt-5.4`）；**不要把 OpenClaw 里的 `model` 改成 Gemma 名**。
+3. `model-router.json` 中保持 `session_state_path`（默认 `memory/session-state.json`，路径相对于 `workspace_root`；未配置 `workspace_root` 时以仓库根为根，即 `tools/` 的上一级目录）。
+
+代理对每个 `POST /v1/chat/completions` 会读取当前 `model_mode`：
+
+| `model_mode` | 行为 |
+|--------------|------|
+| `fallback` | **跳过 primary**，请求体中的 `model` 改写为兜底模型后直连 Ollama（主会话即走 Gemma）。 |
+| `primary` | **仅 primary**，失败/429 等**不**自动降级 Ollama。 |
+| `auto` | 先 primary，命中配置的 HTTP/子串/连接类失败后再走 Ollama（与原先一致）。 |
+
+`/health` 会返回当前解析到的 `session_model_mode`，便于核对代理是否读到了同一份 `session-state.json`。
+
 #### B. 本轮强制兜底
 
 调用 `tools/llm_fallback.py`，stdin 传入带 `force_fallback: true` 的 JSON：

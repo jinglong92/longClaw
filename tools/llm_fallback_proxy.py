@@ -15,7 +15,6 @@ import argparse
 import json
 import os
 import sys
-import threading
 from copy import deepcopy
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -33,6 +32,30 @@ def load_router_cfg(path: Path) -> dict[str, Any]:
         raise FileNotFoundError(f"missing {path}")
     with path.open("r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def read_workspace_model_mode(workspace_root: Path, cfg: dict[str, Any]) -> str:
+    """
+    Read model_mode from workspace session-state (same file as tools/model_mode.py).
+    Returns auto | primary | fallback. Invalid / missing → auto.
+    """
+    raw = cfg.get("session_state_path")
+    if raw is False or raw == "":
+        return "auto"
+    rel = str(raw or "memory/session-state.json").strip()
+    if not rel:
+        return "auto"
+    path = workspace_root / rel
+    if not path.is_file():
+        return "auto"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, TypeError):
+        return "auto"
+    m = data.get("model_mode", "auto")
+    if m in ("auto", "primary", "fallback"):
+        return str(m)
+    return "auto"
 
 
 def _chat_url(base: str) -> str:
@@ -132,9 +155,10 @@ def _lower_header_dict(raw_headers: Any) -> dict[str, str]:
 
 
 class ProxyHandlerFactory:
-    def __init__(self, cfg: dict[str, Any], config_path: Path) -> None:
+    def __init__(self, cfg: dict[str, Any], config_path: Path, workspace_root: Path) -> None:
         self.cfg = cfg
         self.config_path = config_path
+        self.workspace_root = workspace_root
         self.timeout = float(cfg.get("upstream_timeout_seconds") or 600)
         self.primary_base = str(cfg["primary"]["base_url"])
         self.primary_url = _chat_url(self.primary_base)
@@ -158,8 +182,16 @@ class FallbackProxyHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:  # noqa: N802
         if self.path in ("/health", "/v1/health"):
+            mode = read_workspace_model_mode(self._factory.workspace_root, self._factory.cfg)
             body = json.dumps(
-                {"ok": True, "proxy": "llm_fallback_proxy", "cfg": self._factory.config_path.name}
+                {
+                    "ok": True,
+                    "proxy": "llm_fallback_proxy",
+                    "cfg": self._factory.config_path.name,
+                    "session_model_mode": mode,
+                    "session_state_path": self._factory.cfg.get("session_state_path"),
+                    "workspace_root": str(self._factory.workspace_root),
+                }
             ).encode("utf-8")
             self.send_response(HTTPStatus.OK)
             self.send_header("Content-Type", "application/json")
@@ -193,6 +225,37 @@ class FallbackProxyHandler(BaseHTTPRequestHandler):
         primary_payload = deepcopy(payload)
         primary_payload["model"] = primary_model
 
+        session_mode = read_workspace_model_mode(f.workspace_root, cfg)
+
+        if session_mode == "fallback":
+            sys.stderr.write(
+                "[llm_fallback_proxy] session_model_mode=fallback -> direct Ollama (main chat path)\n",
+            )
+            self._try_fallback(
+                payload,
+                primary_model,
+                "session_model_mode:fallback",
+                up_headers,
+            )
+            return
+
+        if session_mode == "primary":
+            sys.stderr.write(
+                "[llm_fallback_proxy] session_model_mode=primary -> primary only (no Ollama fallback)\n",
+            )
+            try:
+                status, body, ctype = _forward_json(f.primary_url, primary_payload, up_headers, f.timeout)
+            except (URLError, TimeoutError, OSError) as e:
+                self._send_json(
+                    HTTPStatus.BAD_GATEWAY,
+                    {"error": {"message": str(e), "type": "proxy_upstream_primary_only"}},
+                )
+                return
+            body_text = body.decode("utf-8", errors="replace")
+            self._send_raw(status, body, ctype)
+            return
+
+        # session_mode == auto
         reason = ""
         try:
             status, body, ctype = _forward_json(f.primary_url, primary_payload, up_headers, f.timeout)
@@ -264,7 +327,8 @@ def main() -> None:
     cfg = load_router_cfg(cfg_path)
     host = str(cfg.get("listen_host", "127.0.0.1"))
     port = int(cfg.get("listen_port", 18080))
-    factory = ProxyHandlerFactory(cfg, cfg_path)
+    workspace_root = Path(cfg.get("workspace_root") or ROOT).resolve()
+    factory = ProxyHandlerFactory(cfg, cfg_path, workspace_root)
     FallbackProxyHandler.shared_factory = factory
     httpd = ThreadingHTTPServer((host, port), FallbackProxyHandler)
     httpd.daemon_threads = True

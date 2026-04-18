@@ -1,6 +1,7 @@
 {
   "listen_host": "127.0.0.1",
   "listen_port": 18080,
+  "session_state_path": "memory/session-state.json",
   "primary": {
     "base_url": "https://api.openai.com/v1",
     "api_key_env": "OPENAI_API_KEY",
