@@ -6,11 +6,12 @@
 
 ---
 
-## 字段顺序（9 个）
+## 字段顺序（10 个）
 
 ```
 [DEV LOG]
 🔀 路由     <routing decision>
+🤖 模型     <actual model/mode used>
 🧩 Skill    <skill match result>
 🛠️ 工具     <tool call results — PostToolUse>
 🧠 Memory   <domain injected + token savings>
@@ -29,6 +30,16 @@
 ```
 🔀 路由 <ROLE> | 触发: "<keyword>" | 模式: <normal debug|blocked/fix-now> / <单专职|双并行>
 ```
+
+### 🤖 模型
+```
+🤖 模型 session=<provider/model|alias> | mode=<auto|primary|fallback> | actual=<provider/model|none>
+```
+- `session`：当前会话主模型，优先来自 `session_status`
+- `mode`：来自 `memory/session-state.json.model_mode`
+- `actual`：本轮实际产出内容所使用的模型；若本轮未实际调用 LLM 生成，写 `none`
+- 若命中兜底模型，必须显式写出 `actual=ollama:gemma4:e2b` 之类的真实值
+- 若无法核实 `session` 或 `actual`，对应字段写 `unavailable`
 
 ### 🧩 Skill
 ```
@@ -106,6 +117,7 @@
 ```
 [DEV LOG]
 🔀 路由 ENGINEER | 触发: "改配置" | 模式: normal debug / 单专职
+🤖 模型 session=openai-codex/gpt-5.4 | mode=auto | actual=none
 🧩 Skill 命中: agent-review | trigger=workspace 配置审查 | loaded=yes | step=completed
 🛠️ 工具 Edit(AGENTS.md) → 插入 Immutable Rules 节，+18行 | status=ok
         Bash(git commit) → hash=f951b9a | status=ok
@@ -122,6 +134,7 @@
 ```
 [DEV LOG]
 🔀 路由 SEARCH | 触发: "查最新论文" | 模式: blocked/fix-now / 单专职
+🤖 模型 session=openai-codex/gpt-5.4 | mode=auto | actual=none
 🧩 Skill 命中: public-evidence-fetch | trigger=公开网页证据抓取 | loaded=yes | step=2/4
 🛠️ 工具 WebFetch(arxiv.org) → 403 Forbidden | status=blocked(missing_tool)
 🧠 Memory (SYSTEM) | ~80 tokens
@@ -136,8 +149,8 @@
 
 ## 最低合格线
 
-- **强制项**（不得省略）：`🔀 路由`、`🧩 Skill`、`🛠️ 工具`、`📂 Session`、`⚖️ 置信度`
-- 至少输出 9 个字段中的 6 个
+- **强制项**（不得省略）：`🔀 路由`、`🤖 模型`、`🧩 Skill`、`🛠️ 工具`、`📂 Session`、`⚖️ 置信度`
+- 至少输出 10 个字段中的 6 个
 - 有文件改动或校验时，`🔍 检索` 不得省略
 - 无 A2A 时必须写 `🤝 A2A 无`
 - 无工具调用时必须写 `🛠️ 工具 无`
