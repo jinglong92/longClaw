@@ -3,18 +3,20 @@
 # 在 Mac mini M4 上运行一次即可
 
 WORKSPACE_DIR="$(cd "$(dirname "$0")" && pwd)"
-OPENCLAW_CMD="openclaw"  # 根据实际安装路径调整
 
-# 检查 openclaw 是否可用
-if ! command -v "$OPENCLAW_CMD" &>/dev/null; then
-  # 尝试常见路径
-  for p in "$HOME/.local/bin/openclaw" "/usr/local/bin/openclaw" "$HOME/bin/openclaw"; do
-    if [ -x "$p" ]; then OPENCLAW_CMD="$p"; break; fi
-  done
+# openclaw 是 node 脚本的 alias，cron 环境没有 shell alias，必须用完整命令
+# 等价于：/opt/homebrew/opt/node/bin/node /opt/homebrew/lib/node_modules/openclaw/dist/entry.js
+NODE_CMD="/opt/homebrew/opt/node/bin/node"
+OPENCLAW_ENTRY="/opt/homebrew/lib/node_modules/openclaw/dist/entry.js"
+OPENCLAW_CMD="$NODE_CMD $OPENCLAW_ENTRY"
+
+# 检查 node 和 entry.js 是否存在
+if [ ! -x "$NODE_CMD" ]; then
+  echo "[ERROR] node not found at $NODE_CMD"
+  exit 1
 fi
-
-if ! command -v "$OPENCLAW_CMD" &>/dev/null; then
-  echo "[ERROR] openclaw not found. Please set OPENCLAW_CMD in this script."
+if [ ! -f "$OPENCLAW_ENTRY" ]; then
+  echo "[ERROR] openclaw entry.js not found at $OPENCLAW_ENTRY"
   exit 1
 fi
 
@@ -30,17 +32,20 @@ fi
 # 方案 B：openclaw system event（入队系统事件，`openclaw system event --mode now` 已验证返回 ok）
 #   HEARTBEAT_CMD="cd '$WORKSPACE_DIR' && $OPENCLAW_CMD system event --text 'heartbeat巡检：spawn heartbeat-agent，执行巡检并写入 memory/heartbeat-state.json，静默完成' --mode now > /tmp/longclaw_heartbeat.log 2>&1"
 #
-# 当前使用方案 B（system event），如需切换取消注释对应行并注释掉下面这行：
-HEARTBEAT_CMD="cd '$WORKSPACE_DIR' && $OPENCLAW_CMD system event --text 'heartbeat巡检：spawn heartbeat-agent，执行巡检并写入 memory/heartbeat-state.json，静默完成' --mode now > /tmp/longclaw_heartbeat.log 2>&1"
+# cron 环境里变量嵌套展开不可靠，直接用硬编码路径构造命令
+# 当前使用方案 B（system event）
+_NODE="/opt/homebrew/opt/node/bin/node"
+_ENTRY="/opt/homebrew/lib/node_modules/openclaw/dist/entry.js"
+_WS="$WORKSPACE_DIR"
+_LOG="/tmp/longclaw_heartbeat.log"
 
-# 安装两个 cron job：早 8:30 和 晚 18:00
-CRON_MORNING="30 8 * * * $HEARTBEAT_CMD"
-CRON_EVENING="0 18 * * * $HEARTBEAT_CMD"
+CRON_MORNING="30 8 * * * cd '$_WS' && $_NODE $_ENTRY system event --text 'longclaw heartbeat巡检' --mode now >> $_LOG 2>&1 # longclaw_heartbeat"
+CRON_EVENING="0 18 * * * cd '$_WS' && $_NODE $_ENTRY system event --text 'longclaw heartbeat巡检' --mode now >> $_LOG 2>&1 # longclaw_heartbeat"
 
 # 读取现有 crontab，去掉旧的 longclaw heartbeat 条目，加入新的
 (crontab -l 2>/dev/null | grep -v "longclaw_heartbeat"; \
- echo "# longclaw heartbeat - morning"; echo "$CRON_MORNING"; \
- echo "# longclaw heartbeat - evening"; echo "$CRON_EVENING") | crontab -
+ echo "$CRON_MORNING"; \
+ echo "$CRON_EVENING") | crontab -
 
 echo "[OK] Heartbeat cron jobs installed:"
 echo "  Morning: 08:30 daily"
