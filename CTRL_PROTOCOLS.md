@@ -178,6 +178,35 @@ DEV LOG 显示：检索级别 / query 变体 / 召回数 / 是否触发跨域
 
 ---
 
+## 兜底模型（Force Fallback）
+
+用户可在会话中随时指定本轮走兜底模型（本地 Ollama），绕过 primary。
+
+### 触发关键词（硬触发，出现任一即命中）
+
+- "用兜底模型" / "走兜底" / "用本地模型"
+- "用 ollama" / "走 ollama" / "本地跑"
+- "force fallback" / "强制兜底"
+
+### 执行方式
+
+命中后，CTRL 调用 `tools/llm_fallback.py`，stdin 传入带 `force_fallback: true` 的 JSON：
+
+```bash
+echo '{"system": "<system>", "prompt": "<用户问题>", "force_fallback": true}' \
+  | python3 tools/llm_fallback.py
+```
+
+### DEV LOG 标注（必须）
+
+```
+🛠️ 工具 llm_fallback(force) → [兜底模型] 用户指定走兜底模型：ollama:gemma4:e2b | status=ok(degraded)
+```
+
+结果输出后，回复开头必须注明：**[本轮使用兜底模型 ollama:gemma4:e2b]**
+
+---
+
 ## Session 状态管理
 
 session_id 命名：`openclaw_{domain}_{YYYY-MM-DD}`（如 `openclaw_job_2026-04-14`）

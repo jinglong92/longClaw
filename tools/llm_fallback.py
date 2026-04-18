@@ -248,6 +248,20 @@ def main() -> None:
     f_prov = str(fallback.get("provider", "ollama"))
     f_model = str(fallback["model"])
 
+    # 用户主动指定走兜底模型（payload 里传 force_fallback=true）
+    if payload.get("force_fallback"):
+        print(
+            f"🧠 Model [force] skipping primary={p_prov}:{p_model}, using fallback={f_prov}:{f_model}",
+            file=sys.stderr,
+        )
+        result = call_ollama(payload, cfg)
+        result["fallback_triggered"] = True
+        result["fallback_reason"] = "force_fallback"
+        result["degraded_mode"] = True
+        result["fallback_notice"] = f"[兜底模型] 用户指定走兜底模型：{f_prov}:{f_model}"
+        print(json.dumps(result, ensure_ascii=False))
+        return
+
     if not cfg.get("enabled", False):
         result = call_primary(payload, cfg)
         result.setdefault("fallback_triggered", False)
