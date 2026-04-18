@@ -178,23 +178,47 @@ DEV LOG 显示：检索级别 / query 变体 / 召回数 / 是否触发跨域
 
 ---
 
-## 兜底模型（Force Fallback）
+## 兜底模型（Force Fallback + Session Model Mode）
 
-用户可在会话中随时指定本轮走兜底模型（本地 Ollama），绕过 primary。
+用户可在会话中随时指定本轮走兜底模型（本地 Ollama），也可把当前 session 切到 `auto / primary / fallback` 三档模型模式。
 
-### 触发关键词（硬触发，出现任一即命中）
+### 会话模型模式（写入 `memory/session-state.json.model_mode`）
 
-- "用兜底模型" / "走兜底" / "用本地模型"
-- "用 ollama" / "走 ollama" / "本地跑"
-- "force fallback" / "强制兜底"
+- `auto`：默认模式，优先 primary，命中 fallback 条件时自动降级
+- `primary`：强制走主模型，失败直接报错，不自动降级
+- `fallback`：强制走兜底模型，跳过 primary
+
+### 模式切换口令（硬触发）
+
+- `切到兜底` / `后续都走兜底` → `python3 tools/model_mode.py set fallback`
+- `切回主模型` / `后续都走主模型` → `python3 tools/model_mode.py set primary`
+- `恢复自动` / `恢复自动切换` → `python3 tools/model_mode.py set auto`
+- `本轮用兜底模型` / `用兜底模型` / `走兜底` / `用本地模型` / `用 ollama` / `走 ollama` / `本地跑` / `force fallback` / `强制兜底` → 仅本轮 `force_fallback = true`
 
 ### 执行方式
 
-命中后，CTRL 调用 `tools/llm_fallback.py`，stdin 传入带 `force_fallback: true` 的 JSON：
+#### A. 会话模式切换
+
+CTRL 统一通过 helper 更新 `memory/session-state.json`：
 
 ```bash
-echo '{"system": "<system>", "prompt": "<用户问题>", "force_fallback": true}' \
-  | python3 tools/llm_fallback.py
+python3 tools/model_mode.py set fallback
+```
+
+之后调用 `tools/llm_fallback.py` 时，即使 payload 不带 `force_fallback`，脚本也会先读 session-state 并按 `model_mode` 执行。
+
+#### B. 本轮强制兜底
+
+调用 `tools/llm_fallback.py`，stdin 传入带 `force_fallback: true` 的 JSON：
+
+```bash
+python3 tools/llm_fallback.py < request.json
+```
+
+其中 `request.json` 至少包含：
+
+```json
+{"system":"<system>","prompt":"<用户问题>","force_fallback":true}
 ```
 
 ### DEV LOG 标注（必须）
@@ -203,7 +227,14 @@ echo '{"system": "<system>", "prompt": "<用户问题>", "force_fallback": true}
 🛠️ 工具 llm_fallback(force) → [兜底模型] 用户指定走兜底模型：ollama:gemma4:e2b | status=ok(degraded)
 ```
 
-结果输出后，回复开头必须注明：**[本轮使用兜底模型 ollama:gemma4:e2b]**
+或：
+
+```
+🛠️ 工具 llm_fallback(session_mode=fallback) → [兜底模型] 会话当前为 fallback 模式：ollama:gemma4:e2b | status=ok(degraded)
+```
+
+结果输出后，若实际走了兜底模型，回复开头必须注明：**[本轮使用兜底模型 ollama:gemma4:e2b]**。
+若 `model_mode = primary`，DEV LOG 必须写清：**当前会话禁用自动降级**。
 
 ---
 

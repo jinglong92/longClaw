@@ -19,6 +19,7 @@ from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parent.parent
 CFG_PATH = ROOT / "runtime" / "model-fallback.json"
+SESSION_STATE_PATH = ROOT / "memory" / "session-state.json"
 
 
 def load_cfg() -> dict[str, Any]:
@@ -36,6 +37,27 @@ def read_stdin_json() -> dict[str, Any]:
     if not isinstance(data, dict):
         raise ValueError("stdin JSON must be an object")
     return data
+
+
+def load_session_state() -> dict[str, Any]:
+    if not SESSION_STATE_PATH.is_file():
+        return {}
+    try:
+        with SESSION_STATE_PATH.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:  # noqa: BLE001
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def resolve_model_mode(payload: dict[str, Any]) -> str:
+    raw = payload.get("model_mode")
+    if raw is None:
+        raw = load_session_state().get("model_mode", "auto")
+    mode = str(raw or "auto").strip().lower()
+    if mode not in {"auto", "primary", "fallback"}:
+        return "auto"
+    return mode
 
 
 def _emit_devlog(primary_provider: str, primary_model: str, fb_provider: str, fb_model: str, reason: str) -> None:
@@ -247,18 +269,24 @@ def main() -> None:
     p_model = str(primary["model"])
     f_prov = str(fallback.get("provider", "ollama"))
     f_model = str(fallback["model"])
+    model_mode = resolve_model_mode(payload)
 
-    # 用户主动指定走兜底模型（payload 里传 force_fallback=true）
-    if payload.get("force_fallback"):
+    # 用户主动指定走兜底模型（payload 里传 force_fallback=true）或会话模式已切到 fallback
+    if payload.get("force_fallback") or model_mode == "fallback":
+        reason = "force_fallback" if payload.get("force_fallback") else "session_model_mode:fallback"
         print(
             f"🧠 Model [force] skipping primary={p_prov}:{p_model}, using fallback={f_prov}:{f_model}",
             file=sys.stderr,
         )
         result = call_ollama(payload, cfg)
         result["fallback_triggered"] = True
-        result["fallback_reason"] = "force_fallback"
+        result["fallback_reason"] = reason
         result["degraded_mode"] = True
-        result["fallback_notice"] = f"[兜底模型] 用户指定走兜底模型：{f_prov}:{f_model}"
+        result["model_mode"] = model_mode
+        if payload.get("force_fallback"):
+            result["fallback_notice"] = f"[兜底模型] 用户指定走兜底模型：{f_prov}:{f_model}"
+        else:
+            result["fallback_notice"] = f"[兜底模型] 会话当前为 fallback 模式：{f_prov}:{f_model}"
         print(json.dumps(result, ensure_ascii=False))
         return
 
@@ -266,6 +294,7 @@ def main() -> None:
         result = call_primary(payload, cfg)
         result.setdefault("fallback_triggered", False)
         result["degraded_mode"] = False
+        result["model_mode"] = model_mode
         print(json.dumps(result, ensure_ascii=False))
         return
 
@@ -273,6 +302,7 @@ def main() -> None:
         result = call_primary(payload, cfg)
         result["fallback_triggered"] = False
         result["degraded_mode"] = False
+        result["model_mode"] = model_mode
         print(json.dumps(result, ensure_ascii=False))
     except Exception as e:
         err_type = classify_from_exception(e)
@@ -295,15 +325,28 @@ def main() -> None:
                 "unknown",
             ):
                 err_type = prefix
+        if model_mode == "primary":
+            out = {
+                "ok": False,
+                "error": str(e),
+                "error_type": err_type,
+                "degraded_mode": False,
+                "fallback_triggered": False,
+                "model_mode": model_mode,
+                "fallback_blocked_by": "session_model_mode:primary",
+            }
+            print(json.dumps(out, ensure_ascii=False))
+            sys.exit(1)
         if should_fallback(err_type, cfg):
             _emit_devlog(p_prov, p_model, f_prov, f_model, err_type)
             result = call_ollama(payload, cfg)
             result["fallback_reason"] = err_type
             result["degraded_mode"] = True
+            result["model_mode"] = model_mode
             result["fallback_notice"] = f"[兜底模型] 本轮命中 fallback：primary={p_prov}:{p_model} 不可用（{err_type}），已切换至 {f_prov}:{f_model}"
             print(json.dumps(result, ensure_ascii=False))
             return
-        out = {"ok": False, "error": str(e), "error_type": err_type, "degraded_mode": False}
+        out = {"ok": False, "error": str(e), "error_type": err_type, "degraded_mode": False, "model_mode": model_mode}
         print(json.dumps(out, ensure_ascii=False))
         sys.exit(1)
 
