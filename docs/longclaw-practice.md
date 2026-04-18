@@ -8,6 +8,59 @@
 
 ## 一、最常见的五类问题及解法
 
+### 问题 0：Skill 根本没进 registry（最前置的坑）
+
+<img src="images/fig14-skill-discovery.png" width="860" alt="Skill discovery 根因分析"/>
+
+**现象**：仓库里明明有 skill，聊天里怎么说都不命中，DEV LOG 里 `🧩 Skill 命中: none`。
+
+**错误排查方向**：怀疑触发关键词写得不够、frontmatter 格式有问题、模型懒得读 SKILL.md。
+
+**真正的根因**：skill 根本没进 OpenClaw 的 registry，谈不上命中。
+
+**诊断方法**：
+
+```bash
+# 查 registry 里来自 workspace 的 skill 数量
+openclaw skills list --json | jq '.skills[] | select(.source=="openclaw-workspace") | .name'
+
+# 和磁盘上实际数量对比
+find skills/ -name "SKILL.md" | wc -l
+```
+
+如果 registry 数量远少于磁盘数量，问题就在目录层级。
+
+**根因**：OpenClaw workspace skill discovery **只扫 `skills/` 下一层目录**，不递归扫第二层分组目录。
+
+```
+skills/<skill>/SKILL.md          → ✅ 进 registry
+skills/<group>/<skill>/SKILL.md  → ❌ 隐身，不进 registry
+```
+
+**解法**：把目录拍平，用前缀保留分类语义：
+
+```bash
+# 批量迁移（longClaw 提供了脚本）
+bash apply_longclaw_skill_pack.sh
+```
+
+或手动：
+
+```
+skills/job/jd-analysis/SKILL.md       → skills/job-jd-analysis/SKILL.md
+skills/learn/paper-deep-dive/SKILL.md → skills/learn-paper-deep-dive/SKILL.md
+skills/search/deep-research/SKILL.md  → skills/search-deep-research/SKILL.md
+```
+
+**改完后必须新开 session**，旧会话沿用老的 skill 列表快照，改了目录也不会生效。
+
+**排查优先级**：
+1. **P0** 目录层级不符合 discovery 规则 → 拍平
+2. **P1** 改完后旧 session 仍用旧快照 → 重启 / 新开 session
+3. **P2** 个别 SKILL.md frontmatter 格式问题 → 改完目录后再查
+
+---
+
 ### 问题 1：Skill 命中但不执行（空转）
 
 **现象**：DEV LOG 显示 `🧩 Skill 命中: deep-research`，但后面没有 `sessions_spawn`，CTRL 自己搜了一遍就完事了。

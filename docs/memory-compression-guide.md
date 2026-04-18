@@ -658,6 +658,8 @@ flowchart TD
 
 ### 5.6 与 Claude Code 压缩设计对比
 
+🖼️ PPT 高清版：![OpenClaw vs Claude Code 设计差异](images/fig6-openclaw-vs-claudecode.png)
+
 Claude Code 采用**四层渐进式**压缩（每次 API 调用前按需触发）：
 
 | Claude Code                               | longClaw 对应            | 差异                                          |
@@ -797,6 +799,10 @@ CTRL 级别检索（跨域）：
 ---
 
 ## 七、完整数据流
+
+### 图 5：上下文组装流程
+
+🖼️ PPT 高清版：![上下文组装流程](images/fig5-context-assembly.png)
 
 ```
 用户对话

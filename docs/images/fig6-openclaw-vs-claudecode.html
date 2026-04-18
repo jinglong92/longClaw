@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>图6：OpenClaw vs Claude Code 上下文组装对比</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f8fafc;
+    padding: 36px 64px;
+    width: 1920px;
+    height: 1080px;
+    color: #1e293b;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
+    text-align: center;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+  }
+
+  .compare {
+    display: flex;
+    gap: 28px;
+    justify-content: center;
+  }
+
+  /* 每侧面板 */
+  .panel {
+    width: 820px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .panel-header {
+    text-align: center;
+    padding: 12px 0;
+    border-radius: 16px 16px 0 0;
+    margin-bottom: 0;
+  }
+  .panel-header .name {
+    font-size: 24px;
+    font-weight: 800;
+    color: #fff;
+  }
+  .panel-header .sub {
+    font-size: 14px;
+    opacity: 0.85;
+    color: #fff;
+    margin-top: 2px;
+  }
+
+  /* OpenClaw 头 */
+  .hdr-oc { background: linear-gradient(135deg, #3b82f6, #6366f1); }
+  /* Claude Code 头 */
+  .hdr-cc { background: linear-gradient(135deg, #d97706, #ea580c); }
+
+  /* 步骤 */
+  .steps {
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-top: none;
+    border-radius: 0 0 16px 16px;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    flex: 1;
+    justify-content: space-between;
+  }
+
+  .step {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .step-dot {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+    margin-top: 2px;
+  }
+  .step-content {
+    flex: 1;
+  }
+  .step-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 3px;
+  }
+  .step-desc {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.6;
+  }
+  .step-desc code {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: "SF Mono", "Menlo", monospace;
+    font-size: 12px;
+    color: #6366f1;
+  }
+  .tag {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin: 2px 3px 2px 0;
+  }
+
+  .arrow {
+    text-align: center;
+    font-size: 18px;
+    color: #cbd5e1;
+    line-height: 1;
+    padding: 3px 0;
+  }
+
+  /* OpenClaw 色系 */
+  .oc .step-dot { background: #3b82f6; }
+  .oc .tag { background: #dbeafe; color: #1d4ed8; }
+
+  /* Claude Code 色系 */
+  .cc .step-dot { background: #d97706; }
+  .cc .tag { background: #fef3c7; color: #92400e; }
+
+  /* 底部差异总结 */
+  .diff-bar {
+    margin-top: 16px;
+    background: #fff;
+    border: 2px solid #c7d2fe;
+    border-radius: 14px;
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .diff-badge {
+    background: #6366f1;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 5px 14px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .diff-content {
+    display: flex;
+    gap: 28px;
+    flex: 1;
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.7;
+  }
+  .diff-content strong {
+    color: #1e293b;
+  }
+  .dl { flex: 1; }
+  .dl-oc strong { color: #3b82f6; }
+  .dl-cc strong { color: #d97706; }
+
+  /* 中间 VS 分隔 */
+  .vs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+  }
+  .vs-text {
+    font-size: 20px;
+    font-weight: 900;
+    color: #94a3b8;
+    background: #f1f5f9;
+    border: 2px solid #e2e8f0;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
+</head>
+<body>
+
+<h1>上下文组装：OpenClaw vs Claude Code 设计差异</h1>
+
+<div class="compare">
+
+  <!-- ===== OpenClaw ===== -->
+  <div class="panel">
+    <div class="panel-header hdr-oc">
+      <div class="name">OpenClaw</div>
+      <div class="sub">显式记忆 + 多层压缩 + 语义检索</div>
+    </div>
+    <div class="steps oc">
+
+      <div class="step">
+        <div class="step-dot">1</div>
+        <div class="step-content">
+          <div class="step-title">Gateway 收到消息</div>
+          <div class="step-desc">查 <code>sessions.json</code> → 找 sessionKey → 复原 JSONL transcript</div>
+        </div>
+      </div>
+      <div class="arrow">↓</div>
+
+      <div class="step">
+        <div class="step-dot">2</div>
+        <div class="step-content">
+          <div class="step-title">注入 5 个 Bootstrap Files</div>
+          <div class="step-desc">
+            <span class="tag">AGENTS.md</span>
+            <span class="tag">SOUL.md</span>
+            <span class="tag">USER.md</span>
+            <span class="tag">IDENTITY.md</span>
+            <span class="tag">TOOLS.md</span>
+          </div>
+        </div>
+      </div>
+      <div class="arrow">↓</div>
+
+      <div class="step">
+        <div class="step-dot">3</div>
+        <div class="step-content">
+          <div class="step-title">4 级 Route-Aware 语义检索</div>
+          <div class="step-desc"><code>memory_search</code> → L1 本域 → L2 域间 → L3 全局 → L4 文件系统<br/><code>memory_get</code> → 读取今天/昨天日志</div>
+        </div>
+      </div>
+      <div class="arrow">↓</div>
+
+      <div class="step">
+        <div class="step-dot">4</div>
+        <div class="step-content">
+          <div class="step-title">组装 Context → 调用模型</div>
+          <div class="step-desc">Bootstrap + 检索记忆 + Session 历史 + 用户消息</div>
+        </div>
+      </div>
+      <div class="arrow">↓</div>
+
+      <div class="step">
+        <div class="step-dot">5</div>
+        <div class="step-content">
+          <div class="step-title">4 层压缩协作</div>
+          <div class="step-desc">
+            <span class="tag">L1 Trim 截断</span>
+            <span class="tag">L2 Summarize 摘要</span>
+            <span class="tag">L3 Compact 原生</span>
+            <span class="tag">L4 Archive 归档</span><br/>
+            Hook: PostCompact 重注入丢失文件
+          </div>
+        </div>
+      </div>
+      <div class="arrow">↓</div>
+
+      <div class="step">
+        <div class="step-dot">6</div>
+        <div class="step-content">
+          <div class="step-title">显式记忆写入</div>
+          <div class="step-desc"><code>MEMORY.md</code> 长期记忆 + <code>memory/YYYY-MM-DD.md</code> 每日日志<br/>话题结束 → 写入 + 重建索引 + 告知用户</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- VS -->
+  <div class="vs"><div class="vs-text">VS</div></div>
+
+  <!-- ===== Claude Code ===== -->
+  <div class="panel">
+    <div class="panel-header hdr-cc">
+      <div class="name">Claude Code</div>
+      <div class="sub">隐式压缩 + CLAUDE.md 优先级栈 + 附件系统</div>
+    </div>
+    <div class="steps cc">
+
+      <div class="step">
+        <div class="step-dot">1</div>
+        <div class="step-content">
+          <div class="step-title">QueryEngine 收到消息</div>
+          <div class="step-desc">JSONL 持久化 → 自动恢复对话<br/>无显式 session 索引文件</div>
+        </div>
+      </div>
+      <div class="arrow">↓</div>
+
+      <div class="step">
+        <div class="step-dot">2</div>
+        <div class="step-content">
+          <div class="step-title">CLAUDE.md 优先级栈（6 层）</div>
+          <div class="step-desc">
+            <span class="tag">/etc 管理策略</span>
+            <span class="tag">~/.claude 全局</span>
+            <span class="tag">项目 CLAUDE.md</span>
+            <span class="tag">CLAUDE.local.md</span>
+            <span class="tag">AutoMem MEMORY</span>
+            <span class="tag">TeamMem</span><br/>
+            目录从 root→CWD 向上遍历，近 CWD 优先级更高
+          </div>
+        </div>
+      </div>
+      <div class="arrow">↓</div>
+
+      <div class="step">
+        <div class="step-dot">3</div>
+        <div class="step-content">
+          <div class="step-title">30+ 附件类型（Per-Turn）</div>
+          <div class="step-desc">每轮动态组装：文件内容、IDE 集成、记忆片段、<br/>Todo 提醒、Hook 结果、技能注入、Swarm 协调等<br/>1 秒超时保护</div>
+        </div>
+      </div>
+      <div class="arrow">↓</div>
+
+      <div class="step">
+        <div class="step-dot">4</div>
+        <div class="step-content">
+          <div class="step-title">组装 Context → 调用模型</div>
+          <div class="step-desc">System Prompt + CLAUDE.md + Attachments + 消息历史<br/>静态前缀可全局缓存（跨 session 复用）</div>
+        </div>
+      </div>
+      <div class="arrow">↓</div>
+
+      <div class="step">
+        <div class="step-dot">5</div>
+        <div class="step-content">
+          <div class="step-title">3 层压缩策略</div>
+          <div class="step-desc">
+            <span class="tag">MicroCompact 清旧输出</span>
+            <span class="tag">Session Memory 无 API</span>
+            <span class="tag">API 摘要兜底</span><br/>
+            PostCompact: 50K token 重新注入预算
+          </div>
+        </div>
+      </div>
+      <div class="arrow">↓</div>
+
+      <div class="step">
+        <div class="step-dot">6</div>
+        <div class="step-content">
+          <div class="step-title">隐式 AutoMem 写入</div>
+          <div class="step-desc"><code>~/.claude/memory/MEMORY.md</code> Agent 自行管理<br/>无结构化索引、无域划分、无老化检测</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- 底部差异总结 -->
+<div class="diff-bar">
+  <span class="diff-badge">核心差异</span>
+  <div class="diff-content">
+    <div class="dl dl-oc">
+      <strong>OpenClaw：</strong>显式记忆体系（结构化 MEMORY.md + daily logs + 4 级语义检索 + 4 层压缩 + 老化检测 + 索引重建），记忆可检索、可管理、可过期
+    </div>
+    <div class="dl dl-cc">
+      <strong>Claude Code：</strong>隐式记忆体系（CLAUDE.md 优先级栈 + AutoMem + 附件系统 + 3 层压缩），记忆靠文件优先级覆盖，无结构化检索，但缓存策略精细
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

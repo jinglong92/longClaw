@@ -163,7 +163,7 @@ DEV LOG 显示：检索级别 / query 变体 / 召回数 / 是否触发跨域
 ```
 ---
 💡 [技能发现] 检测到可复用工作流：<工作流名称>
-建议路径：skills/<role>/<workflow-name>/SKILL.md
+建议路径：skills/<role>-<workflow-name>/SKILL.md
 用途：<一句话描述>
 是否创建？回复"是"自动生成，回复"否"忽略此提议。
 ---

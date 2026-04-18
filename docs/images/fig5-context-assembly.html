@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>图5：上下文组装流程</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f8fafc;
+    padding: 44px 120px;
+    width: 1920px;
+    height: 1080px;
+    color: #1e293b;
+  }
+  h1 {
+    font-size: 30px;
+    font-weight: 700;
+    color: #1e293b;
+    text-align: center;
+    margin-bottom: 24px;
+    letter-spacing: 1px;
+  }
+
+  .main {
+    display: flex;
+    gap: 24px;
+    height: 880px;
+    justify-content: center;
+  }
+
+  /* 左侧流程 */
+  .flow {
+    width: 900px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    justify-content: space-between;
+  }
+
+  .step {
+    border-radius: 18px;
+    padding: 18px 24px;
+    position: relative;
+  }
+  .step-num {
+    position: absolute;
+    top: 14px;
+    left: 18px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    font-weight: 800;
+    color: #fff;
+  }
+  .step-title {
+    font-size: 21px;
+    font-weight: 700;
+    margin-left: 46px;
+    margin-bottom: 6px;
+    color: #1e293b;
+  }
+  .step-body {
+    font-size: 17px;
+    line-height: 1.7;
+    color: #475569;
+    margin-left: 46px;
+  }
+  .step-body code {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-family: "SF Mono", "Menlo", monospace;
+    font-size: 14px;
+    color: #6366f1;
+  }
+
+  .arrow {
+    text-align: center;
+    font-size: 24px;
+    color: #94a3b8;
+    line-height: 1;
+    padding: 2px 0;
+  }
+
+  /* 浅色步骤卡片 */
+  .s1 { background: #eff6ff; border-left: 5px solid #3b82f6; }
+  .s1 .step-num { background: #3b82f6; }
+
+  .s2 { background: #f5f3ff; border-left: 5px solid #8b5cf6; }
+  .s2 .step-num { background: #8b5cf6; }
+  .file-tag {
+    display: inline-block;
+    background: #ede9fe;
+    border: 1px solid #c4b5fd;
+    color: #5b21b6;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 8px;
+    margin: 3px 4px 3px 0;
+  }
+
+  .s3 { background: #f0fdf4; border-left: 5px solid #22c55e; }
+  .s3 .step-num { background: #22c55e; }
+
+  .s4 { background: #fffbeb; border-left: 5px solid #f59e0b; }
+  .s4 .step-num { background: #f59e0b; }
+
+  .s5 { background: #fdf2f8; border-left: 5px solid #ec4899; }
+  .s5 .step-num { background: #ec4899; }
+
+  .s6 { background: #ecfeff; border-left: 5px solid #06b6d4; }
+  .s6 .step-num { background: #06b6d4; }
+
+  /* 右侧记忆面板 */
+  .memory-panel {
+    width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .mem-card {
+    border-radius: 16px;
+    padding: 14px 16px;
+    background: #fff;
+    border: 2px solid #e2e8f0;
+  }
+  .mem-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #1e293b;
+  }
+  .mem-card-body {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+  .mem-card-body code {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-family: "SF Mono", "Menlo", monospace;
+    font-size: 14px;
+    color: #6366f1;
+  }
+
+  .m1 { border-color: #86efac; background: #f0fdf4; }
+  .m1 .mem-card-title { color: #15803d; }
+
+  .m2 { border-color: #c4b5fd; background: #f5f3ff; }
+  .m2 .mem-card-title { color: #6d28d9; }
+
+  .m3 { border-color: #fde047; background: #fefce8; }
+  .m3 .mem-card-title { color: #a16207; }
+
+  .m4 { border-color: #67e8f9; background: #ecfeff; }
+  .m4 .mem-card-title { color: #0e7490; }
+
+  /* Context 汇总条 */
+  .context-bar {
+    background: #fff;
+    border: 2px solid #818cf8;
+    border-radius: 16px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .ctx-badge {
+    background: #6366f1;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
+    padding: 6px 18px;
+    border-radius: 24px;
+  }
+  .ctx-text {
+    font-size: 17px;
+    color: #475569;
+    flex: 1;
+  }
+  .ctx-text span {
+    color: #4f46e5;
+    font-weight: 700;
+  }
+
+  .link-hint {
+    position: absolute;
+    right: -16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #cbd5e1;
+  }
+</style>
+</head>
+<body>
+
+<h1>OpenClaw 上下文组装流程</h1>
+
+<div class="main">
+  <!-- 左侧流程 -->
+  <div class="flow">
+
+    <div class="step s1">
+      <div class="step-num">1</div>
+      <div class="step-title">用户发消息</div>
+      <div class="step-body">OpenClaw Gateway 收到请求 → 开始上下文组装</div>
+    </div>
+
+    <div class="arrow">↓</div>
+
+    <div class="step s1">
+      <div class="step-num">2</div>
+      <div class="step-title">Session 恢复</div>
+      <div class="step-body">查 <code>sessions.json</code> → 找到 sessionKey → 复原 JSONL transcript<br/>没有 → 新建 session</div>
+      <div class="link-hint">→</div>
+    </div>
+
+    <div class="arrow">↓</div>
+
+    <div class="step s2" style="flex:1.3;">
+      <div class="step-num">3</div>
+      <div class="step-title">注入 Bootstrap Files（每次都注入）</div>
+      <div class="step-body">
+        <span class="file-tag">AGENTS.md → 操作规程</span>
+        <span class="file-tag">SOUL.md → 人格/语气</span>
+        <span class="file-tag">USER.md → 你是谁</span>
+        <span class="file-tag">IDENTITY.md → 它叫什么</span>
+        <span class="file-tag">TOOLS.md → 工具备注</span>
+      </div>
+      <div class="link-hint">→</div>
+    </div>
+
+    <div class="arrow">↓</div>
+
+    <div class="step s3">
+      <div class="step-num">4</div>
+      <div class="step-title">Agent 按 AGENTS.md 规则执行</div>
+      <div class="step-body"><code>memory_search</code> 语义检索 &nbsp;|&nbsp; <code>memory_get</code> 读今天/昨天日志</div>
+      <div class="link-hint">→</div>
+    </div>
+
+    <div class="arrow">↓</div>
+
+    <div class="step s4">
+      <div class="step-num">5</div>
+      <div class="step-title">组装 Context → 发给模型 → 回复</div>
+      <div class="step-body">Bootstrap + Session 历史 + 检索到的记忆 + 当前用户消息</div>
+    </div>
+
+    <div class="arrow">↓</div>
+
+    <div class="step s5">
+      <div class="step-num">6</div>
+      <div class="step-title">对话中 → 记忆写入 &amp; 自动压缩</div>
+      <div class="step-body">
+        重要事项 → 写入 <code>memory/YYYY-MM-DD.md</code><br/>
+        快到上限 → Silent memory flush → Auto-compaction 压缩旧对话
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 右侧记忆文件面板 -->
+  <div class="memory-panel">
+
+    <div class="mem-card m1">
+      <div class="mem-card-title">📄 MEMORY.md</div>
+      <div class="mem-card-body">长期记忆：用户身份、偏好、关键决策<br/>跨 session 持久保存</div>
+    </div>
+
+    <div class="mem-card m2">
+      <div class="mem-card-title">📄 memory/*.md</div>
+      <div class="mem-card-body">每日日志：任务进度、临时上下文<br/>按日期分文件：<code>YYYY-MM-DD.md</code></div>
+    </div>
+
+    <div class="mem-card m3">
+      <div class="mem-card-title">📄 sessions.json</div>
+      <div class="mem-card-body">会话索引：<code>sessionKey</code> → JSONL 路径<br/>用于恢复对话历史</div>
+    </div>
+
+    <div class="mem-card m4">
+      <div class="mem-card-title">📄 *.jsonl transcript</div>
+      <div class="mem-card-body">完整对话记录：每条消息一行 JSON<br/>按需加载、压缩旧轮次</div>
+    </div>
+
+    <div class="context-bar">
+      <span class="ctx-badge">Context</span>
+      <div class="ctx-text">
+        <span>Bootstrap</span> + <span>History</span> + <span>Memory</span> + <span>User Msg</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

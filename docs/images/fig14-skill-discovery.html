@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8"/>
+<style>
+  body { margin: 0; background: #ffffff; font-family: 'SF Pro Text', 'PingFang SC', sans-serif; }
+  .canvas { width: 920px; padding: 36px 48px 44px; box-sizing: border-box; }
+  h2 { color: #1e293b; font-size: 17px; font-weight: 700; margin: 0 0 4px; }
+  .subtitle { color: #94a3b8; font-size: 12px; margin: 0 0 26px; }
+
+  .two-col { display: flex; gap: 16px; margin-bottom: 16px; }
+  .col { flex: 1; }
+
+  .block { background: #f8fafc; border-radius: 10px; padding: 14px 16px 12px; border: 1px solid #e2e8f0; margin-bottom: 12px; }
+  .block:last-child { margin-bottom: 0; }
+  .block-title { font-size: 12px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .block-body { font-size: 11.5px; color: #475569; line-height: 1.65; }
+  .block-body code { background: #f1f5f9; color: #0369a1; padding: 1px 4px; border-radius: 3px; font-size: 10.5px; }
+
+  /* 目录对比 */
+  .dir-compare { display: flex; gap: 12px; }
+  .dir-box { flex: 1; border-radius: 8px; padding: 12px 14px; font-size: 11px; font-family: 'SF Mono', 'Menlo', monospace; line-height: 1.8; }
+  .dir-bad { background: #fef2f2; border: 1px solid #fecaca; }
+  .dir-good { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .dir-label { font-size: 10px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; margin-bottom: 8px; font-family: 'SF Pro Text', sans-serif; }
+  .dir-bad .dir-label { color: #dc2626; }
+  .dir-good .dir-label { color: #16a34a; }
+  .dim { color: #94a3b8; }
+  .hit { color: #16a34a; font-weight: 600; }
+  .miss { color: #dc2626; }
+
+  /* 排查流程 */
+  .flow { display: flex; gap: 0; align-items: stretch; }
+  .flow-step { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 12px 10px; margin-right: 8px; position: relative; }
+  .flow-step:last-child { margin-right: 0; }
+  .flow-arrow { position: absolute; right: -10px; top: 50%; transform: translateY(-50%); color: #cbd5e1; font-size: 16px; z-index: 1; }
+  .flow-step:last-child .flow-arrow { display: none; }
+  .flow-num { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; margin-bottom: 6px; }
+  .flow-title { font-size: 11px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+  .flow-body { font-size: 10.5px; color: #64748b; line-height: 1.55; }
+  .flow-body code { background: #f1f5f9; color: #0369a1; padding: 1px 3px; border-radius: 2px; font-size: 10px; }
+
+  .f1 .flow-num { background: #dbeafe; color: #1d4ed8; }
+  .f2 .flow-num { background: #ede9fe; color: #6d28d9; }
+  .f3 .flow-num { background: #fef3c7; color: #b45309; }
+  .f4 .flow-num { background: #d1fae5; color: #065f46; }
+  .f5 .flow-num { background: #fce7f3; color: #be185d; }
+
+  .tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 3px; }
+  .tag-red { background: #fef2f2; color: #dc2626; }
+  .tag-green { background: #f0fdf4; color: #16a34a; }
+  .tag-blue { background: #dbeafe; color: #1d4ed8; }
+  .tag-orange { background: #fef3c7; color: #b45309; }
+
+  hr { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <h2>Skill 不被收录的根因分析 — OpenClaw workspace skill discovery 只扫一层</h2>
+  <p class="subtitle">症状：仓库里明明有 skill，聊天里却不命中。真实原因：skill 根本没进 registry，谈不上命中。</p>
+
+  <div class="two-col">
+    <!-- 左：目录对比 -->
+    <div class="col">
+      <div class="block">
+        <div class="block-title">📁 目录结构对比 — 一层 vs 两层</div>
+        <div class="dir-compare">
+          <div class="dir-box dir-bad">
+            <div class="dir-label">❌ 两层（不被识别）</div>
+            <div class="dim">skills/</div>
+            <div class="miss">  job/</div>
+            <div class="miss">    jd-analysis/</div>
+            <div class="miss">      SKILL.md  ✗</div>
+            <div class="miss">  learn/</div>
+            <div class="miss">    paper-deep-dive/</div>
+            <div class="miss">      SKILL.md  ✗</div>
+            <div class="miss">  search/</div>
+            <div class="miss">    deep-research/</div>
+            <div class="miss">      SKILL.md  ✗</div>
+          </div>
+          <div class="dir-box dir-good">
+            <div class="dir-label">✅ 一层（被识别）</div>
+            <div class="dim">skills/</div>
+            <div class="hit">  multi-agent-bootstrap/</div>
+            <div class="hit">    SKILL.md  ✓</div>
+            <div class="hit">  job-jd-analysis/</div>
+            <div class="hit">    SKILL.md  ✓</div>
+            <div class="hit">  learn-paper-deep-dive/</div>
+            <div class="hit">    SKILL.md  ✓</div>
+            <div class="hit">  search-deep-research/</div>
+            <div class="hit">    SKILL.md  ✓</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右：现象 + 证据 -->
+    <div class="col">
+      <div class="block">
+        <div class="block-title">🔍 现象与证据</div>
+        <div class="block-body">
+          <span class="tag tag-red">症状</span> skill 有内容、有触发条件，聊天里就是不命中<br><br>
+          <span class="tag tag-blue">openclaw skills check</span><br>
+          59 个 skill / 22 eligible / 0 blocked by allowlist<br>
+          → allowlist 没有拦截，问题在更前面<br><br>
+          <span class="tag tag-blue">skills list --json</span><br>
+          source=openclaw-workspace 只有 2 个：<br>
+          <code>multi-agent-bootstrap</code> 和 <code>paperbanana</code><br><br>
+          <span class="tag tag-orange">关键差异</span> 这两个恰好是 skills/ 下一层的 skill，其余全是两层分组目录
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title">💡 根因</div>
+        <div class="block-body">
+          OpenClaw workspace skill discovery <b>只扫 skills/ 下一层目录</b>，不递归扫第二层分组目录。<br><br>
+          <code>skills/&lt;skill&gt;/SKILL.md</code> → <span class="tag tag-green">进 registry</span><br>
+          <code>skills/&lt;group&gt;/&lt;skill&gt;/SKILL.md</code> → <span class="tag tag-red">隐身，不进 registry</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr/>
+
+  <!-- 排查流程 -->
+  <div style="font-size:11px; font-weight:700; color:#64748b; letter-spacing:.4px; text-transform:uppercase; margin-bottom:10px;">排查路径（下次遇到 skill 不命中，按此顺序）</div>
+  <div class="flow">
+    <div class="flow-step f1">
+      <div class="flow-num">1</div>
+      <div class="flow-title">查 registry</div>
+      <div class="flow-body"><code>skills list --json</code><br>看 source=workspace 有几个，和磁盘上实际数量对比</div>
+      <div class="flow-arrow">›</div>
+    </div>
+    <div class="flow-step f2">
+      <div class="flow-num">2</div>
+      <div class="flow-title">查目录层级</div>
+      <div class="flow-body">registry 数量 &lt; 磁盘数量 → 检查目录是否超过一层</div>
+      <div class="flow-arrow">›</div>
+    </div>
+    <div class="flow-step f3">
+      <div class="flow-num">3</div>
+      <div class="flow-title">最小验证</div>
+      <div class="flow-body">拍平一个 skill 到一层，重启 session，再查 registry</div>
+      <div class="flow-arrow">›</div>
+    </div>
+    <div class="flow-step f4">
+      <div class="flow-num">4</div>
+      <div class="flow-title">查 frontmatter</div>
+      <div class="flow-body">进了 registry 但仍不命中 → 检查 name/description/触发条件</div>
+      <div class="flow-arrow">›</div>
+    </div>
+    <div class="flow-step f5">
+      <div class="flow-num">5</div>
+      <div class="flow-title">新开 session</div>
+      <div class="flow-body">改完目录后必须新开 session，旧会话沿用老的 skill 列表快照</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

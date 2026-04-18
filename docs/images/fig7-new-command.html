@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>图7：/new 命令 — 上下文清空流程</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f8fafc;
+    padding: 40px 60px;
+    width: 960px;
+    height: 1080px;
+    color: #1e293b;
+    display: flex;
+    flex-direction: column;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1e293b;
+    text-align: center;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 16px;
+    color: #64748b;
+    margin-bottom: 16px;
+  }
+
+  .main {
+    display: flex;
+    gap: 18px;
+    flex: 1;
+  }
+
+  /* 左侧：时序流程 */
+  .timeline {
+    flex: 1.4;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .phase {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+    position: relative;
+  }
+  .phase-line {
+    width: 38px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+  .phase-dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+    z-index: 1;
+  }
+  .phase-connector {
+    width: 3px;
+    flex: 1;
+    background: #cbd5e1;
+    min-height: 6px;
+  }
+  .phase-content {
+    flex: 1;
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 5px;
+  }
+  .phase-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: #1e293b;
+  }
+  .phase-body {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #475569;
+  }
+  .phase-body code {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 1px 6px;
+    border-radius: 5px;
+    font-family: "SF Mono", "Menlo", monospace;
+    font-size: 12px;
+    color: #6366f1;
+  }
+
+  /* 阶段颜色 */
+  .p1 .phase-dot { background: #ef4444; }
+  .p1 .phase-content { background: #fef2f2; border-left: 5px solid #ef4444; }
+
+  .p2 .phase-dot { background: #f59e0b; }
+  .p2 .phase-content { background: #fffbeb; border-left: 5px solid #f59e0b; }
+
+  .p3 .phase-dot { background: #3b82f6; }
+  .p3 .phase-content { background: #eff6ff; border-left: 5px solid #3b82f6; }
+
+  .p4 .phase-dot { background: #22c55e; }
+  .p4 .phase-content { background: #f0fdf4; border-left: 5px solid #22c55e; }
+
+  .p5 .phase-dot { background: #8b5cf6; }
+  .p5 .phase-content { background: #f5f3ff; border-left: 5px solid #8b5cf6; }
+
+  /* 右侧：关键概念面板 */
+  .side-panel {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .side-card {
+    border-radius: 14px;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    background: #fff;
+  }
+  .side-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .side-card-body {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #64748b;
+  }
+  .side-card-body code {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 1px 6px;
+    border-radius: 5px;
+    font-family: "SF Mono", "Menlo", monospace;
+    font-size: 12px;
+    color: #6366f1;
+  }
+
+  .c1 { border-color: #fca5a5; background: #fef2f2; }
+  .c1 .side-card-title { color: #b91c1c; }
+
+  .c2 { border-color: #fde047; background: #fefce8; }
+  .c2 .side-card-title { color: #a16207; }
+
+  .c3 { border-color: #86efac; background: #f0fdf4; }
+  .c3 .side-card-title { color: #15803d; }
+
+  .c4 { border-color: #c4b5fd; background: #f5f3ff; }
+  .c4 .side-card-title { color: #6d28d9; }
+
+  /* 底部醒目警告条 */
+  .warn-bar {
+    background: #fff;
+    border: 2px solid #ef4444;
+    border-radius: 14px;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .warn-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .warn-text {
+    font-size: 14px;
+    color: #991b1b;
+    font-weight: 600;
+  }
+  .warn-text span {
+    color: #ef4444;
+    font-weight: 800;
+  }
+
+  /* hook代码块 */
+  .hook-block {
+    background: #1e293b;
+    color: #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-family: "SF Mono", "Menlo", monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    margin-top: 6px;
+  }
+  .hook-block .hl-key { color: #93c5fd; }
+  .hook-block .hl-str { color: #86efac; }
+  .hook-block .hl-cmd { color: #fde047; }
+</style>
+</head>
+<body>
+
+<h1>/new 命令 — 上下文清空流程</h1>
+<div class="subtitle">UserPromptSubmit Hook 检测 → <code>openclaw gateway restart</code> → 干净新会话</div>
+
+<div class="main">
+
+  <!-- 左侧时序流程 -->
+  <div class="timeline">
+
+    <div class="phase p1">
+      <div class="phase-line">
+        <div class="phase-dot">1</div>
+        <div class="phase-connector"></div>
+      </div>
+      <div class="phase-content">
+        <div class="phase-title">用户发送 <code>/new</code></div>
+        <div class="phase-body">微信 / WhatsApp / Telegram 渠道均可触发<br/>字符串精确匹配，不需要语义推断</div>
+      </div>
+    </div>
+
+    <div class="phase p2">
+      <div class="phase-line">
+        <div class="phase-dot">2</div>
+        <div class="phase-connector"></div>
+      </div>
+      <div class="phase-content">
+        <div class="phase-title">UserPromptSubmit Hook 触发</div>
+        <div class="phase-body">OpenClaw 在发送给模型前拦截<br/>检测到 <code>/new</code> → 执行钩子命令</div>
+      </div>
+    </div>
+
+    <div class="phase p3">
+      <div class="phase-line">
+        <div class="phase-dot">3</div>
+        <div class="phase-connector"></div>
+      </div>
+      <div class="phase-content">
+        <div class="phase-title"><code>openclaw gateway restart</code></div>
+        <div class="phase-body">重启 Gateway 进程 → <span style="color:#3b82f6;font-weight:700;">真正清空 context window</span><br/>等同于原生 <code>/new</code> — 旧对话彻底丢弃</div>
+      </div>
+    </div>
+
+    <div class="phase p4">
+      <div class="phase-line">
+        <div class="phase-dot">4</div>
+        <div class="phase-connector"></div>
+      </div>
+      <div class="phase-content">
+        <div class="phase-title">新 Session 启动</div>
+        <div class="phase-body">Bootstrap Files 重新注入（AGENTS / SOUL / USER / IDENTITY / TOOLS）<br/>SessionStart Hook → 检查 heartbeat-state.json → 呈现待办</div>
+      </div>
+    </div>
+
+    <div class="phase p5">
+      <div class="phase-line">
+        <div class="phase-dot">5</div>
+      </div>
+      <div class="phase-content">
+        <div class="phase-title">干净会话就绪</div>
+        <div class="phase-body">零历史上下文 → 无旧对话干扰 → 从 Bootstrap 开始<br/>记忆召回仍可用（<code>memory_search</code> 从 JSONL 索引读取）</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 右侧关键概念面板 -->
+  <div class="side-panel">
+
+    <div class="side-card c1">
+      <div class="side-card-title">⚠️ 关键：先归档再 /new</div>
+      <div class="side-card-body">
+        /new 不可逆，旧 context 直接丢弃<br/>
+        <span style="color:#b91c1c;font-weight:700;">正确顺序：</span>先说"归档" → Layer 4 Archive → 再发 /new<br/>
+        <span style="color:#b91c1c;font-weight:700;">反向操作 = 数据丢失</span>
+      </div>
+    </div>
+
+    <div class="side-card c2">
+      <div class="side-card-title">⚙️ Hook 配置</div>
+      <div class="side-card-body">
+        <code>.claude/settings.json</code> 中配置：
+        <div class="hook-block">
+<span class="hl-key">"UserPromptSubmit"</span>: [{<br/>
+&nbsp;&nbsp;<span class="hl-key">"matcher"</span>: <span class="hl-str">"/new"</span>,<br/>
+&nbsp;&nbsp;<span class="hl-key">"hooks"</span>: [{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="hl-key">"type"</span>: <span class="hl-str">"command"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="hl-key">"command"</span>: <span class="hl-cmd">"openclaw gateway restart"</span><br/>
+&nbsp;&nbsp;}]<br/>
+}]
+        </div>
+      </div>
+    </div>
+
+    <div class="side-card c3">
+      <div class="side-card-title">✅ 记忆不丢失</div>
+      <div class="side-card-body">
+        /new 只清空 <span style="font-weight:700;">context window</span>（对话历史）<br/>
+        文件系统不受影响：<br/>
+        <code>MEMORY.md</code> · <code>memory/*.md</code> · <code>JSONL 索引</code><br/>
+        新 session 仍可通过 <code>memory_search</code> 取回
+      </div>
+    </div>
+
+    <div class="side-card c4">
+      <div class="side-card-title">🔄 ephemeral session</div>
+      <div class="side-card-body">
+        微信 bot 每条消息 = 新 session<br/>
+        /new 对 CLI 场景更有意义（单 session 长对话）<br/>
+        ephemeral 不跨 session 累积状态
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>

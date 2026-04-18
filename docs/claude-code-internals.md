@@ -237,13 +237,13 @@ Step 15：Cleanup
 
 ### 内置 Agent 类型
 
-| Agent | 模型 | 工具 | 特点 |
-|-------|------|------|------|
-| **Explore** | Haiku | 只读 | 每周 3400 万次调用，激进 tokenization（每周节省 46 亿字符）|
-| **Plan** | 继承 | 只读 | 四步结构化架构指导 |
-| **Verification** | 继承 | 完整 | 始终 async，反规避提示（"recognize excuses and do the opposite"）|
-| **General** | 继承 | 完整（除 Agent） | 默认委托目标 |
-| **Guide** | Haiku | 文档获取 | Claude Code 生态感知 |
+| Agent            | 模型    | 工具          | 特点                                                      |
+| ---------------- | ----- | ----------- | ------------------------------------------------------- |
+| **Explore**      | Haiku | 只读          | 每周 3400 万次调用，激进 tokenization（每周节省 46 亿字符）               |
+| **Plan**         | 继承    | 只读          | 四步结构化架构指导                                               |
+| **Verification** | 继承    | 完整          | 始终 async，反规避提示（"recognize excuses and do the opposite"） |
+| **General**      | 继承    | 完整（除 Agent） | 默认委托目标                                                  |
+| **Guide**        | Haiku | 文档获取        | Claude Code 生态感知                                        |
 
 ### Fork Agent 的缓存经济学
 
