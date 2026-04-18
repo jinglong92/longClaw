@@ -206,7 +206,7 @@ Route/domain labels must match `MULTI_AGENTS.md` exactly.
 
 Maintain `memory/session-state.json` as source of truth for session-scoped metadata.
 
-Minimum fields: `session_id`, `round`, `dev_mode`, `routing_visibility`, `active_domain`, `current_topic`, `last_retrieval_scope`, `last_retrieval_query_variants`, `pending_confirmation`, `read_only_web_authorized`, `authorized_scopes`, `compression_count`, `last_compression_at`, `updated_at`
+Minimum fields: `session_id`, `round`, `dev_mode`, `routing_visibility`, `active_domain`, `current_topic`, `model_mode`, `last_retrieval_scope`, `last_retrieval_query_variants`, `pending_confirmation`, `read_only_web_authorized`, `authorized_scopes`, `compression_count`, `last_compression_at`, `updated_at`
 
 **session_id 生成规则**：`openclaw_{domain}_{YYYY-MM-DD}`，与 MULTI_AGENTS.md Session 命名规则对齐。
 示例：`openclaw_job_2026-04-14` / `openclaw_main`（跨域永久会话）
