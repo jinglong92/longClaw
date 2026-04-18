@@ -88,9 +88,11 @@ User -> CTRL -> ([专职A] || [专职B]) -> CTRL -> User
 
 触发条件：请求明确跨域 / 单专职存在明显盲区需第二视角。
 
-### Routing 行格式（每条回复必须带）
-- 单专职：`Routing: User -> CTRL -> [JOB] -> CTRL -> User`
-- 双并行：`Routing: User -> CTRL -> ([PARENT] || [LIFE]) -> CTRL -> User`
+### Routing 行格式
+- 当 `routing_visibility = visible` 时：
+  - 单专职：`Routing: User -> CTRL -> [JOB] -> CTRL -> User`
+  - 双并行：`Routing: User -> CTRL -> ([PARENT] || [LIFE]) -> CTRL -> User`
+- 当 `routing_visibility = devlog_only` 时：正文不显示 Routing 行，只在 `[DEV LOG]` 中显示。
 
 ---
 

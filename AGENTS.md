@@ -192,7 +192,8 @@ Default: keep routing visible.
 Format: `Routing: User -> CTRL -> [ROLE] -> CTRL -> User`
 Parallel: `Routing: User -> CTRL -> ([ROLE_A] || [ROLE_B]) -> CTRL -> User`
 
-If user asks to hide routing from body text: move to `[DEV LOG]` only.
+If user asks to hide routing from body text: set `memory/session-state.json.routing_visibility = "devlog_only"` for the current session and move routing to `[DEV LOG]` only.
+If user later asks to show routing again: set `routing_visibility = "visible"`.
 If `dev_mode = on`: routing must appear somewhere in the reply.
 
 Route/domain labels must match `MULTI_AGENTS.md` exactly.
