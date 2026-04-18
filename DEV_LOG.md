@@ -46,6 +46,11 @@
 - `status=failed`：附失败原因
 - `status=blocked`：附原因（missing_tool / deny_rule / need_auth）
 - 无工具调用：`🛠️ 工具 无`
+- **LLM fallback 命中时必须明确标注**：
+  ```
+  🛠️ 工具 llm_fallback → [兜底模型] primary=openai:gpt-5.4 不可用（rate_limit），已切换至 ollama:gemma4:e2b | status=ok(degraded)
+  ```
+  结果 JSON 里 `fallback_triggered=true` 时，此行不得省略
 
 ### 🧠 Memory
 ```

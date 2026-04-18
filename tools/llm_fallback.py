@@ -286,6 +286,7 @@ def main() -> None:
             result = call_ollama(payload, cfg)
             result["fallback_reason"] = err_type
             result["degraded_mode"] = True
+            result["fallback_notice"] = f"[兜底模型] 本轮命中 fallback：primary={p_prov}:{p_model} 不可用（{err_type}），已切换至 {f_prov}:{f_model}"
             print(json.dumps(result, ensure_ascii=False))
             return
         out = {"ok": False, "error": str(e), "error_type": err_type, "degraded_mode": False}
