@@ -178,113 +178,22 @@ DEV LOG 显示：检索级别 / query 变体 / 召回数 / 是否触发跨域
 
 ---
 
-## 兜底模型（Force Fallback + Session Model Mode）
+## 会话模型模式（轻量）
 
-用户可在会话中随时指定本轮走兜底模型（本地 Ollama），也可把当前 session 切到 `auto / primary / fallback` 三档模型模式。
+`memory/session-state.json` 可含 `model_mode`（由 `tools/model_mode.py` 或 CTRL 写入），仅作**会话内观测/提示**，不驱动仓库内任何 LLM 代理或本地兜底。
 
-### 会话模型模式（写入 `memory/session-state.json.model_mode`）
+- `auto`（默认）：无特殊约束
+- `primary`：提示「主模型优先、不依赖自动降级叙事」；**不改变** OpenClaw / Codex 实际 HTTP 上游
 
-- `auto`：默认模式，优先 primary，命中 fallback 条件时自动降级
-- `primary`：强制走主模型，失败直接报错，不自动降级
-- `fallback`：强制走兜底模型，跳过 primary
-
-### 模式切换口令（硬触发）
-
-- `切到兜底` / `后续都走兜底` → `python3 tools/model_mode.py set fallback`
-- `切回主模型` / `后续都走主模型` → `python3 tools/model_mode.py set primary`
-- `恢复自动` / `恢复自动切换` → `python3 tools/model_mode.py set auto`
-- `本轮用兜底模型` / `用兜底模型` / `走兜底` / `用本地模型` / `用 ollama` / `走 ollama` / `本地跑` / `force fallback` / `强制兜底` → 仅本轮 `force_fallback = true`
-
-### 执行方式
-
-#### A. 会话模式切换
-
-CTRL 统一通过 helper 更新 `memory/session-state.json`：
+切换示例：
 
 ```bash
-python3 tools/model_mode.py set fallback
+python3 tools/model_mode.py set primary
+python3 tools/model_mode.py set auto
+python3 tools/model_mode.py get
 ```
 
-之后调用 `tools/llm_fallback.py` 时，即使 payload 不带 `force_fallback`，脚本也会先读 session-state 并按 `model_mode` 执行。
-
-#### A′. 主会话「整段」走兜底（含 1+2 这类简单题）
-
-前提：`~/.openclaw/openclaw.json` 已注册 `models.providers.ollama`（例如 `ollama/gemma4:e2b`）。
-
-仅改 `session-state.json` **不会**让 OpenClaw UI 里仍选中的 `openai-codex/gpt-5.4` 自动变成 Ollama。要让**所有主会话回答**（含算术）都走本地模型，在切 `fallback` 时**同时改 agent 绑定模型**：
-
-```bash
-python3 tools/model_mode.py set fallback --sync-openclaw
-openclaw gateway restart
-```
-
-- 首次执行会备份当前 `agents.defaults.model.primary` 与各 `agents.list[].model` 到 `~/.openclaw/model_mode_agent_restore.json`，再把上述字段统一改为 `ollama/gemma4:e2b`（可用环境变量 `OPENCLAW_FALLBACK_MODEL` 覆盖）。
-- 回到云上主模型：`python3 tools/model_mode.py set auto --sync-openclaw`（或 `set primary`）后同样建议 **`openclaw gateway restart`**，以便恢复备份中的模型 ID。
-
-这样 DEV LOG 里 **`mode=fallback` 时 `actual` 应能写 `ollama/gemma4:e2b`**（前提是客户端已重载配置）。
-
-#### A″. 持续兜底（跨会话）直到你手动切回 — 与 Codex 预算
-
-你要的行为是：**前序对话里一旦切到兜底，后续新开会话、下一轮聊天都继续用兜底**，直到你明确切回主模型 —— 这样 **Codex 额度用尽时仍可用本地 Ollama 跑通**。
-
-| 机制 | 是否跨会话持久 | 说明 |
-|------|------------------|------|
-| 只写 `memory/session-state.json` 的 `model_mode` | **不一定** | CTRL 每轮可能改写该文件；新上下文也可能被初始化，**不能单独当作「全局开关」**。 |
-| **`set fallback --sync-openclaw`** | **是** | 把 **`~/.openclaw/openclaw.json`** 里 agent 绑定改到 **`ollama/gemma4:e2b`**，存在磁盘上，**新开 chat、重启客户端后仍生效**，直到执行 **`set auto --sync-openclaw`**（或 **`set primary --sync-openclaw`**）并 **`openclaw gateway restart`** 从备份恢复。 |
-| **`llm_fallback_proxy` + `base_url`** | **是**（代理侧） | 流量经代理时按 `session_state_path` 读 `model_mode`；同样建议与 `--sync-openclaw` 二选一或组合，避免「state 写 fallback、主会话仍绑 Codex」的漂移。 |
-
-**自检**：`python3 tools/model_mode.py get` 会输出 `openclaw_defaults_primary` 与 **`persistent_fallback_active`**（仅当 `model_mode=fallback` 且 OpenClaw 主模型已是 `ollama/*` 时为 `true`）。若出现 **`drift_warning`**，说明会话口头兜底了但 **OpenClaw 仍指向 Codex**，需补跑 `--sync-openclaw`。
-
-**Codex 预算**：当 agent 实际绑定 **`ollama/...`** 时，主请求**不走** openai-codex，自然不消耗 Codex 额度（仍须本机 **`ollama serve`** 与对应模型已拉取）。
-
-#### C. 主会话（OpenClaw Chat）与 `model_mode` 闭环
-
-**事实边界**：只改 `memory/session-state.json` 的 `model_mode`，**不会**改变 OpenClaw / Codex **内置主会话**实际调用的 HTTP 上游；主会话不经过 `tools/llm_fallback.py`，除非你显式调用该脚本。
-
-**闭环做法**（让「主回答」也被 `model_mode` 接管）：
-
-1. 在本机常驻运行 `python3 tools/llm_fallback_proxy.py`（配置见 `runtime/model-router.json`）。
-2. 在 OpenClaw 侧把**主模型 provider** 的 `base_url` 指到代理（例如 `http://127.0.0.1:18080/v1`），`model` 仍写你逻辑上的主模型名（如 `gpt-5.4`）；**不要把 OpenClaw 里的 `model` 改成 Gemma 名**。
-3. `model-router.json` 中保持 `session_state_path`（默认 `memory/session-state.json`，路径相对于 `workspace_root`；未配置 `workspace_root` 时以仓库根为根，即 `tools/` 的上一级目录）。
-
-代理对每个 `POST /v1/chat/completions` 会读取当前 `model_mode`：
-
-| `model_mode` | 行为 |
-|--------------|------|
-| `fallback` | **跳过 primary**，请求体中的 `model` 改写为兜底模型后直连 Ollama（主会话即走 Gemma）。 |
-| `primary` | **仅 primary**，失败/429 等**不**自动降级 Ollama。 |
-| `auto` | 先 primary，命中配置的 HTTP/子串/连接类失败后再走 Ollama（与原先一致）。 |
-
-`/health` 会返回当前解析到的 `session_model_mode`，便于核对代理是否读到了同一份 `session-state.json`。
-
-#### B. 本轮强制兜底
-
-调用 `tools/llm_fallback.py`，stdin 传入带 `force_fallback: true` 的 JSON：
-
-```bash
-python3 tools/llm_fallback.py < request.json
-```
-
-其中 `request.json` 至少包含：
-
-```json
-{"system":"<system>","prompt":"<用户问题>","force_fallback":true}
-```
-
-### DEV LOG 标注（必须）
-
-```
-🛠️ 工具 llm_fallback(force) → [兜底模型] 用户指定走兜底模型：ollama:gemma4:e2b | status=ok(degraded)
-```
-
-或：
-
-```
-🛠️ 工具 llm_fallback(session_mode=fallback) → [兜底模型] 会话当前为 fallback 模式：ollama:gemma4:e2b | status=ok(degraded)
-```
-
-结果输出后，若实际走了兜底模型，回复开头必须注明：**[本轮使用兜底模型 ollama:gemma4:e2b]**。
-若 `model_mode = primary`，DEV LOG 必须写清：**当前会话禁用自动降级**。
+历史上若存在 `model_mode=fallback`，`model_mode.py get` 会将其**归一为 `primary`** 并写回文件。换模型、换 provider 请在 **OpenClaw 客户端 / `~/.openclaw/openclaw.json`** 配置。
 
 ---
 

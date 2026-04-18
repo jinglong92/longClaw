@@ -353,9 +353,6 @@ Bootstrap 完成。
    export BRAVE_API_KEY=你的key
    # 再写入你的 shell profile 做持久化
 
-可选安装（本地模型兜底）：
-- Ollama 建议继续单独用官方 macOS 安装方式处理，不放进这个脚本里。
-
 EOF
 }
 

@@ -33,12 +33,11 @@
 
 ### 🤖 模型
 ```
-🤖 模型 session=<provider/model|alias> | mode=<auto|primary|fallback> | actual=<provider/model|none>
+🤖 模型 session=<provider/model|alias> | mode=<auto|primary> | actual=<provider/model|none>
 ```
 - `session`：当前会话主模型，优先来自 `session_status`
-- `mode`：来自 `memory/session-state.json.model_mode`
+- `mode`：来自 `memory/session-state.json.model_mode`（仅 `auto`/`primary`；无本地 LLM 兜底层）
 - `actual`：本轮实际产出内容所使用的模型；若本轮未实际调用 LLM 生成，写 `none`
-- 若命中兜底模型，必须显式写出 `actual=ollama:gemma4:e2b` 之类的真实值
 - 若无法核实 `session` 或 `actual`，对应字段写 `unavailable`
 
 ### 🧩 Skill
@@ -57,11 +56,6 @@
 - `status=failed`：附失败原因
 - `status=blocked`：附原因（missing_tool / deny_rule / need_auth）
 - 无工具调用：`🛠️ 工具 无`
-- **LLM fallback 命中时必须明确标注**：
-  ```
-  🛠️ 工具 llm_fallback → [兜底模型] primary=openai:gpt-5.4 不可用（rate_limit），已切换至 ollama:gemma4:e2b | status=ok(degraded)
-  ```
-  结果 JSON 里 `fallback_triggered=true` 时，此行不得省略
 
 ### 🧠 Memory
 ```

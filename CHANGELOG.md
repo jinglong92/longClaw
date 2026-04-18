@@ -5,16 +5,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.6.1] — 2026-04-18
+
+### Removed
+- **本地 LLM 兜底层**：删除 `tools/llm_fallback.py`、`tools/llm_fallback_proxy.py`、`runtime/model-fallback.json`、`runtime/model-router.json` 及自测配置；`tools/model_mode.py` 精简为仅 `auto`/`primary`，并归一遗留的 `model_mode=fallback` → `primary`
+- **相关 tmp 样例**：`tmp/fallback-*.json`、`tmp/llm_fallback_smoketest.json`
+
+### Changed
+- **`CTRL_PROTOCOLS.md` / `DEV_LOG.md` / `docs/longclaw-practice.md`**：去掉兜底模型与 `llm_fallback` 工具协议说明
+
+---
+
 ## [v0.6.0] — 2026-04-18
 
 ### Added
-- **LLM fallback 路由层**（`tools/llm_fallback.py` + `tools/llm_fallback_proxy.py`）：primary（OpenAI/Codex）失败时自动 fallback 到本地 Ollama（gemma4:e2b），支持 quota 耗尽、限速、超时、连接失败等场景；OpenAI-compatible proxy 让不支持 Ollama 的工具透明走 fallback
-- **`runtime/model-fallback.json`**：模型路由配置，定义 primary/fallback 模型和触发/不触发条件；`runtime/model-router.json` 提供多路由规则支持
 - **Playwright CLI skill**（`skills/engineer-playwright-cli/`）：浏览器自动化完整技能包，含 session 管理、元素操作、请求 mock、视频录制、tracing、测试生成等 10 个 reference 文档
 - **openclaw-paperbanana skill**（`skills/openclaw-paperbanana/`）：从 Clawhub registry 引入，含完整脚本（generate.py / evaluate.py / plot.py）和 provider 参考文档；新增 `.clawhub/lock.json` 追踪 registry 依赖
 
 ### Changed
-- **`runtime/model-fallback.json`**：fallback 模型从 `gemma2:2b` 修正为 `gemma4:e2b`（本机 Ollama 实际存在的模型）
+- _(historical)_ v0.6.0 曾引入 LLM fallback 路由与 `runtime/model-*.json`；已于 **v0.6.1** 移除
 
 ### Chore
 - **脚本归档**：根目录 7 个 `.sh` 脚本统一移入 `scripts/`，保持根目录整洁
