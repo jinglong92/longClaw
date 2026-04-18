@@ -480,14 +480,54 @@ tools: [Read, Glob, Grep, Bash]
 
 ## 六、Mac mini M4 部署
 
+### 6.0 Mac mini M4 已知问题（绕坑必读）
+
+**`crontab -` 管道写入会永久挂起**
+
+这台机器上 `... | crontab -` 这种写法会卡死，已多次复现：
+
+```bash
+# ❌ 永远不要在这台机器上用这种写法
+crontab -l | grep -v longclaw_heartbeat | crontab -   # 会挂
+(crontab -l; echo "...") | crontab -                  # 会挂
+```
+
+`setup_heartbeat_cron.sh` 已经处理了这个问题：用临时文件 + python3 subprocess 写入，5 秒超时后自动 fallback 到 Gateway cron。**直接跑脚本，不要手动操作 crontab。**
+
+**当前 heartbeat 走的是 Gateway cron（不是 system crontab）**
+
+system crontab 在这台机器上装不进去（5 秒超时），脚本自动 fallback 到 `openclaw cron add`：
+
+```
+longclaw-heartbeat-am  id: f19c5a35-02ac-4259-8296-4f22c9717a94  08:30 Asia/Shanghai
+longclaw-heartbeat-pm  id: 163558d3-081f-477f-8719-8aa2876e2169  18:00 Asia/Shanghai
+```
+
+验证 Gateway cron 是否在线：`openclaw cron list`
+
+**openclaw 是 node alias，cron 环境无法识别**
+
+cron 里不能用 `openclaw`，必须用完整路径：
+```
+/opt/homebrew/opt/node/bin/node /opt/homebrew/lib/node_modules/openclaw/dist/entry.js
+```
+
+**Gateway 端口是动态的**
+
+每次重启 openclaw，Gateway 端口可能变（当前 18789）。Gateway cron 由 openclaw 内部管理，不受端口变化影响；但如果手动构造 `system event --url` 命令需要重新确认端口：`lsof -i -P | grep node | grep LISTEN`
+
+---
+
 ### 6.1 首次激活
 
 ```bash
 cd ~/longClaw
 
 # 1. 安装 heartbeat cron job（只需一次）
+# 注意：不要手动操作 crontab，直接跑脚本，它会自动处理 fallback
 bash setup_heartbeat_cron.sh
-crontab -l | grep longclaw  # 验证：应看到 08:30 和 18:00 两条
+# 验证（Gateway cron）：
+openclaw cron list | grep longclaw
 
 # 2. 构建记忆索引（首次或 MEMORY.md 更新后）
 python3 tools/memory_entry.py
