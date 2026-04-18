@@ -537,20 +537,20 @@ python3 tools/memory_search.py --query "上次面试进展" --domain JOB --hybri
 
 | 文件 | 触发场景 |
 |------|---------|
-| [skills/job/jd-analysis/SKILL.md](skills/job/jd-analysis/SKILL.md) | JD 分析 |
-| [skills/learn/paper-deep-dive/SKILL.md](skills/learn/paper-deep-dive/SKILL.md) | 论文深度解读 |
-| [skills/engineer/agent-review/SKILL.md](skills/engineer/agent-review/SKILL.md) | Workspace 审查 |
-| [skills/search/fact-check-latest/SKILL.md](skills/search/fact-check-latest/SKILL.md) | 最新事实核查 |
-| [skills/engineer/research-execution-protocol/SKILL.md](skills/engineer/research-execution-protocol/SKILL.md) | 研究型工程执行协议 |
-| [skills/engineer/research-build/SKILL.md](skills/engineer/research-build/SKILL.md) | 研究工程落地构建 workflow |
-| [skills/meta/skill-safety-audit/SKILL.md](skills/meta/skill-safety-audit/SKILL.md) | 外部技能接入安全审计 |
-| [skills/meta/session-compression-flow/SKILL.md](skills/meta/session-compression-flow/SKILL.md) | 会话压缩与跨会话衔接流程 |
+| [skills/job-jd-analysis/SKILL.md](skills/job-jd-analysis/SKILL.md) | JD 分析 |
+| [skills/learn-paper-deep-dive/SKILL.md](skills/learn-paper-deep-dive/SKILL.md) | 论文深度解读 |
+| [skills/engineer-agent-review/SKILL.md](skills/engineer-agent-review/SKILL.md) | Workspace 审查 |
+| [skills/search-fact-check-latest/SKILL.md](skills/search-fact-check-latest/SKILL.md) | 最新事实核查 |
+| [skills/engineer-research-execution-protocol/SKILL.md](skills/engineer-research-execution-protocol/SKILL.md) | 研究型工程执行协议 |
+| [skills/engineer-research-build/SKILL.md](skills/engineer-research-build/SKILL.md) | 研究工程落地构建 workflow |
+| [skills/meta-skill-safety-audit/SKILL.md](skills/meta-skill-safety-audit/SKILL.md) | 外部技能接入安全审计 |
+| [skills/meta-session-compression-flow/SKILL.md](skills/meta-session-compression-flow/SKILL.md) | 会话压缩与跨会话衔接流程 |
 | [skills/multi-agent-bootstrap/SKILL.md](skills/multi-agent-bootstrap/SKILL.md) | 多代理架构搭建/迁移 |
-| [skills/search/public-evidence-fetch/SKILL.md](skills/search/public-evidence-fetch/SKILL.md) | 公开网页/论文证据抓取 |
-| [skills/search/deep-research/SKILL.md](skills/search/deep-research/SKILL.md) | 并发多源深度调研（spawn search-agent×2-3）|
-| [skills/companion/memory-companion/SKILL.md](skills/companion/memory-companion/SKILL.md) | 记忆增强陪伴（BRO/SIS 自动触发）|
-| [skills/meta/proactive-heartbeat/SKILL.md](skills/meta/proactive-heartbeat/SKILL.md) | 主动心跳巡检（cron + SessionStart 呈现）|
-| [skills/learn/paperbanana/SKILL.md](skills/learn/paperbanana/SKILL.md) | 学术论文配图自动生成（需本地安装）|
+| [skills/search-public-evidence-fetch/SKILL.md](skills/search-public-evidence-fetch/SKILL.md) | 公开网页/论文证据抓取 |
+| [skills/search-deep-research/SKILL.md](skills/search-deep-research/SKILL.md) | 并发多源深度调研（spawn search-agent×2-3）|
+| [skills/companion-memory-companion/SKILL.md](skills/companion-memory-companion/SKILL.md) | 记忆增强陪伴（BRO/SIS 自动触发）|
+| [skills/meta-proactive-heartbeat/SKILL.md](skills/meta-proactive-heartbeat/SKILL.md) | 主动心跳巡检（cron + SessionStart 呈现）|
+| [skills/learn-paperbanana/SKILL.md](skills/learn-paperbanana/SKILL.md) | 学术论文配图自动生成（需本地安装）|
 
 ### Memory 检索工具
 
@@ -653,8 +653,8 @@ longClaw 是在官方 OpenClaw 软件基础上改造的 workspace。执行层（
 
 欢迎贡献 Workflow Skill、改进检索工具或完善训练底座。
 
-最低门槛的贡献方式：在 `skills/<domain>/<skill-name>/` 下新建一个 `SKILL.md`，
-描述一个具体的可复用工作流（参考现有的 `skills/job/jd-analysis/` 格式）。
+最低门槛的贡献方式：在 `skills/<domain>-<skill-name>/` 下新建一个 `SKILL.md`，
+描述一个具体的可复用工作流（参考现有的 `skills/job-jd-analysis/` 格式）。
 
 详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
@@ -666,7 +666,7 @@ longClaw 是在官方 OpenClaw 软件基础上改造的 workspace。执行层（
 - 不常驻污染上下文（执行完即退出）
 - 优先局部增强、可验证、可回滚
 
-新增方式：在 `skills/<domain>/<skill-name>/` 下新建 `SKILL.md`，参考现有格式（frontmatter + 触发条件 + 流程步骤 + 输出格式）。
+新增方式：在 `skills/<domain>-<skill-name>/` 下新建 `SKILL.md`，参考现有格式（frontmatter + 触发条件 + 流程步骤 + 输出格式）。
 
 
 ---

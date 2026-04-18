@@ -483,16 +483,16 @@ Shows: same-domain priority + entity-hit weighted ranking + hybrid semantic gap-
 
 | File | Trigger |
 |------|---------|
-| [skills/job/jd-analysis/SKILL.md](skills/job/jd-analysis/SKILL.md) | JD analysis |
-| [skills/learn/paper-deep-dive/SKILL.md](skills/learn/paper-deep-dive/SKILL.md) | Paper deep dive |
-| [skills/engineer/agent-review/SKILL.md](skills/engineer/agent-review/SKILL.md) | Workspace review |
-| [skills/search/fact-check-latest/SKILL.md](skills/search/fact-check-latest/SKILL.md) | Latest fact check |
-| [skills/engineer/research-execution-protocol/SKILL.md](skills/engineer/research-execution-protocol/SKILL.md) | Research execution protocol |
-| [skills/engineer/research-build/SKILL.md](skills/engineer/research-build/SKILL.md) | Research build workflow |
-| [skills/meta/skill-safety-audit/SKILL.md](skills/meta/skill-safety-audit/SKILL.md) | External skill safety audit |
-| [skills/meta/session-compression-flow/SKILL.md](skills/meta/session-compression-flow/SKILL.md) | Session compression flow |
+| [skills/job-jd-analysis/SKILL.md](skills/job-jd-analysis/SKILL.md) | JD analysis |
+| [skills/learn-paper-deep-dive/SKILL.md](skills/learn-paper-deep-dive/SKILL.md) | Paper deep dive |
+| [skills/engineer-agent-review/SKILL.md](skills/engineer-agent-review/SKILL.md) | Workspace review |
+| [skills/search-fact-check-latest/SKILL.md](skills/search-fact-check-latest/SKILL.md) | Latest fact check |
+| [skills/engineer-research-execution-protocol/SKILL.md](skills/engineer-research-execution-protocol/SKILL.md) | Research execution protocol |
+| [skills/engineer-research-build/SKILL.md](skills/engineer-research-build/SKILL.md) | Research build workflow |
+| [skills/meta-skill-safety-audit/SKILL.md](skills/meta-skill-safety-audit/SKILL.md) | External skill safety audit |
+| [skills/meta-session-compression-flow/SKILL.md](skills/meta-session-compression-flow/SKILL.md) | Session compression flow |
 | [skills/multi-agent-bootstrap/SKILL.md](skills/multi-agent-bootstrap/SKILL.md) | Multi-agent bootstrap |
-| [skills/search/public-evidence-fetch/SKILL.md](skills/search/public-evidence-fetch/SKILL.md) | Public evidence fetch |
+| [skills/search-public-evidence-fetch/SKILL.md](skills/search-public-evidence-fetch/SKILL.md) | Public evidence fetch |
 
 ### Memory retrieval tools
 
@@ -578,7 +578,7 @@ This repo is the workspace configuration layer, extending:
 
 Contributions to Workflow Skills, retrieval tools, or training substrate are welcome.
 
-Lowest-friction contribution: create a `SKILL.md` under `skills/<domain>/<skill-name>/`, describing a specific reusable workflow (see `skills/job/jd-analysis/` as reference).
+Lowest-friction contribution: create a `SKILL.md` under `skills/<domain>-<skill-name>/`, describing a specific reusable workflow (see `skills/job-jd-analysis/` as reference).
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
