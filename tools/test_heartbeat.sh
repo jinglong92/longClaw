@@ -69,8 +69,33 @@ echo "── Step 5：检查 cron job"
 if crontab -l 2>/dev/null | grep -q "longclaw_heartbeat"; then
     echo " [OK] heartbeat cron job 已安装："
     crontab -l | grep "longclaw_heartbeat"
+    if crontab -l | grep "longclaw_heartbeat" | grep -q "agent --agent main"; then
+        echo " [OK] cron 触发链为 openclaw agent（已知可写回 heartbeat-state.json）"
+    else
+        echo " [WARN] cron 仍不是 agent 直连链路，可能继续只 wake 不执行"
+    fi
 else
-    echo " [WARN] heartbeat cron job 未安装，运行 bash setup_heartbeat_cron.sh 安装"
+    echo " [WARN] system crontab 未安装或宿主机 crontab 异常，检查 Gateway cron"
+    GATEWAY_STORE="$HOME/.openclaw/cron/jobs.json"
+    if python3 - "$GATEWAY_STORE" <<'PY'
+import json
+from pathlib import Path
+import sys
+try:
+    data = json.loads(Path(sys.argv[1]).read_text())
+except Exception:
+    raise SystemExit(1)
+jobs = data.get("jobs") if isinstance(data, dict) else data
+jobs = jobs or []
+names = {job.get("name") for job in jobs}
+raise SystemExit(0 if {"longclaw-heartbeat-am", "longclaw-heartbeat-pm"} <= names else 1)
+PY
+    then
+        echo " [OK] Gateway cron 已安装："
+        cat "$GATEWAY_STORE"
+    else
+        echo " [WARN] Gateway cron 也未安装，运行 bash setup_heartbeat_cron.sh 安装"
+    fi
 fi
 echo ""
 
