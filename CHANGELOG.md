@@ -5,6 +5,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.5.1] — 2026-04-18
+
+### Fixed
+- **Heartbeat cron 全链路修复**：从"从未真正运行"到"Gateway cron 已验证可达"
+  - `setup_heartbeat_cron.sh` 修正 `openclaw --print '…'`（2026.4.15 非法用法）→ 改为 `openclaw agent --agent main --message`
+  - cron 环境无 shell alias，改用完整路径 `/opt/homebrew/opt/node/bin/node .../entry.js`
+  - `| crontab -` 管道在 Mac mini M4 上永久挂起，改为临时文件 + python3 subprocess 写入（5秒超时）
+  - 新增 Gateway cron fallback：system crontab 失败时自动用 `openclaw cron add` 注册，已装好 `longclaw-heartbeat-am`（08:30）和 `longclaw-heartbeat-pm`（18:00）
+  - 修正 Gateway URL 缺失问题：system event 需要 `--url ws://localhost:<port>` 和 `--token`，否则事件入队但 CTRL 收不到
+
+- **DEV LOG 模板不生效修复**：新 session 第一轮用 OpenClaw 内置英文格式，而非自定义 9 字段中文模板
+  - 根因：`AGENTS.md Every Session` 读取清单缺少 `DEV_LOG.md`，且 PostCompact hook 只在压缩后触发，第一轮无法注入
+  - `AGENTS.md` 补充读取 `CTRL_PROTOCOLS.md` 和 `DEV_LOG.md`
+  - `SessionStart` hook 新增注入：`cat CTRL_PROTOCOLS.md DEV_LOG.md >> $CLAUDE_ENV_FILE`
+
+- **Skill 不进 registry 修复**：14 个 skill 因目录两层（`skills/<group>/<skill>/`）被 OpenClaw workspace discovery 忽略
+  - 全部拍平为一层（`skills/<group>-<skill>/`），保留分类前缀语义
+  - 新增 `flatten_skills.sh` 批量迁移脚本（支持 `--dry-run`）
+  - 同步更新 README / README.en.md 中的路径引用
+
+### Added
+- **`docs/longclaw-practice.md` 大幅扩充**：新增 §2.0-2.3（借鉴故事）、§3.0（inbox 管道）、§6.0（Mac mini 已知问题）、问题 0（skill registry 排查）
+- **配图 fig9-fig14**：6 张浅色 PPT 配图，覆盖 Harness 迭代、Claude Code 借鉴、Hermes 借鉴、自研迭代、inbox 管道、skill discovery 根因
+
+---
+
 ## [v0.5.0] — 2026-04-17
 
 ### Added
