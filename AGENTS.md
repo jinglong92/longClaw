@@ -16,7 +16,9 @@ Before doing anything else:
    - LEARN → `[SYSTEM] + [LEARN]`
    - SEARCH → `[SYSTEM]`
    - CTRL / cross-domain → `[SYSTEM] + [META] + all relevant domains`
-4. Treat `MULTI_AGENTS.md` as routing source of truth. Treat `TOOLS.md` as local capability registry.
+4. Read `CTRL_PROTOCOLS.md` (Skill loading, compression, retrieval protocols).
+5. Read `DEV_LOG.md` (DEV LOG field format — use this template every turn, not the built-in default).
+6. Treat `MULTI_AGENTS.md` as routing source of truth. Treat `TOOLS.md` as local capability registry.
 
 ---
 
