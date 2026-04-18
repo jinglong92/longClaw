@@ -19,7 +19,19 @@ if ! command -v "$OPENCLAW_CMD" &>/dev/null; then
 fi
 
 # heartbeat 巡检命令
-HEARTBEAT_CMD="cd '$WORKSPACE_DIR' && $OPENCLAW_CMD --print 'heartbeat巡检：spawn heartbeat-agent，执行巡检并写入 memory/heartbeat-state.json，静默完成' > /tmp/longclaw_heartbeat.log 2>&1"
+# 注意：`openclaw --print '…'` 在 2026.4.15+ 版本中不合法，
+# 解析器会把引号内的字符串当成子命令名导致失败。
+#
+# 根据你的 openclaw 版本选择以下其中一种：
+#
+# 方案 A：openclaw agent（经 Gateway 跑一轮，需 Gateway 在线）
+#   HEARTBEAT_CMD="cd '$WORKSPACE_DIR' && $OPENCLAW_CMD agent --agent main --message 'heartbeat巡检：spawn heartbeat-agent，执行巡检并写入 memory/heartbeat-state.json，静默完成' > /tmp/longclaw_heartbeat.log 2>&1"
+#
+# 方案 B：openclaw system event（入队系统事件，`openclaw system event --mode now` 已验证返回 ok）
+#   HEARTBEAT_CMD="cd '$WORKSPACE_DIR' && $OPENCLAW_CMD system event --text 'heartbeat巡检：spawn heartbeat-agent，执行巡检并写入 memory/heartbeat-state.json，静默完成' --mode now > /tmp/longclaw_heartbeat.log 2>&1"
+#
+# 当前使用方案 B（system event），如需切换取消注释对应行并注释掉下面这行：
+HEARTBEAT_CMD="cd '$WORKSPACE_DIR' && $OPENCLAW_CMD system event --text 'heartbeat巡检：spawn heartbeat-agent，执行巡检并写入 memory/heartbeat-state.json，静默完成' --mode now > /tmp/longclaw_heartbeat.log 2>&1"
 
 # 安装两个 cron job：早 8:30 和 晚 18:00
 CRON_MORNING="30 8 * * * $HEARTBEAT_CMD"
