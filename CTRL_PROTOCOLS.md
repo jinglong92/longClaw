@@ -207,6 +207,36 @@ python3 tools/model_mode.py set fallback
 
 之后调用 `tools/llm_fallback.py` 时，即使 payload 不带 `force_fallback`，脚本也会先读 session-state 并按 `model_mode` 执行。
 
+#### A′. 主会话「整段」走兜底（含 1+2 这类简单题）
+
+前提：`~/.openclaw/openclaw.json` 已注册 `models.providers.ollama`（例如 `ollama/gemma4:e2b`）。
+
+仅改 `session-state.json` **不会**让 OpenClaw UI 里仍选中的 `openai-codex/gpt-5.4` 自动变成 Ollama。要让**所有主会话回答**（含算术）都走本地模型，在切 `fallback` 时**同时改 agent 绑定模型**：
+
+```bash
+python3 tools/model_mode.py set fallback --sync-openclaw
+openclaw gateway restart
+```
+
+- 首次执行会备份当前 `agents.defaults.model.primary` 与各 `agents.list[].model` 到 `~/.openclaw/model_mode_agent_restore.json`，再把上述字段统一改为 `ollama/gemma4:e2b`（可用环境变量 `OPENCLAW_FALLBACK_MODEL` 覆盖）。
+- 回到云上主模型：`python3 tools/model_mode.py set auto --sync-openclaw`（或 `set primary`）后同样建议 **`openclaw gateway restart`**，以便恢复备份中的模型 ID。
+
+这样 DEV LOG 里 **`mode=fallback` 时 `actual` 应能写 `ollama/gemma4:e2b`**（前提是客户端已重载配置）。
+
+#### A″. 持续兜底（跨会话）直到你手动切回 — 与 Codex 预算
+
+你要的行为是：**前序对话里一旦切到兜底，后续新开会话、下一轮聊天都继续用兜底**，直到你明确切回主模型 —— 这样 **Codex 额度用尽时仍可用本地 Ollama 跑通**。
+
+| 机制 | 是否跨会话持久 | 说明 |
+|------|------------------|------|
+| 只写 `memory/session-state.json` 的 `model_mode` | **不一定** | CTRL 每轮可能改写该文件；新上下文也可能被初始化，**不能单独当作「全局开关」**。 |
+| **`set fallback --sync-openclaw`** | **是** | 把 **`~/.openclaw/openclaw.json`** 里 agent 绑定改到 **`ollama/gemma4:e2b`**，存在磁盘上，**新开 chat、重启客户端后仍生效**，直到执行 **`set auto --sync-openclaw`**（或 **`set primary --sync-openclaw`**）并 **`openclaw gateway restart`** 从备份恢复。 |
+| **`llm_fallback_proxy` + `base_url`** | **是**（代理侧） | 流量经代理时按 `session_state_path` 读 `model_mode`；同样建议与 `--sync-openclaw` 二选一或组合，避免「state 写 fallback、主会话仍绑 Codex」的漂移。 |
+
+**自检**：`python3 tools/model_mode.py get` 会输出 `openclaw_defaults_primary` 与 **`persistent_fallback_active`**（仅当 `model_mode=fallback` 且 OpenClaw 主模型已是 `ollama/*` 时为 `true`）。若出现 **`drift_warning`**，说明会话口头兜底了但 **OpenClaw 仍指向 Codex**，需补跑 `--sync-openclaw`。
+
+**Codex 预算**：当 agent 实际绑定 **`ollama/...`** 时，主请求**不走** openai-codex，自然不消耗 Codex 额度（仍须本机 **`ollama serve`** 与对应模型已拉取）。
+
 #### C. 主会话（OpenClaw Chat）与 `model_mode` 闭环
 
 **事实边界**：只改 `memory/session-state.json` 的 `model_mode`，**不会**改变 OpenClaw / Codex **内置主会话**实际调用的 HTTP 上游；主会话不经过 `tools/llm_fallback.py`，除非你显式调用该脚本。
