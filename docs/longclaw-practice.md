@@ -434,7 +434,105 @@ tools: [Read, Glob, Grep, Bash]
 
 ---
 
-## 五、Coding Agent 实践
+## 五、Skill 与工具实践
+
+### 5.0 Skill env 注入：直接调脚本 vs 通过 OpenClaw 触发
+
+**现象**：在终端直接 `uv run skills/xxx/scripts/generate.py` 报 `No API key found`，但 `~/.openclaw/openclaw.json` 里明明配了 key。
+
+**根因**：`skills.entries.<name>.env` 里的环境变量只在 OpenClaw 通过 skill 系统调用时才注入，直接跑脚本拿不到。
+
+**解法**：
+```bash
+# 直接调脚本时手动传 env
+GOOGLE_API_KEY=xxx uv run skills/openclaw-paperbanana/scripts/generate.py ...
+
+# 正常使用：通过 OpenClaw 触发 skill，env 自动注入，不需要手动传
+```
+
+---
+
+### 5.1 paperbanana — 学术配图生成
+
+**触发**：说"帮我生成一张 xxx 架构图"或"画一张 xxx 方法论图"。
+
+**配置**（`~/.openclaw/openclaw.json`，已配置）：
+```json5
+{
+  "skills": {
+    "entries": {
+      "paperbanana": {
+        "env": { "GOOGLE_API_KEY": "AIza..." }
+      }
+    }
+  }
+}
+```
+
+**常用命令**（通过 skill 触发后 CTRL 自动执行，也可手动）：
+```bash
+# 生成架构图
+uv run skills/openclaw-paperbanana/scripts/generate.py \
+  --context "描述你的系统架构..." \
+  --caption "图标题" \
+  --iterations 3 --auto-refine
+
+# 从文件输入
+uv run skills/openclaw-paperbanana/scripts/generate.py \
+  --input method_section.txt --caption "Overview"
+
+# 继续上一次，加反馈
+uv run skills/openclaw-paperbanana/scripts/generate.py \
+  --continue --feedback "箭头加粗，颜色更鲜明"
+```
+
+**注意**：
+- Gemini 免费额度限速 15 RPM，`--iterations` 建议 ≤ 3
+- 生成耗时 1-5 分钟，脚本会打印进度
+- 不要传敏感数据，内容会发到 Google API
+
+---
+
+### 5.2 `.claude/skills/` vs `skills/` — 路径陷阱
+
+OpenClaw workspace skill discovery **只扫 `skills/` 目录**，不扫 `.claude/skills/`。
+
+```
+skills/<name>/SKILL.md         → ✅ 进 registry
+.claude/skills/<name>/SKILL.md → ❌ 不进 registry
+```
+
+Codex 提交的 playwright-cli skill 最初放在 `.claude/skills/`，已迁移到 `skills/engineer-playwright-cli/`。以后新增 skill 统一放 `skills/` 下。
+
+---
+
+### 5.3 LLM Fallback 路由层
+
+**用途**：primary（Codex/OpenAI）不可用时自动切到本地 Ollama，无需手动干预。
+
+**配置文件**：`runtime/model-fallback.json`
+```json
+{
+  "primary":  { "provider": "openai", "model": "gpt-5.4" },
+  "fallback": { "provider": "ollama", "model": "gemma4:e2b" },
+  "fallback_on": ["rate_limit", "timeout", "connection_error", "server_error"]
+}
+```
+
+**使用方式**：
+```bash
+# stdin 传入请求，stdout 输出结果
+echo '{"system": "你是助手", "prompt": "你好"}' | python3 tools/llm_fallback.py
+
+# OpenAI-compatible proxy（让其他工具透明走 fallback）
+python3 tools/llm_fallback_proxy.py --port 8099
+```
+
+**注意**：`authentication_error` 在 `do_not_fallback_on` 列表里，API Key 错误不会触发 fallback。你走浏览器 OAuth 认证，不需要设置 `OPENAI_API_KEY`。
+
+---
+
+## 五（原）、Coding Agent 实践
 
 ### 5.1 repo-explorer 的使用
 
@@ -602,6 +700,15 @@ git pull origin main
 - heartbeat-agent 集成 `--check-stale` 自动重建索引
 - 问题：每次更新 MEMORY.md 后需要手动跑 `--rebuild`
 - 解法：heartbeat 巡检时自动检查 mtime，过期才重建
+
+### 2026-04-18：v0.5.1 + v0.6.0 — 修复三大坑 + 工具扩展
+
+- **Heartbeat cron 全链路修复**：`openclaw --print` 非法 → `openclaw agent --agent main --message`；crontab 管道挂起 → 临时文件 + python3 subprocess；Gateway URL/token 缺失 → 补全；最终 fallback 到 Gateway cron 成功
+- **DEV LOG 模板不生效**：SessionStart hook 新增注入 `CTRL_PROTOCOLS.md` + `DEV_LOG.md`，第一轮就用正确模板
+- **Skill 不进 registry**：14 个 skill 从两层目录拍平为一层，OpenClaw 只扫一层
+- **LLM fallback 路由层**：primary 失败自动切 Ollama（gemma4:e2b），新增 `tools/llm_fallback.py`
+- **新增 skill**：playwright-cli（浏览器自动化）、openclaw-paperbanana（学术配图，配 GOOGLE_API_KEY 即用）
+- **发现**：`.claude/skills/` 不被 OpenClaw 扫描，skill 必须放 `skills/` 下
 
 ---
 
