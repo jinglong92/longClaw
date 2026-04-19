@@ -22,6 +22,7 @@ class HookEventType(str, Enum):
     POST_COMPACT = "PostCompact"
     FILE_CHANGED = "FileChanged"
     PRE_TOOL_USE = "PreToolUse"
+    USER_PROMPT_SUBMIT = "UserPromptSubmit"
 
     @classmethod
     def from_string(cls, name: str) -> "HookEventType":

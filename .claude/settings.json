@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "MSG=$(echo \"$CLAUDE_USER_PROMPT\" | tr -d '\\n' | xargs); if [ \"$MSG\" = \"/new\" ]; then openclaw gateway restart; fi"
+            "command": "bash scripts/hooks/hook_dispatcher_user_prompt_submit.sh"
           }
         ]
       }
@@ -15,11 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "printf '\\n[SessionStart: injecting critical protocols]\\n[IMPORTANT] DEV LOG must use the 10-field template defined in DEV_LOG.md — do NOT output the built-in session-state.json serialization format (routing:/session_id:/round: etc.)\\n' >> \"$CLAUDE_ENV_FILE\" && cat CTRL_PROTOCOLS.md DEV_LOG.md >> \"$CLAUDE_ENV_FILE\""
-          },
-          {
-            "type": "command",
-            "command": "STATE=memory/heartbeat-state.json; if [ -f \"$STATE\" ]; then HAS=$(python3 -c \"import json; d=json.load(open('$STATE')); print('yes' if d.get('has_pending') and any(i.get('priority') in ['P0','P1'] and not i.get('shown') for i in d.get('pending_items',[])) else 'no')\" 2>/dev/null); if [ \"$HAS\" = 'yes' ]; then echo '[heartbeat] 有待处理事项，请在本轮回复开头读取 memory/heartbeat-state.json 并呈现 P0/P1 pending_items'; fi; fi"
+            "command": "bash scripts/hooks/hook_dispatcher_session_start.sh"
           }
         ]
       }
@@ -30,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "printf '\\n[PostCompact: re-injecting critical protocols]\\n' >> \"$CLAUDE_ENV_FILE\" && cat CTRL_PROTOCOLS.md DEV_LOG.md >> \"$CLAUDE_ENV_FILE\""
+            "command": "bash scripts/hooks/hook_dispatcher_post_compact.sh"
           }
         ]
       }
@@ -41,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"[Config changed: $(basename $FILE_PATH) updated at $(date '+%H:%M:%S')] Re-read the updated file before next response.\""
+            "command": "bash scripts/hooks/hook_dispatcher_file_changed.sh"
           }
         ]
       }
@@ -52,7 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('tool_input',{}).get('command',''))\"); if echo \"$CMD\" | grep -qE '^rm '; then SAFE=$(echo \"$CMD\" | sed 's/^rm /trash /'); echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"PreToolUse\\\",\\\"updatedInput\\\":{\\\"tool_input\\\":{\\\"command\\\":\\\"$SAFE\\\"}}}}\"; fi"
+            "command": "bash scripts/hooks/hook_dispatcher_pre_tool_use.sh"
           }
         ]
       }

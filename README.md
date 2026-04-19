@@ -666,22 +666,23 @@ longClaw 是在官方 OpenClaw 软件基础上改造的 workspace。执行层（
 
 Sidecar **不替代** OpenClaw 自带的 session 存储与运行时行为；改动应保持可逆。
 
-### 10.2 接入 Hook Dispatcher
+### 10.2 接入：Bridge + Dispatcher（推荐）
 
-在 `.claude/settings.json` 中为各 hook 指向分发器（从仓库根目录执行 `python3`）：
+OpenClaw 对部分 hook 有固定协议语义（例如 `SessionStart` / `PostCompact` 对 `CLAUDE_ENV_FILE` 的注入、`PreToolUse` 的 `hookSpecificOutput.updatedInput`）。**不要**把四个事件全部直接改成只跑 `python3 -m runtime_sidecar.hook_dispatcher`，否则容易丢失这些语义。
 
-```json
-{
-  "hooks": {
-    "SessionStart": "python3 runtime_sidecar/hook_dispatcher.py",
-    "PostCompact": "python3 runtime_sidecar/hook_dispatcher.py",
-    "FileChanged": "python3 runtime_sidecar/hook_dispatcher.py",
-    "PreToolUse": "python3 runtime_sidecar/hook_dispatcher.py"
-  }
-}
-```
+推荐做法：在 `scripts/hooks/` 下用 **bridge 脚本**先完成既有协议与保护逻辑，再以旁路方式调用侧车写台账。仓库内已提供：
 
-分发器从环境变量或 stdin 读取事件名与上下文，路由到 `runtime_sidecar/plugins/`，将各 plugin 结果汇总为 JSON 输出。
+- `scripts/hooks/hook_dispatcher_session_start.sh`（在宿主**会**发 `SessionStart` 时生效）
+- `scripts/hooks/hook_dispatcher_user_prompt_submit.sh`（**UserPromptSubmit**：`/new` 清 marker 并重启 gateway；按会话 key 用 `memory/.user_prompt_submit.injected.<key>` 做**协议首轮注入**；每轮用户消息旁路 **`python3 -m runtime_sidecar.hook_dispatcher UserPromptSubmit`**，由插件 `user_prompt_submit.py` 写 `sessions` + `notes(kind=user_prompt_submit)`；stdin JSON 与 `CLAUDE_USER_PROMPT` 均可供提取 prompt 预览）
+- `scripts/hooks/hook_dispatcher_post_compact.sh`
+- `scripts/hooks/hook_dispatcher_file_changed.sh`
+- `scripts/hooks/hook_dispatcher_pre_tool_use.sh`
+
+**宿主差异（已用探针验证）：** 在部分 OpenClaw / Claude Code 会话类型下，**`SessionStart` 可能根本不被调用**；此时 **`UserPromptSubmit` 承担主初始化**，**`PreToolUse`** 继续负责工具前旁路与无 `session_id` 时的台账兜底。
+
+`.claude/settings.json` 中对应事件应指向上述 `bash scripts/hooks/...`。`SessionStart` 建议保持旧版**单层 `hooks` 数组、不包 `matcher`**（部分宿主对 `SessionStart`+`matcher: "auto"` 不触发）；`PostCompact` 等可沿用你环境原先已验证的 `matcher` 写法。侧车分发器从 stdin 读 JSON：`python3 -m runtime_sidecar.hook_dispatcher <Event>`，由 bridge 构造并管道传入。
+
+排查宿主是否真正执行 hook：各 bridge 会向 `memory/sidecar-hooks.log` 写入 `[hook] … bridge invoked`。
 
 ### 10.3 常用命令
 

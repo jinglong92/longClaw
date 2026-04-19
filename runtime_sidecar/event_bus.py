@@ -37,6 +37,7 @@ class EventBus:
             "post_compact",
             "file_changed",
             "pre_tool_use",
+            "user_prompt_submit",
         ]
         for name in plugin_names:
             try:
