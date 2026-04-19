@@ -10,8 +10,14 @@ future versions may add full‑text search.
 
 import argparse
 import json
+import os
 import sys
 from typing import Dict, List
+
+# Ensure the repository root is on sys.path so runtime_sidecar can be imported
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
 
 from runtime_sidecar.state import readers, writers, db
 
