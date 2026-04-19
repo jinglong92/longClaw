@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+"""
+Status reporting script for the longClaw runtime sidecar.
+
+This CLI queries the sidecar ledger to provide a summary of current state
+including counts of sessions, route decisions, tool events and the
+timestamp of the most recent note.  It prints human‑readable output by
+default and can emit JSON via the `--json` flag.
+"""
+
+import argparse
+import json
+import os
+import sys
+from typing import Any, Dict
+
+# Ensure the repository root is on sys.path so that runtime_sidecar can be imported
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+
+from runtime_sidecar.state import db, readers, writers
+
+
+def gather_status() -> Dict[str, Any]:
+    # Ensure schema exists
+    conn = db.get_connection()
+    writers.initialise_schema(conn)
+    status: Dict[str, Any] = {}
+    status["db_path"] = db._determine_db_path()
+    # Check existence of db file
+    status["db_exists"] = bool(status["db_path"] and os.path.exists(status["db_path"]))  # type: ignore
+    status["sessions"] = readers.count_records("sessions")
+    status["route_decisions"] = readers.count_records("route_decisions")
+    status["tool_events"] = readers.count_records("tool_events")
+    status["latest_note"] = readers.latest_note_timestamp()
+    return status
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="longClaw sidecar status")
+    parser.add_argument("--json", action="store_true", help="Output status in JSON format")
+    args = parser.parse_args()
+    status = gather_status()
+    if args.json:
+        print(json.dumps(status, indent=2))
+    else:
+        print(f"Sidecar DB path: {status['db_path']}")
+        print(f"DB exists: {'yes' if status['db_exists'] else 'no'}")
+        print(f"Sessions: {status['sessions']}")
+        print(f"Route decisions: {status['route_decisions']}")
+        print(f"Tool events: {status['tool_events']}")
+        latest = status['latest_note']
+        print(f"Last note timestamp: {latest if latest else 'N/A'}")
+    return 0
+
+
+if __name__ == "__main__":
+    import os
+    import sys
+    sys.exit(main())

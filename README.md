@@ -115,7 +115,7 @@ bash refactor_workspace_baseline.sh
 | `memory/` | 自动生成 | 每日对话日志，由 CTRL 自动写入 |
 
 **可以直接复用（不需要改）**：
-`AGENTS.md` · `SOUL.md` · `MULTI_AGENTS.md` · `skills/` · `tools/`
+`AGENTS.md` · `SOUL.md` · `MULTI_AGENTS.md` · `skills/` · `tools/` · `runtime_sidecar/` · `scripts/longclaw-doctor` · `scripts/longclaw-status`
 
 ---
 
@@ -130,6 +130,7 @@ bash refactor_workspace_baseline.sh
 7. [文件索引](#7-文件索引)
 8. [当前边界](#8-当前边界)
 9. [设计借鉴说明](#9-设计借鉴说明)
+10. [Runtime Sidecar（本迭代新增）](#10-runtime-sidecar本迭代新增)
 
 ---
 
@@ -646,6 +647,63 @@ longClaw 是在官方 OpenClaw 软件基础上改造的 workspace。执行层（
 ---
 
 > 这套系统最有价值的地方，不是"会分角色聊天"，而是把控制、记忆、流程和优化闭环拆清楚——让每一层都可以独立演进、独立观测、独立优化。
+
+---
+
+## 10. Runtime Sidecar（本迭代新增）
+
+本迭代在 workspace 中增加一层 **Python Runtime Sidecar**：在不大改 OpenClaw 本体的前提下，用 hooks 聚合事件、持久化会话台账（session ledger），并提供 `doctor` / `status` 等诊断与查询入口。设计取向是 **workspace 优先、侧车次之、最后才 fork 运行时**——能靠配置解决的不写代码，能靠侧车解决的不 fork。
+
+### 10.1 新增路径与工具
+
+| 路径 | 作用 |
+|------|------|
+| `runtime_sidecar/` | Hook 分发器、事件总线、状态 SQLite、日志、`plugins/`（SessionStart、PostCompact、FileChanged、PreToolUse）、`doctor/` 自检模块 |
+| `scripts/longclaw-doctor` | 健康检查：必备文件、hook 配置、状态库初始化、可选组件形态；可用 `--json` 输出机器可读结果，任一项失败则非零退出 |
+| `scripts/longclaw-status` | 台账摘要：会话数、路由与工具事件、最近 note 时间等；可用 `--json`；库不存在时会在首次使用时创建 |
+| `tools/session_search.py` | 对台账做子串检索（默认可扫全表） |
+| `docs/architecture-boundary.md`、`docs/migration-roadmap.md`、`docs/compatibility-matrix.md` | 架构边界、迁移路线、兼容矩阵 |
+
+Sidecar **不替代** OpenClaw 自带的 session 存储与运行时行为；改动应保持可逆。
+
+### 10.2 接入 Hook Dispatcher
+
+在 `.claude/settings.json` 中为各 hook 指向分发器（从仓库根目录执行 `python3`）：
+
+```json
+{
+  "hooks": {
+    "SessionStart": "python3 runtime_sidecar/hook_dispatcher.py",
+    "PostCompact": "python3 runtime_sidecar/hook_dispatcher.py",
+    "FileChanged": "python3 runtime_sidecar/hook_dispatcher.py",
+    "PreToolUse": "python3 runtime_sidecar/hook_dispatcher.py"
+  }
+}
+```
+
+分发器从环境变量或 stdin 读取事件名与上下文，路由到 `runtime_sidecar/plugins/`，将各 plugin 结果汇总为 JSON 输出。
+
+### 10.3 常用命令
+
+```bash
+# 自检
+scripts/longclaw-doctor
+# scripts/longclaw-doctor --json
+
+# 台账状态
+scripts/longclaw-status
+# scripts/longclaw-status --json
+
+# 子串检索示例
+python3 tools/session_search.py --query error --kind notes
+```
+
+### 10.4 范围与后续
+
+- 实现刻意保持精简：不试图覆盖 OpenClaw 全部会话语义；当前仅实现部分 hook 作为起点，新事件可通过新增 plugin 扩展。
+- 检索侧目前为简单 `LIKE` 查询；后续阶段可升级到 FTS5。
+
+更细的说明见 `docs/` 下上述三份文档。
 
 ---
 

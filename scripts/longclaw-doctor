@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+"""
+Diagnostic script for the longClaw runtime sidecar.
+
+This CLI executes a suite of doctor checks defined in the runtime_sidecar
+package and reports their status.  Use this tool to validate your
+longClaw workspace setup.  It returns a non‑zero exit code if any
+check fails.
+"""
+
+import argparse
+import os
+import sys
+import json
+import sys
+
+# Ensure the repository root is on sys.path so that runtime_sidecar can be imported
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+
+from runtime_sidecar.doctor.checks import run_all_checks
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="longClaw doctor checks")
+    parser.add_argument("--json", action="store_true", help="Output results in JSON format")
+    args = parser.parse_args()
+
+    results = run_all_checks()
+    if args.json:
+        print(json.dumps(results, indent=2))
+    else:
+        for result in results:
+            status = result["status"]
+            check = result["check"]
+            message = result["message"]
+            print(f"[{status}] {check}: {message}")
+    exit_code = 0
+    if any(r["status"] == "FAIL" for r in results):
+        exit_code = 1
+    return exit_code
+
+
+if __name__ == "__main__":
+    sys.exit(main())
