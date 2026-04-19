@@ -683,6 +683,35 @@ git pull origin main
 - **新增 skill**：playwright-cli（浏览器自动化）、openclaw-paperbanana（学术配图，配 GOOGLE_API_KEY 即用）
 - **发现**：`.claude/skills/` 不被 OpenClaw 扫描，skill 必须放 `skills/` 下
 
+### 2026-04-19：v0.6.1 — 对比 Hermes 后的架构重新定位 + runtime_sidecar 基础层
+
+**背景：对比 Hermes Agent 之后的吸收借鉴**
+
+对比 Hermes 的工程外壳（统一会话存储、插件扩展点、cron、doctor、集中日志）后，明确了 longClaw 不能照搬 Hermes 架构，因为宿主是 OpenClaw。确立了三层改造原则：
+
+```
+workspace-first → sidecar-second → thin-patch-last
+```
+
+| 层 | 目标 | 是否改 OpenClaw |
+|---|---|---|
+| L1: workspace 协议层 | AGENTS / MULTI_AGENTS / skills / hooks 驱动 | 否 |
+| L2: sidecar 运行层 | state.db、jobs、doctor、hook dispatcher | 否 |
+| L3: thin patch 层 | 只有 workspace 和 sidecar 做不到时才动 | 是，严格最小化 |
+
+**核心定位**：OpenClaw 做宿主，longClaw 做大脑，sidecar 做基础设施。
+
+**这一版做了什么**：
+- 删除 LLM fallback 层（`llm_fallback.py`/`llm_fallback_proxy.py`/`runtime/model-*.json`）——过于复杂且主会话根本不经过这个脚本
+- 新增 `runtime_sidecar/` 基础层：hook_dispatcher、event_bus、plugins（SessionStart/PostCompact/FileChanged/PreToolUse）、state.db schema、doctor 诊断
+- 新增 `scripts/longclaw-doctor` 和 `scripts/longclaw-status` 运维脚本
+- 新增 `docs/architecture-boundary.md`（三层边界）、`docs/migration-roadmap.md`（路线图）、`docs/compatibility-matrix.md`
+
+**后续路线图优先级**：
+- **P0**：hook dispatcher 接管 settings.json shell 逻辑 + state.db session ledger + doctor/logs/status
+- **P1**：通用 jobs/process registry/notify_on_complete + skill registry/schema/audit
+- **P2**：session_search + external memory provider + thin runtime patches
+
 ---
 
 ## 八、待解决的已知问题
