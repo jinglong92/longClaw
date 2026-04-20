@@ -34,10 +34,12 @@ _NODE="/opt/homebrew/opt/node/bin/node"
 _ENTRY="/opt/homebrew/lib/node_modules/openclaw/dist/entry.js"
 _WS="$WORKSPACE_DIR"
 _LOG="/tmp/longclaw_heartbeat.log"
+_MODEL="openai-codex/gpt-5.3-codex"
 _MSG="执行一次 heartbeat 巡检：读取 HEARTBEAT.md 与 .claude/agents/heartbeat-agent.md，按其中流程静默完成巡检；只写入 memory/heartbeat-state.json，不发送任何外部消息。完成后输出一句话，包含 last_check。"
 
-CRON_MORNING="30 8 * * * cd '$_WS' && $_NODE $_ENTRY agent --agent main --message '$_MSG' --timeout 180 --json >> $_LOG 2>&1 # longclaw_heartbeat"
-CRON_EVENING="0 18 * * * cd '$_WS' && $_NODE $_ENTRY agent --agent main --message '$_MSG' --timeout 180 --json >> $_LOG 2>&1 # longclaw_heartbeat"
+# system crontab 仅作兜底；显式传入模型，避免 isolated/background 任务漂到已失效的本地 provider
+CRON_MORNING="30 8 * * * cd '$_WS' && OPENCLAW_AGENT_MODEL='$_MODEL' $_NODE $_ENTRY agent --agent main --message '$_MSG' --timeout 180 --json >> $_LOG 2>&1 # longclaw_heartbeat"
+CRON_EVENING="0 18 * * * cd '$_WS' && OPENCLAW_AGENT_MODEL='$_MODEL' $_NODE $_ENTRY agent --agent main --message '$_MSG' --timeout 180 --json >> $_LOG 2>&1 # longclaw_heartbeat"
 
 install_system_cron() {
   # 读取现有 crontab，去掉旧的 longclaw heartbeat 条目，加入新的。
@@ -113,6 +115,7 @@ install_gateway_cron() {
     --session isolated \
     --no-deliver \
     --light-context \
+    --model "$_MODEL" \
     --timeout-seconds 180 \
     --cron "30 8 * * *" \
     --tz "Asia/Shanghai" \
@@ -125,6 +128,7 @@ install_gateway_cron() {
     --session isolated \
     --no-deliver \
     --light-context \
+    --model "$_MODEL" \
     --timeout-seconds 180 \
     --cron "0 18 * * *" \
     --tz "Asia/Shanghai" \
