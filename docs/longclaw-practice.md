@@ -693,11 +693,11 @@ git pull origin main
 workspace-first → sidecar-second → thin-patch-last
 ```
 
-| 层 | 目标 | 是否改 OpenClaw |
-|---|---|---|
-| L1: workspace 协议层 | AGENTS / MULTI_AGENTS / skills / hooks 驱动 | 否 |
-| L2: sidecar 运行层 | state.db、jobs、doctor、hook dispatcher | 否 |
-| L3: thin patch 层 | 只有 workspace 和 sidecar 做不到时才动 | 是，严格最小化 |
+| 层                 | 目标                                        | 是否改 OpenClaw |
+| ----------------- | ----------------------------------------- | ------------ |
+| L1: workspace 协议层 | AGENTS / MULTI_AGENTS / skills / hooks 驱动 | 否            |
+| L2: sidecar 运行层   | state.db、jobs、doctor、hook dispatcher      | 否            |
+| L3: thin patch 层  | 只有 workspace 和 sidecar 做不到时才动             | 是，严格最小化      |
 
 **核心定位**：OpenClaw 做宿主，longClaw 做大脑，sidecar 做基础设施。
 
@@ -735,6 +735,8 @@ workspace-first → sidecar-second → thin-patch-last
 ## 八、runtime_sidecar 实践
 
 ### 8.1 sidecar 是什么，解决什么问题
+
+<img src="images/fig15-runtime-sidecar.png" width="860" alt="runtime_sidecar 架构全景"/>
 
 **之前**：`.claude/settings.json` 里 hook 全是内嵌 shell 命令，越来越长，难以维护，出错不知道哪里坏了。
 
