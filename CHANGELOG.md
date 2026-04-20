@@ -5,6 +5,38 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.7.0] — 2026-04-19/20
+
+### Added
+- **`runtime_sidecar/` 基础层**（Hermes 对比后的架构重新定位）：确立 "OpenClaw 做宿主 · longClaw 做大脑 · sidecar 做基础设施" 三层原则，新增完整 sidecar 基础设施
+  - `hook_dispatcher.py` + `event_bus.py`：统一 hook 入口，settings.json 每个 hook 只剩一行 bash 调用
+  - `plugins/`：SessionStart / UserPromptSubmit / PreToolUse / PostCompact / FileChanged 五个插件
+  - `state/`：SQLite 状态数据库（sessions / tool_events / route_decisions / notes 四张表）
+  - `doctor/`：健康检查（`scripts/longclaw-doctor`）
+  - `scripts/longclaw-status`：DB 状态快照
+  - `tools/session_search.py`：多维度会话查询工具
+- **`scripts/hooks/`**：5 个 hook dispatcher shell 脚本，接管原 settings.json 内嵌 shell 逻辑
+- **`runtime_sidecar/README.zh.md`**：中文说明文档（含架构图、工作流程、各插件说明、新增插件步骤）
+- **`docs/test-cases.md`**：19 个功能测试案例，含快速全量测试脚本
+- **配图 fig15**：runtime_sidecar 架构全景图（浅色，适合 PPT）
+
+### Changed
+- **`.claude/settings.json`**：所有 hook shell 逻辑迁移到 `scripts/hooks/`，新增 UserPromptSubmit hook（处理 `/new` 命令）
+- **`DEV_LOG.md`**：新增 `🤖 模型` 字段（第10个字段），标注本轮实际使用模型和 model_mode；新增禁止内置 session-state 序列化格式的强制规则
+- **`AGENTS.md`**：Every Session 读取清单补充 `CTRL_PROTOCOLS.md` 和 `DEV_LOG.md`
+- **`agents.defaults.bootstrapMaxChars`**：调大至 20000，修复 MEMORY.md 注入截断问题
+- **`ollama/gemma4:e2b`**：注册到 openclaw.json，支持 `openclaw models set ollama/gemma4:e2b` 直接切换本地模型
+
+### Fixed
+- **SessionStart hook 注入**：新增 `$CLAUDE_ENV_FILE` 注入，修复新 session 第一轮使用内置 DEV LOG 格式的问题
+- **session_search.py**：补充 REPO_ROOT sys.path，修复 ModuleNotFoundError
+
+### Docs
+- **实践文档 §八**：新增 runtime_sidecar 实践章节（架构/插件/查询/健康检查/扩展步骤）
+- **演进历程**：补充 2026-04-19/20 迭代记录
+
+---
+
 ## [v0.6.1] — 2026-04-18
 
 ### Removed
