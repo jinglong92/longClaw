@@ -712,9 +712,101 @@ workspace-first → sidecar-second → thin-patch-last
 - **P1**：通用 jobs/process registry/notify_on_complete + skill registry/schema/audit
 - **P2**：session_search + external memory provider + thin runtime patches
 
+### 2026-04-19/20：v0.6.1 → runtime_sidecar 完整落地
+
+**P0 完成：hook dispatcher 接管 settings.json**
+
+`.claude/settings.json` 里所有 hook 的 shell 逻辑全部迁移到 `scripts/hooks/` 下的独立脚本，再由脚本调用 Python sidecar。settings.json 现在每个 hook 只有一行：
+
+```json
+"SessionStart": [{"command": "bash scripts/hooks/hook_dispatcher_session_start.sh"}]
+```
+
+**新增 UserPromptSubmit hook**：用户每次发消息时触发，处理 `/new` 命令、记录 prompt 事件。
+
+**state.db 全量验证通过**：sessions / tool_events / notes 三张表写入读取均正常，`session_search.py` 支持多维度查询。
+
+**Ollama 本地模型接入**：通过 `openclaw models set ollama/gemma4:e2b` 直接切换主会话模型，不需要 CTRL 中转。
+
+**bootstrap 上限调大**：MEMORY.md 超过 bootstrap 单文件上限（12KB）导致截断，通过 `openclaw config set agents.defaults.bootstrapMaxChars 20000` 修复。
+
 ---
 
-## 八、待解决的已知问题
+## 八、runtime_sidecar 实践
+
+### 8.1 sidecar 是什么，解决什么问题
+
+**之前**：`.claude/settings.json` 里 hook 全是内嵌 shell 命令，越来越长，难以维护，出错不知道哪里坏了。
+
+**现在**：所有 hook 逻辑迁移到 Python 模块，settings.json 只剩一行调用。
+
+```
+OpenClaw 触发 hook
+    ↓
+scripts/hooks/hook_dispatcher_xxx.sh
+    ↓
+python3 -m runtime_sidecar.hook_dispatcher <EventName>
+    ↓
+EventBus 分发给对应插件
+    ↓
+插件执行，结果写入 state.db
+```
+
+**关键设计**：一个插件失败不影响其他插件，也不影响主会话。
+
+### 8.2 各插件触发时机和行为
+
+| 插件 | 触发时机 | 做了什么 |
+|------|---------|---------|
+| SessionStart | 新会话开始 | 注入 CTRL_PROTOCOLS.md + DEV_LOG.md，检查 heartbeat pending，写 sessions 表 |
+| UserPromptSubmit | 每次发消息 | 处理 /new 命令，记录 prompt 事件 |
+| PreToolUse | Bash 工具调用前 | 检测 `rm` 命令自动加 `-i`，写 tool_events 表 |
+| PostCompact | context 压缩后 | 重新注入协议文件，防止规则"被压缩掉" |
+| FileChanged | 配置文件变更 | 提示 CTRL 重读变更的协议文件 |
+
+### 8.3 state.db 查询
+
+```bash
+cd ~/.openclaw/workspace
+
+# 状态快照
+python3 scripts/longclaw-status
+
+# 查询 session 记录
+python3 tools/session_search.py --query <关键词>
+python3 tools/session_search.py --query rm --kind tool_events
+python3 tools/session_search.py --query compact --kind notes --json
+
+# 直接查 SQLite
+sqlite3 memory/state.db "select * from sessions order by started_at desc limit 5;"
+sqlite3 memory/state.db "select tool_name, args_json, ok from tool_events order by id desc limit 10;"
+```
+
+### 8.4 健康检查
+
+```bash
+# 全量诊断（任何 FAIL 返回非零退出码）
+python3 scripts/longclaw-doctor
+
+# JSON 格式（便于脚本解析）
+python3 scripts/longclaw-doctor --json
+```
+
+检查项包括：协议文件存在性、settings.json 语法、state.db 可写、heartbeat-state.json 格式、索引新鲜度。
+
+### 8.5 新增插件的步骤
+
+1. `hook_events.py` 注册新事件类型
+2. `plugins/` 下新建模块，实现 `HANDLED_EVENTS` 和 `handle_event()`
+3. `event_bus.py` 的 `plugin_names` 列表加上新模块名
+4. `scripts/hooks/` 下新建对应 shell 脚本
+5. `.claude/settings.json` 注册新 hook
+
+详见 `runtime_sidecar/README.zh.md`。
+
+---
+
+## 九、待解决的已知问题
 
 | 问题 | 优先级 | 解法方向 |
 |------|--------|---------|
@@ -724,3 +816,5 @@ workspace-first → sidecar-second → thin-patch-last
 | repo-map（tree-sitter）未实现 | 低 | 参考 Aider 的 repomap.py |
 | openclaw_substrate 训练底座未激活 | 低 | 主用 Codex，短期不启用 |
 | 群聊隔离（不加载 MEMORY.md） | 低 | AGENTS.md 加检测规则 |
+| state.db route_decisions 未写入 | 低 | CTRL 路由时调用 sidecar 写入，需 hook 支持 |
+| heartbeat-agent spawn 未验证 | 中 | Gateway cron 触发后确认 last_check 更新 |
