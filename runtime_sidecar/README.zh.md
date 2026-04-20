@@ -1,5 +1,7 @@
 # runtime_sidecar — 中文说明
 
+> English version: [README.md](README.md)
+
 > **一句话定位**：sidecar 是 longClaw 的"基础设施层"，负责把 OpenClaw 触发的 hook 事件转发给 Python 处理模块，并把运行状态记录到本地数据库，供诊断和查询使用。
 
 ---

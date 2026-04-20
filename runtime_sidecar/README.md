@@ -1,5 +1,7 @@
 # runtime_sidecar
 
+> 中文文档请看 [README.zh.md](README.zh.md)
+
 The `runtime_sidecar` package contains the non‑intrusive infrastructure layer for
 longClaw.  It runs alongside the existing OpenClaw runtime and provides a
 discrete place to extend behaviour without modifying the host.  The sidecar
