@@ -5,6 +5,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.7.1] — 2026-04-21
+
+### Added
+- **记忆检索评估资产**：新增 `eval/` 下 6 份评估样本与结果文件（builtin/custom 对比、样本集、评估笔记与模板），用于回归验证召回与排序质量
+- **`tools/eval_memory_retrieval.py`**：新增检索评估脚本，支持批量问题评测与结果落盘，便于迭代 memory search 打分策略
+
+### Changed
+- **`tools/memory_entry.py`**：增强 daily 解析与结构化抽取能力
+  - 支持显式 domain 标记（如 `[JOB]`、`[BRO/SIS]`）
+  - 新增相对时间归一化（今天/明天/本周/下周 + 晚上等）并写入可检索标记
+  - 新增事件类型抽取（interview/chat/internal mobility/offer）用于后续检索加权
+- **`tools/memory_search.py`**：升级查询改写与打分逻辑
+  - 增加中文时态/时间语义变体扩展，补强“今晚/面试安排/约聊”等问题召回
+  - 引入中文 token 粒度拆分、人名与意图词 bonus、事件类型匹配加权与噪声惩罚
+  - 加入中国时区日期基准，提升“今天/今晚”等时间敏感问题命中稳定性
+- **`CTRL_PROTOCOLS.md` / `DEV_LOG.md`**：补充 dev mode 展示硬规则，明确 `dev_mode=true` 时 `[DEV LOG]` 不可省略，并收敛模型字段输出规范
+
+---
+
 ## [v0.7.0] — 2026-04-19/20
 
 ### Added
