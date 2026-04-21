@@ -220,11 +220,22 @@ python3 tools/model_mode.py get
 4. 若本轮尚未读取 `DEV_LOG.md`，不得输出 DEV LOG
 5. 若候选输出命中 `session_id:`、`round:`、`dev_mode:` 这类内置裸字段块，而非 `DEV_LOG.md` 定义的模板字段，则视为格式错误，必须回退并重渲染
 
+### Dev Mode 展示硬规则（新增，强制）
+
+若 `memory/session-state.json.dev_mode == true`，则本轮回复**必须**包含一个真实的 `[DEV LOG]` 块，不得省略，不得仅保留内部状态，不得因为“正文简洁”或“避免打扰”而跳过。
+
+补充约束：
+- `routing_visibility=devlog_only` 的含义是“路由与调试信息收纳进 DEV LOG”，**不是**“可以不显示 DEV LOG”。
+- 当 `dev_mode=true` 时，`[DEV LOG]` 是回复协议的一部分，而不是可选附录。
+- 若本轮未能生成合格 DEV LOG，则整条回复视为未满足协议，必须先补齐 DEV LOG 再发送。
+- 只有用户明确说出“关闭 dev mode / 关闭开发者模式”后，才允许停止在回复中显示 DEV LOG。
+
 快速检查口令：
 
 - 模板从哪里来？→ `DEV_LOG.md`
 - 值从哪里来？→ runtime / tools / session-state
 - 当前输出像不像 `DEV_LOG.md` 示例？→ 若否，禁止发送
+- `dev_mode=true` 时能不能不显示 DEV LOG？→ 不能
 
 ## Session 状态管理
 

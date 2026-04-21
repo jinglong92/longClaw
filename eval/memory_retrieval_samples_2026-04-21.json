@@ -1,0 +1,242 @@
+[
+  {
+    "id": "S01",
+    "domain": "JOB",
+    "query": "淘宝闪购二面是什么时候",
+    "expected_sources": ["memory/2026-04-18.md", "MEMORY.md", "memory/2026-04-19-startup-context.md"],
+    "expected_keywords": ["淘宝闪购", "二面", "19:00"],
+    "gold": "2026-04-19 19:00 淘宝闪购二面"
+  },
+  {
+    "id": "S02",
+    "domain": "JOB",
+    "query": "跟雪涛约的时间",
+    "expected_sources": ["memory/2026-04-18.md", "MEMORY.md", "memory/2026-04-19-startup-context.md"],
+    "expected_keywords": ["丁雪涛", "下周四", "19:00", "约聊"],
+    "gold": "2026-04-23 19:00 与丁雪涛约聊"
+  },
+  {
+    "id": "S03",
+    "domain": "JOB",
+    "query": "丁雪涛现在是什么情况",
+    "expected_sources": ["memory/2026-04-18.md", "MEMORY.md", "memory/2026-04-19-startup-context.md"],
+    "expected_keywords": ["丁雪涛", "L10", "满编", "略超编"],
+    "gold": "丁雪涛对用户认可较强，但团队当前满编或略超编"
+  },
+  {
+    "id": "S04",
+    "domain": "JOB",
+    "query": "当前活水线是不是丁雪涛团队",
+    "expected_sources": ["memory/2026-04-18.md", "MEMORY.md", "memory/2026-04-19-startup-context.md"],
+    "expected_keywords": ["不是", "丁雪涛", "国际化外卖线"],
+    "gold": "当前重点推进的是美团国际化外卖线，不是丁雪涛团队线"
+  },
+  {
+    "id": "S05",
+    "domain": "JOB",
+    "query": "张宇约的是哪天聊",
+    "expected_sources": ["memory/2026-04-21.md", "MEMORY.md", "memory/2026-04-18.md", "memory/2026-04-19.md"],
+    "expected_keywords": ["张宇", "初聊", "2026-04-21"],
+    "gold": "2026-04-21 当晚与张宇 initial chat / 初聊"
+  },
+  {
+    "id": "S06",
+    "domain": "JOB",
+    "query": "Shopee 现在到哪一轮了",
+    "expected_sources": ["memory/2026-04-10.md", "MEMORY.md", "memory/heartbeat-state.json"],
+    "expected_keywords": ["Shopee", "二面", "三面", "未排期"],
+    "gold": "Shopee 已完成二面，三面尚未排期"
+  },
+  {
+    "id": "S07",
+    "domain": "JOB",
+    "query": "滴滴面试现在什么状态",
+    "expected_sources": ["memory/2026-04-18.md", "MEMORY.md", "memory/2026-04-19-startup-context.md"],
+    "expected_keywords": ["滴滴", "面评", "暂无进一步消息"],
+    "gold": "滴滴面试已完成，HR 反馈面试官尚未写面评，暂无进一步消息"
+  },
+  {
+    "id": "S08",
+    "domain": "JOB",
+    "query": "强沟通后的 HR follow up 应该怎么做",
+    "expected_sources": ["memory/2026-04-17.md", "MEMORY.md", "memory/2026-04-18-startup-context.md", "memory/2026-04-18-skill-routing.md"],
+    "expected_keywords": ["耐心", "1-3 个工作日", "avoid", "landing"],
+    "gold": "默认耐心等待 1-3 个工作日，必要时补 landing/takeover 方案，不频繁催促"
+  },
+  {
+    "id": "S09",
+    "domain": "JOB",
+    "query": "配送算法岗位默认叙事应该怎么讲",
+    "expected_sources": ["memory/2026-04-17.md", "MEMORY.md", "memory/2026-04-18-startup-context.md"],
+    "expected_keywords": ["实时匹配", "调度机制", "效率", "成本", "体验", "稳定性"],
+    "gold": "默认叙事强调复杂履约交易系统中的实时匹配与调度机制落地"
+  },
+  {
+    "id": "S10",
+    "domain": "JOB",
+    "query": "最新简历文件是哪个",
+    "expected_sources": ["memory/2026-04-10.md", "MEMORY.md"],
+    "expected_keywords": ["resume_2026-04-10_jack_meituan.pdf"],
+    "gold": "最新简历归档为 resume_2026-04-10_jack_meituan.pdf"
+  },
+  {
+    "id": "S11",
+    "domain": "LIFE",
+    "query": "下次医院优先去哪",
+    "expected_sources": ["memory/2026-03-26.md", "MEMORY.md", "memory/2026-04-06.md"],
+    "expected_keywords": ["北医三院", "二门诊"],
+    "gold": "下次医院优先北医三院二门诊"
+  },
+  {
+    "id": "S12",
+    "domain": "LIFE",
+    "query": "疼痛该先挂哪个科",
+    "expected_sources": ["memory/2026-04-06.md"],
+    "expected_keywords": ["疼痛科", "分层评估", "中医科", "针灸"],
+    "gold": "先疼痛科分层评估，再中医科针灸"
+  },
+  {
+    "id": "S13",
+    "domain": "ENGINEER",
+    "query": "gateway restart 遇到 Node 20 怎么解决",
+    "expected_sources": ["memory/2026-04-19.md", "MEMORY.md", "memory/2026-04-19-startup-context.md"],
+    "expected_keywords": ["Node25", "PATH=", "openclaw gateway restart"],
+    "gold": "使用 Node25 PATH 覆盖再执行 openclaw gateway restart"
+  },
+  {
+    "id": "S14",
+    "domain": "ENGINEER",
+    "query": "gateway 修好后怎么验证正常",
+    "expected_sources": ["memory/2026-04-21.md", "MEMORY.md", "memory/2026-04-12.md"],
+    "expected_keywords": ["Runtime: running", "RPC probe: ok"],
+    "gold": "以 Runtime: running 和 RPC probe: ok 验证 gateway 恢复"
+  },
+  {
+    "id": "S15",
+    "domain": "ENGINEER",
+    "query": "memory_search 失败后应该怎么 fallback",
+    "expected_sources": ["memory/2026-04-20.md", "TOOLS.md"],
+    "expected_keywords": ["disabled", "unavailable", "memory_get", "read/rg", "fts-only"],
+    "gold": "memory_search 失败不得说没搜到，要 fallback 到 memory_get + read/rg 或 fts-only"
+  },
+  {
+    "id": "S16",
+    "domain": "ENGINEER",
+    "query": "现在默认主 recall 链是哪条",
+    "expected_sources": ["memory/2026-04-21.md"],
+    "expected_keywords": ["builtin", "OpenClaw 内置", "memory_search"],
+    "gold": "默认主 recall 链是 OpenClaw 内置 memory_search"
+  },
+  {
+    "id": "S17",
+    "domain": "ENGINEER",
+    "query": "custom jsonl 检索链现在定位是什么",
+    "expected_sources": ["memory/2026-04-21.md"],
+    "expected_keywords": ["fallback", "debug", "benchmark"],
+    "gold": "custom jsonl 链主要定位为 fallback、debug、benchmark"
+  },
+  {
+    "id": "S18",
+    "domain": "ENGINEER",
+    "query": "builtin memory search 当前配置是什么",
+    "expected_sources": ["memory/2026-04-21.md"],
+    "expected_keywords": ["provider=ollama", "model=nomic-embed-text", "vectorEnabled=true"],
+    "gold": "builtin memorySearch 当前为 ollama + nomic-embed-text + vectorEnabled=true"
+  },
+  {
+    "id": "S19",
+    "domain": "ENGINEER",
+    "query": "README 为什么不能被英文包覆盖",
+    "expected_sources": ["memory/2026-04-19.md", "memory/2026-04-19-startup-context.md"],
+    "expected_keywords": ["英文 README", "不覆盖", "§10 Runtime Sidecar"],
+    "gold": "英文 README 不得覆盖主 README，侧车说明合并到 README §10"
+  },
+  {
+    "id": "S20",
+    "domain": "ENGINEER",
+    "query": "兜底模型相关功能后来怎么处理了",
+    "expected_sources": ["memory/2026-04-18.md", "memory/2026-04-19-startup-context.md"],
+    "expected_keywords": ["llm_fallback", "移除", "runtime/model"],
+    "gold": "llm_fallback 和相关 runtime/model 文件已移除"
+  },
+  {
+    "id": "S21",
+    "domain": "ENGINEER",
+    "query": "transformer 深度解读 skill 路由问题怎么定性的",
+    "expected_sources": ["memory/2026-04-18.md", "memory/2026-04-18-skill-routing.md", "memory/2026-04-19-startup-context.md"],
+    "expected_keywords": ["paper-deep-dive", "P1", "available_skills"],
+    "gold": "漏命中暂定性 P1，可能被客户端 available_skills 注入或默认选择压过"
+  },
+  {
+    "id": "S22",
+    "domain": "ENGINEER",
+    "query": "OpenClaw 和 Claude Code 默认怎么比较",
+    "expected_sources": ["memory/2026-04-17.md", "MEMORY.md"],
+    "expected_keywords": ["OpenClaw 擅长沉淀", "Claude Code 擅长调度"],
+    "gold": "默认比较是 OpenClaw 擅长沉淀，Claude Code 擅长调度"
+  },
+  {
+    "id": "S23",
+    "domain": "ENGINEER",
+    "query": "三层架构默认怎么讲",
+    "expected_sources": ["MEMORY.md"],
+    "expected_keywords": ["OpenClaw 做宿主", "longClaw 做大脑", "sidecar 做基础设施"],
+    "gold": "默认三层口径是 OpenClaw 宿主，longClaw 大脑，sidecar 基础设施"
+  },
+  {
+    "id": "S24",
+    "domain": "META",
+    "query": "dev mode 开了以后回复里必须有什么",
+    "expected_sources": ["memory/2026-04-21.md", "MEMORY.md"],
+    "expected_keywords": ["DEV LOG", "每条用户可见回复都必须带"],
+    "gold": "session-state.dev_mode=true 时每条用户可见回复都必须带真实 DEV LOG"
+  },
+  {
+    "id": "S25",
+    "domain": "META",
+    "query": "我说关闭前不要主动关 dev mode 这件事记在哪",
+    "expected_sources": ["memory/2026-04-21.md", "USER.md", "MEMORY.md"],
+    "expected_keywords": ["不要主动关闭 dev mode"],
+    "gold": "已写入 USER.md、MEMORY.md 和当日记忆"
+  },
+  {
+    "id": "S26",
+    "domain": "META",
+    "query": "routing_visibility 设成 devlog_only 还算不算显示 routing",
+    "expected_sources": ["MEMORY.md", "AGENTS.md"],
+    "expected_keywords": ["DEV LOG", "still counts", "routing only inside"],
+    "gold": "如果正文隐藏 routing，仅在 DEV LOG 显示也算满足 routing visibility"
+  },
+  {
+    "id": "S27",
+    "domain": "JOB",
+    "query": "淘宝闪购这个岗位最在意什么",
+    "expected_sources": ["memory/2026-04-12-jd-analysis.md"],
+    "expected_keywords": ["即时物流调度", "运筹", "跨团队落地"],
+    "gold": "淘宝闪购岗位核心看即时物流调度、运筹/博弈和跨团队落地"
+  },
+  {
+    "id": "S28",
+    "domain": "JOB",
+    "query": "Resume 里以后默认怎么讲 Agent + OR",
+    "expected_sources": ["MEMORY.md"],
+    "expected_keywords": ["Agent + OR", "delivery/fulfillment", "real-time matching"],
+    "gold": "默认优先投递 Agent + OR 结合的岗位，并强调履约实时匹配与调度落地"
+  },
+  {
+    "id": "S29",
+    "domain": "LIFE",
+    "query": "我的车和通勤车分别是什么",
+    "expected_sources": ["MEMORY.md"],
+    "expected_keywords": ["Tesla", "Merida Duke 600"],
+    "gold": "关键车辆是 Tesla，通勤/健身车是 Merida Duke 600"
+  },
+  {
+    "id": "S30",
+    "domain": "ENGINEER",
+    "query": "README 最近做了什么架构重写",
+    "expected_sources": ["memory/2026-04-10.md", "memory/2026-04-11.md"],
+    "expected_keywords": ["control plane", "four explicit innovation axes", "README"],
+    "gold": "README 围绕 control plane 和四条创新轴做了结构重写"
+  }
+]

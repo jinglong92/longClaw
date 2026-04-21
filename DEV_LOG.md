@@ -33,12 +33,14 @@
 
 ### 🤖 模型
 ```
-🤖 模型 session=<provider/model|alias> | mode=<auto|primary> | actual=<provider/model|none>
+🤖 模型 <provider/model|alias|none> | effort=<low|adaptive|high|unavailable>
 ```
-- `session`：当前会话主模型，优先来自 `session_status`
-- `mode`：来自 `memory/session-state.json.model_mode`（仅 `auto`/`primary`；无本地 LLM 兜底层）
-- `actual`：本轮实际产出内容所使用的模型；若本轮未实际调用 LLM 生成，写 `none`
-- 若无法核实 `session` 或 `actual`，对应字段写 `unavailable`
+- 写本轮实际用于产出内容的模型，以及当前会话的 effort / Think 档位
+- 默认保持简短，不再展开 `session/mode/actual` 这类冗余字段
+- 若本轮没有需要单独说明的模型切换或排障价值，可省略该字段
+- 若本轮未实际调用需要区分的模型，写 `none`
+- `effort` 优先取 `session_status` 的 Think 档位；无法核实时写 `unavailable`
+- 若无法核实模型，写 `unavailable`
 
 ### 🧩 Skill
 ```
@@ -105,6 +107,15 @@
 | `normal debug` | 普通执行、检索、审查、改写、读回、非阻塞推进 |
 | `blocked/fix-now` | 卡住、证据缺失、用户质疑"是不是没执行"、需要立即补救 |
 
+## Dev Mode 不可省略规则
+
+当 `memory/session-state.json.dev_mode = true` 时：
+
+- 每条用户可见回复都必须包含一个真实的 `[DEV LOG]`
+- 不允许因为“简洁输出”“正文隐藏 routing”“减少打扰”而省略
+- `routing_visibility=devlog_only` 只表示把路由放进 DEV LOG，不表示可以不展示 DEV LOG
+- 只有用户明确要求关闭 dev mode 后，才允许停止输出 `[DEV LOG]`
+
 ---
 
 ## 示例 A：normal debug
@@ -112,7 +123,7 @@
 ```
 [DEV LOG]
 🔀 路由 ENGINEER | 触发: "改配置" | 模式: normal debug / 单专职
-🤖 模型 session=openai-codex/gpt-5.4 | mode=auto | actual=none
+🤖 模型 openai-codex/gpt-5.4 | effort=adaptive
 🧩 Skill 命中: agent-review | trigger=workspace 配置审查 | loaded=yes | step=completed
 🛠️ 工具 Edit(AGENTS.md) → 插入 Immutable Rules 节，+18行 | status=ok
         Bash(git commit) → hash=f951b9a | status=ok
@@ -127,7 +138,7 @@
 ```
 [DEV LOG]
 🔀 路由 SEARCH | 触发: "查最新论文" | 模式: blocked/fix-now / 单专职
-🤖 模型 session=openai-codex/gpt-5.4 | mode=auto | actual=none
+🤖 模型 none | effort=adaptive
 🧩 Skill 命中: public-evidence-fetch | trigger=公开网页证据抓取 | loaded=yes | step=2/4
 🛠️ 工具 WebFetch(arxiv.org) → 403 Forbidden | status=blocked(missing_tool)
 🧠 Memory (SYSTEM) | ~80 tokens
@@ -141,7 +152,7 @@
 ## 最低合格线
 
 - **强制项**（不得省略）：`🔀 路由`、`🧩 Skill`、`🛠️ 工具`、`📂 Session`
-- `🤖 模型` 为可选项：仅在模型切换、fallback 命中、用户追问模型、或模型信息对排障有直接价值时输出
+- `🤖 模型` 为可选项：仅在用户追问模型、模型切换、fallback 命中、或模型信息对排障有直接价值时输出；若输出，只写“本轮用了啥模型 + 当前 effort”
 - `⚖️ 置信度` 为可选项：仅在存在证据冲突、不确定性较高、用户质疑结论、或需要显式标注判断依据时输出
 - 至少输出 10 个字段中的 4 个
 - 有文件改动或校验时，`🔍 检索` 不得省略

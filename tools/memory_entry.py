@@ -5,7 +5,7 @@ import hashlib
 import json
 import re
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 # MEMORY.md 域块标记格式约束：
@@ -37,12 +37,85 @@ DOMAIN_HINTS = {
 }
 
 ENTITY_PATTERNS = [
-    r"(?:敦煌网|美团|字节|阿里|腾讯|百度|华为|京东|滴滴|快手|小红书|Shopee)",
+    r"(?:敦煌网|美团|字节|阿里|腾讯|百度|华为|京东|滴滴|快手|小红书|Shopee|张宇|丁雪涛|邢轲)",
     r"(?:offer|Offer|OFFER)",
     r"(?:GRPO|PPO|DPO|SFT|LoRA|RAG|GNN|GAT|LLM)",
     r"(?:Tesla|Mac\s*mini|MacBook)",
     r"\d{4}-\d{2}-\d{2}",
 ]
+
+WEEKDAY_MAP = {
+    "周一": 0,
+    "周二": 1,
+    "周三": 2,
+    "周四": 3,
+    "周五": 4,
+    "周六": 5,
+    "周日": 6,
+    "周天": 6,
+}
+
+EVENT_PATTERNS = {
+    "interview": ["面试", "一面", "二面", "三面", "终面"],
+    "chat": ["约聊", "初聊", "聊", "聊天", "initial chat"],
+    "internal_mobility_chat": ["活水", "internal mobility chat"],
+    "offer": ["offer", "发 offer", "口头 offer"],
+}
+
+
+def parse_explicit_domain(text: str) -> str | None:
+    m = re.match(r"^\s*-?\s*\[(JOB|WORK|LEARN|MONEY|LIFE|PARENT|ENGINEER|META|BRO/SIS)\]", text)
+    if not m:
+        return None
+    value = m.group(1)
+    return "BRO_SIS" if value == "BRO/SIS" else value
+
+
+def normalize_relative_dates(text: str, base_date_str: str) -> tuple[str, list[str]]:
+    base = datetime.strptime(base_date_str, "%Y-%m-%d")
+    week_start = base - timedelta(days=base.weekday())
+    normalized: list[str] = []
+
+    def add(dt: datetime, *labels: str) -> None:
+        normalized.append(dt.strftime("%Y-%m-%d"))
+        for label in labels:
+            normalized.append(f"{label}={dt.strftime('%Y-%m-%d')}")
+
+    if "今天" in text or "今晚" in text or "今天晚上" in text:
+        labels = ["今天"]
+        if "今晚" in text:
+            labels.append("今晚")
+        if "今天晚上" in text or ("今天" in text and "晚上" in text):
+            labels.append("今天晚上")
+        add(base, *labels)
+    if "明天" in text:
+        labels = ["明天"]
+        if "明天晚上" in text or ("明天" in text and "晚上" in text):
+            labels.append("明天晚上")
+        add(base + timedelta(days=1), *labels)
+
+    for token, weekday in WEEKDAY_MAP.items():
+        if token not in text:
+            continue
+        target = None
+        labels = [token]
+        if f"下周{token[-1]}" in text:
+            target = week_start + timedelta(days=7 + weekday)
+            labels = [f"下周{token[-1]}", token]
+        elif f"本周{token[-1]}" in text:
+            target = week_start + timedelta(days=weekday)
+            labels = [f"本周{token[-1]}", token]
+        elif re.search(rf"(?<!下周)(?<!本周){token}", text):
+            target = week_start + timedelta(days=weekday)
+        if target is not None:
+            if "晚上" in text:
+                labels.append(f"{labels[0]}晚上")
+            add(target, *labels)
+
+    if not normalized:
+        return text, []
+    normalized = list(dict.fromkeys(normalized))
+    return f"{text} [normalized_dates: {'; '.join(normalized)}]", normalized
 
 
 def extract_entities(text: str) -> list[str]:
@@ -50,6 +123,15 @@ def extract_entities(text: str) -> list[str]:
     for p in ENTITY_PATTERNS:
         entities.extend(re.findall(p, text))
     return sorted(set(entities))
+
+
+def extract_event_types(text: str) -> list[str]:
+    text_lower = text.lower()
+    hits: list[str] = []
+    for event_type, patterns in EVENT_PATTERNS.items():
+        if any(p.lower() in text_lower for p in patterns):
+            hits.append(event_type)
+    return sorted(set(hits))
 
 
 def estimate_importance(text: str) -> float:
@@ -105,6 +187,7 @@ def parse_memory_md(path: Path) -> list[dict]:
                     "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
                     "text": para,
                     "entities": extract_entities(para),
+                    "event_types": extract_event_types(para),
                     "importance": estimate_importance(para),
                     "status": "active",
                 }
@@ -133,20 +216,46 @@ def parse_daily(path: Path) -> list[dict]:
     text = path.read_text(encoding="utf-8", errors="ignore")
     entries: list[dict] = []
 
-    for i, para in enumerate(re.split(r"\n{2,}", text.strip())):
-        para = para.strip()
-        if len(para) < 20:
+    lines = text.splitlines()
+    bullets: list[str] = []
+    current: list[str] = []
+    for raw in lines:
+        line = raw.rstrip()
+        if not line.strip() or line.strip().startswith("#"):
+            if current:
+                bullets.append("\n".join(current).strip())
+                current = []
             continue
+        if line.lstrip().startswith("- "):
+            if current:
+                bullets.append("\n".join(current).strip())
+            current = [line.strip()]
+        else:
+            if current:
+                current.append(line.strip())
+            else:
+                current = [line.strip()]
+    if current:
+        bullets.append("\n".join(current).strip())
+
+    for i, para in enumerate(bullets):
+        para = para.strip()
+        if len(para) < 10:
+            continue
+        domain = parse_explicit_domain(para) or infer_domain(para)
+        searchable_text, normalized_dates = normalize_relative_dates(para, date_str)
+        entities = sorted(set(extract_entities(searchable_text) + normalized_dates))
         entries.append(
             {
                 "id": make_id(str(path), i, para),
                 "source": str(path),
                 "source_type": "daily",
-                "domain": infer_domain(para),
+                "domain": domain,
                 "session_type": "main",
                 "created_at": date_str,
-                "text": para,
-                "entities": extract_entities(para),
+                "text": searchable_text,
+                "entities": entities,
+                "event_types": extract_event_types(searchable_text),
                 "importance": estimate_importance(para),
                 "status": "active",
             }

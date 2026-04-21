@@ -1,0 +1,1089 @@
+{
+  "mode": "builtin",
+  "samples": "eval/memory_retrieval_samples_2026-04-21.json",
+  "summary": {
+    "overall": {
+      "n": 30,
+      "hit_at_1": 0.2,
+      "hit_at_3": 0.3667,
+      "mrr": 0.2667,
+      "keyword_hit_at_1": 0.1,
+      "keyword_hit_at_3": 0.1
+    },
+    "by_domain": {
+      "ENGINEER": {
+        "n": 12,
+        "hit_at_1": 0.25,
+        "hit_at_3": 0.4167,
+        "mrr": 0.3194,
+        "keyword_hit_at_1": 0.1667,
+        "keyword_hit_at_3": 0.1667
+      },
+      "JOB": {
+        "n": 12,
+        "hit_at_1": 0.25,
+        "hit_at_3": 0.3333,
+        "mrr": 0.2917,
+        "keyword_hit_at_1": 0.0833,
+        "keyword_hit_at_3": 0.0833
+      },
+      "LIFE": {
+        "n": 3,
+        "hit_at_1": 0.0,
+        "hit_at_3": 0.0,
+        "mrr": 0.0,
+        "keyword_hit_at_1": 0.0,
+        "keyword_hit_at_3": 0.0
+      },
+      "META": {
+        "n": 3,
+        "hit_at_1": 0.0,
+        "hit_at_3": 0.6667,
+        "mrr": 0.2222,
+        "keyword_hit_at_1": 0.0,
+        "keyword_hit_at_3": 0.0
+      }
+    },
+    "failures_top1": [
+      {
+        "id": "S01",
+        "query": "淘宝闪购二面是什么时候",
+        "expected_sources": [
+          "memory/2026-04-18.md",
+          "MEMORY.md",
+          "memory/2026-04-19-startup-context.md"
+        ],
+        "top1_source": "memory/2026-04-12-jd-analysis.md",
+        "top1_text": "2) “我擅长 OR 与学习方法协同, 能做从建模到上线闭环”\n- 简历/沟通里补一段“工程可信度”: Python 主力 + C++/Java 协作经验\n- 面试前 3 天突击:"
+      },
+      {
+        "id": "S02",
+        "query": "跟雪涛约的时间",
+        "expected_sources": [
+          "memory/2026-04-18.md",
+          "MEMORY.md",
+          "memory/2026-04-19-startup-context.md"
+        ],
+        "top1_source": "memory/2026-04-12-jd-analysis.md",
+        "top1_text": "- Day2: 常见调度/图搜索/DP 编码题"
+      },
+      {
+        "id": "S03",
+        "query": "丁雪涛现在是什么情况",
+        "expected_sources": [
+          "memory/2026-04-18.md",
+          "MEMORY.md",
+          "memory/2026-04-19-startup-context.md"
+        ],
+        "top1_source": "memory/2026-04-12-jd-analysis.md",
+        "top1_text": "- Day2: 常见调度/图搜索/DP 编码题"
+      },
+      {
+        "id": "S05",
+        "query": "张宇约的是哪天聊",
+        "expected_sources": [
+          "memory/2026-04-21.md",
+          "MEMORY.md",
+          "memory/2026-04-18.md",
+          "memory/2026-04-19.md"
+        ],
+        "top1_source": "memory/2026-04-18-skill-hit-test.md",
+        "top1_text": "- 多模态能用"
+      },
+      {
+        "id": "S06",
+        "query": "Shopee 现在到哪一轮了",
+        "expected_sources": [
+          "memory/2026-04-10.md",
+          "MEMORY.md",
+          "memory/heartbeat-state.json"
+        ],
+        "top1_source": "memory/2026-04-12-jd-analysis.md",
+        "top1_text": "2) “我擅长 OR 与学习方法协同"
+      },
+      {
+        "id": "S07",
+        "query": "滴滴面试现在什么状态",
+        "expected_sources": [
+          "memory/2026-04-18.md",
+          "MEMORY.md",
+          "memory/2026-04-19-startup-context.md"
+        ],
+        "top1_source": "memory/2026-04-18-startup-context.md",
+        "top1_text": "- 面向配送/履约算法岗位时..."
+      },
+      {
+        "id": "S09",
+        "query": "配送算法岗位默认叙事应该怎么讲",
+        "expected_sources": [
+          "memory/2026-04-17.md",
+          "MEMORY.md",
+          "memory/2026-04-18-startup-context.md"
+        ],
+        "top1_source": "memory/2026-04-16-delivery-algorithm.md",
+        "top1_text": "负责派单引擎的架构设计、算法研发与持续优化"
+      },
+      {
+        "id": "S10",
+        "query": "最新简历文件是哪个",
+        "expected_sources": [
+          "memory/2026-04-10.md",
+          "MEMORY.md"
+        ],
+        "top1_source": "memory/2026-03-26.md",
+        "top1_text": "- 用户新增就医偏好：下次去医院优先选择“北医三院二门诊”。"
+      },
+      {
+        "id": "S11",
+        "query": "下次医院优先去哪",
+        "expected_sources": [
+          "memory/2026-03-26.md",
+          "MEMORY.md",
+          "memory/2026-04-06.md"
+        ],
+        "top1_source": "memory/2026-04-17.md",
+        "top1_text": "- [ENGINEER] 固化了 OpenClaw vs Claude Code 的对比框架"
+      },
+      {
+        "id": "S12",
+        "query": "疼痛该先挂哪个科",
+        "expected_sources": [
+          "memory/2026-04-06.md"
+        ],
+        "top1_source": "memory/2026-04-12-jd-analysis.md",
+        "top1_text": "- Day2: 常见调度/图搜索/DP 编码题"
+      },
+      {
+        "id": "S13",
+        "query": "gateway restart 遇到 Node 20 怎么解决",
+        "expected_sources": [
+          "memory/2026-04-19.md",
+          "MEMORY.md",
+          "memory/2026-04-19-startup-context.md"
+        ],
+        "top1_source": "memory/2026-04-19-gateway-fix.md",
+        "top1_text": "gateway_restart_fix=Node25_PATH_override"
+      },
+      {
+        "id": "S14",
+        "query": "gateway 修好后怎么验证正常",
+        "expected_sources": [
+          "memory/2026-04-21.md",
+          "MEMORY.md",
+          "memory/2026-04-12.md"
+        ],
+        "top1_source": "memory/2026-04-18-skill-hit-test.md",
+        "top1_text": "### 方案 B，如果 A 还不行"
+      },
+      {
+        "id": "S15",
+        "query": "memory_search 失败后应该怎么 fallback",
+        "expected_sources": [
+          "memory/2026-04-20.md",
+          "TOOLS.md"
+        ],
+        "top1_source": "memory/2026-04-21.md",
+        "top1_text": "默认回答问题走 OpenClaw 内置 `memory_search`"
+      },
+      {
+        "id": "S16",
+        "query": "现在默认主 recall 链是哪条",
+        "expected_sources": [
+          "memory/2026-04-21.md"
+        ],
+        "top1_source": "memory/2026-04-18-request-timed-out-before-a-res.md",
+        "top1_text": "- 你把 `model_mode` 切到了 `fallback`"
+      },
+      {
+        "id": "S19",
+        "query": "README 为什么不能被英文包覆盖",
+        "expected_sources": [
+          "memory/2026-04-19.md",
+          "memory/2026-04-19-startup-context.md"
+        ],
+        "top1_source": "memory/2026-04-16-delivery-algorithm.md",
+        "top1_text": "2. **Spark/Hive一线实操深度**"
+      },
+      {
+        "id": "S20",
+        "query": "兜底模型相关功能后来怎么处理了",
+        "expected_sources": [
+          "memory/2026-04-18.md",
+          "memory/2026-04-19-startup-context.md"
+        ],
+        "top1_source": "memory/2026-04-12-jd-analysis.md",
+        "top1_text": "2) “我擅长 OR 与学习方法协同"
+      },
+      {
+        "id": "S21",
+        "query": "transformer 深度解读 skill 路由问题怎么定性的",
+        "expected_sources": [
+          "memory/2026-04-18.md",
+          "memory/2026-04-18-skill-routing.md",
+          "memory/2026-04-19-startup-context.md"
+        ],
+        "top1_source": "memory/2026-04-18-skill-hit-test.md",
+        "top1_text": "🔀 路由 LEARN | 触发: \"深度解读 transformer论文\""
+      },
+      {
+        "id": "S23",
+        "query": "三层架构默认怎么讲",
+        "expected_sources": [
+          "MEMORY.md"
+        ],
+        "top1_source": "memory/2026-03-29.md",
+        "top1_text": "# 2026-03-29"
+      },
+      {
+        "id": "S24",
+        "query": "dev mode 开了以后回复里必须有什么",
+        "expected_sources": [
+          "memory/2026-04-21.md",
+          "MEMORY.md"
+        ],
+        "top1_source": "memory/2026-04-19-gateway-fix.md",
+        "top1_text": "读取到 10 字段模板与强制规则"
+      },
+      {
+        "id": "S25",
+        "query": "我说关闭前不要主动关 dev mode 这件事记在哪",
+        "expected_sources": [
+          "memory/2026-04-21.md",
+          "USER.md",
+          "MEMORY.md"
+        ],
+        "top1_source": "memory/2026-04-18-skill-routing.md",
+        "top1_text": "dev_mode=true"
+      },
+      {
+        "id": "S26",
+        "query": "routing_visibility 设成 devlog_only 还算不算显示 routing",
+        "expected_sources": [
+          "MEMORY.md",
+          "AGENTS.md"
+        ],
+        "top1_source": "memory/2026-04-18-startup-context.md",
+        "top1_text": "[DEV LOG] routing: unavailable"
+      },
+      {
+        "id": "S28",
+        "query": "Resume 里以后默认怎么讲 Agent + OR",
+        "expected_sources": [
+          "MEMORY.md"
+        ],
+        "top1_source": "memory/2026-04-12-jd-analysis.md",
+        "top1_text": "它明确要 C++/Java/Python 工程实现 + 运筹优化（VRP/MIP）+ 机器学习"
+      },
+      {
+        "id": "S29",
+        "query": "我的车和通勤车分别是什么",
+        "expected_sources": [
+          "MEMORY.md"
+        ],
+        "top1_source": "memory/2026-04-12-jd-analysis.md",
+        "top1_text": "2) “我擅长 OR 与学习方法协同"
+      },
+      {
+        "id": "S30",
+        "query": "README 最近做了什么架构重写",
+        "expected_sources": [
+          "memory/2026-04-10.md",
+          "memory/2026-04-11.md"
+        ],
+        "top1_source": "memory/2026-04-12-jd-analysis.md",
+        "top1_text": "- Day2: 常见调度/图搜索/DP 编码题"
+      }
+    ]
+  },
+  "results": [
+    {
+      "sample_id": "S01",
+      "query": "淘宝闪购二面是什么时候",
+      "domain": "JOB",
+      "expected_sources": [
+        "memory/2026-04-18.md",
+        "MEMORY.md",
+        "memory/2026-04-19-startup-context.md"
+      ],
+      "expected_keywords": [
+        "淘宝闪购",
+        "二面",
+        "19:00"
+      ],
+      "top1_source": "memory/2026-04-12-jd-analysis.md",
+      "top3_sources": [
+        "memory/2026-04-12-jd-analysis.md",
+        "memory/2026-04-18-startup-context.md",
+        "memory/2026-04-16-delivery-algorithm.md"
+      ],
+      "top1_text": "2) “我擅长 OR 与学习方法协同, 能做从建模到上线闭环”\n- 简历/沟通里补一段“工程可信度”: Python 主力 + C++/Java 协作经验\n- 面试前 3 天突击:",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S02",
+      "query": "跟雪涛约的时间",
+      "domain": "JOB",
+      "expected_sources": [
+        "memory/2026-04-18.md",
+        "MEMORY.md",
+        "memory/2026-04-19-startup-context.md"
+      ],
+      "expected_keywords": [
+        "丁雪涛",
+        "下周四",
+        "19:00",
+        "约聊"
+      ],
+      "top1_source": "memory/2026-04-12-jd-analysis.md",
+      "top3_sources": [
+        "memory/2026-04-12-jd-analysis.md",
+        "memory/2026-04-18-skill-hit-test.md",
+        "memory/2026-04-17.md"
+      ],
+      "top1_text": "- Day2: 常见调度/图搜索/DP 编码题",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S03",
+      "query": "丁雪涛现在是什么情况",
+      "domain": "JOB",
+      "expected_sources": [
+        "memory/2026-04-18.md",
+        "MEMORY.md",
+        "memory/2026-04-19-startup-context.md"
+      ],
+      "expected_keywords": [
+        "丁雪涛",
+        "L10",
+        "满编",
+        "略超编"
+      ],
+      "top1_source": "memory/2026-04-12-jd-analysis.md",
+      "top3_sources": [
+        "memory/2026-04-12-jd-analysis.md",
+        "memory/2026-04-17.md",
+        "memory/2026-04-18-request-timed-out-before-a-res.md"
+      ],
+      "top1_text": "- Day2: 常见调度/图搜索/DP 编码题",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S04",
+      "query": "当前活水线是不是丁雪涛团队",
+      "domain": "JOB",
+      "expected_sources": [
+        "memory/2026-04-18.md",
+        "MEMORY.md",
+        "memory/2026-04-19-startup-context.md"
+      ],
+      "expected_keywords": [
+        "不是",
+        "丁雪涛",
+        "国际化外卖线"
+      ],
+      "top1_source": "memory/2026-04-18.md",
+      "top3_sources": [
+        "memory/2026-04-18.md",
+        "memory/2026-04-18-skill-hit-test.md",
+        "memory/2026-03-22.md"
+      ],
+      "top1_text": "- [JOB] 用户补充丁雪涛关系背景... - [JOB] 用户纠正活水线归属：当前重点推进的这条线不是丁雪涛所在团队线，而是美团国际化外卖线",
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "mrr": 1.0,
+      "keyword_hit_at_1": true,
+      "keyword_hit_at_3": true
+    },
+    {
+      "sample_id": "S05",
+      "query": "张宇约的是哪天聊",
+      "domain": "JOB",
+      "expected_sources": [
+        "memory/2026-04-21.md",
+        "MEMORY.md",
+        "memory/2026-04-18.md",
+        "memory/2026-04-19.md"
+      ],
+      "expected_keywords": [
+        "张宇",
+        "初聊",
+        "2026-04-21"
+      ],
+      "top1_source": "memory/2026-04-18-skill-hit-test.md",
+      "top3_sources": [
+        "memory/2026-04-18-skill-hit-test.md",
+        "memory/2026-04-12-jd-analysis.md",
+        "memory/2026-04-12-jd-analysis.md"
+      ],
+      "top1_text": "- 多模态能用",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S06",
+      "query": "Shopee 现在到哪一轮了",
+      "domain": "JOB",
+      "expected_sources": [
+        "memory/2026-04-10.md",
+        "MEMORY.md",
+        "memory/heartbeat-state.json"
+      ],
+      "expected_keywords": [
+        "Shopee",
+        "二面",
+        "三面",
+        "未排期"
+      ],
+      "top1_source": "memory/2026-04-12-jd-analysis.md",
+      "top3_sources": [
+        "memory/2026-04-12-jd-analysis.md",
+        "memory/2026-04-17.md",
+        "memory/2026-04-16-delivery-algorithm.md"
+      ],
+      "top1_text": "2) “我擅长 OR 与学习方法协同",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S07",
+      "query": "滴滴面试现在什么状态",
+      "domain": "JOB",
+      "expected_sources": [
+        "memory/2026-04-18.md",
+        "MEMORY.md",
+        "memory/2026-04-19-startup-context.md"
+      ],
+      "expected_keywords": [
+        "滴滴",
+        "面评",
+        "暂无进一步消息"
+      ],
+      "top1_source": "memory/2026-04-18-startup-context.md",
+      "top3_sources": [
+        "memory/2026-04-18-startup-context.md",
+        "memory/2026-04-17.md",
+        "memory/2026-04-16-delivery-algorithm.md"
+      ],
+      "top1_text": "- 面向配送/履约算法岗位时...",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S08",
+      "query": "强沟通后的 HR follow up 应该怎么做",
+      "domain": "JOB",
+      "expected_sources": [
+        "memory/2026-04-17.md",
+        "MEMORY.md",
+        "memory/2026-04-18-startup-context.md",
+        "memory/2026-04-18-skill-routing.md"
+      ],
+      "expected_keywords": [
+        "耐心",
+        "1-3 个工作日",
+        "avoid",
+        "landing"
+      ],
+      "top1_source": "memory/2026-04-18-skill-routing.md",
+      "top3_sources": [
+        "memory/2026-04-18-skill-routing.md",
+        "memory/2026-04-18-startup-context.md",
+        "memory/2026-04-18-startup-context.md"
+      ],
+      "top1_text": "- 对强沟通后的 HR/面试流程，默认 follow-up 策略应保持耐心",
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "mrr": 1.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S09",
+      "query": "配送算法岗位默认叙事应该怎么讲",
+      "domain": "JOB",
+      "expected_sources": [
+        "memory/2026-04-17.md",
+        "MEMORY.md",
+        "memory/2026-04-18-startup-context.md"
+      ],
+      "expected_keywords": [
+        "实时匹配",
+        "调度机制",
+        "效率",
+        "成本",
+        "体验",
+        "稳定性"
+      ],
+      "top1_source": "memory/2026-04-16-delivery-algorithm.md",
+      "top3_sources": [
+        "memory/2026-04-16-delivery-algorithm.md",
+        "memory/2026-04-18-startup-context.md",
+        "memory/2026-04-12-jd-analysis.md"
+      ],
+      "top1_text": "负责派单引擎的架构设计、算法研发与持续优化",
+      "hit_at_1": false,
+      "hit_at_3": true,
+      "mrr": 0.5,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S10",
+      "query": "最新简历文件是哪个",
+      "domain": "JOB",
+      "expected_sources": [
+        "memory/2026-04-10.md",
+        "MEMORY.md"
+      ],
+      "expected_keywords": [
+        "resume_2026-04-10_jack_meituan.pdf"
+      ],
+      "top1_source": "memory/2026-03-26.md",
+      "top3_sources": [
+        "memory/2026-03-26.md",
+        "memory/2026-04-06.md",
+        "memory/2026-04-13-dev-mode.md"
+      ],
+      "top1_text": "- 用户新增就医偏好：下次去医院优先选择“北医三院二门诊”。",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S11",
+      "query": "下次医院优先去哪",
+      "domain": "LIFE",
+      "expected_sources": [
+        "memory/2026-03-26.md",
+        "MEMORY.md",
+        "memory/2026-04-06.md"
+      ],
+      "expected_keywords": [
+        "北医三院",
+        "二门诊"
+      ],
+      "top1_source": "memory/2026-04-17.md",
+      "top3_sources": [
+        "memory/2026-04-17.md",
+        "memory/2026-04-12-jd-analysis.md",
+        "memory/2026-04-12-jd-analysis.md"
+      ],
+      "top1_text": "- [ENGINEER] 固化了 OpenClaw vs Claude Code 的对比框架",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S12",
+      "query": "疼痛该先挂哪个科",
+      "domain": "LIFE",
+      "expected_sources": [
+        "memory/2026-04-06.md"
+      ],
+      "expected_keywords": [
+        "疼痛科",
+        "分层评估",
+        "中医科",
+        "针灸"
+      ],
+      "top1_source": "memory/2026-04-12-jd-analysis.md",
+      "top3_sources": [
+        "memory/2026-04-12-jd-analysis.md",
+        "memory/2026-04-17.md",
+        "memory/2026-04-12-jd-analysis.md"
+      ],
+      "top1_text": "- Day2: 常见调度/图搜索/DP 编码题",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S13",
+      "query": "gateway restart 遇到 Node 20 怎么解决",
+      "domain": "ENGINEER",
+      "expected_sources": [
+        "memory/2026-04-19.md",
+        "MEMORY.md",
+        "memory/2026-04-19-startup-context.md"
+      ],
+      "expected_keywords": [
+        "Node25",
+        "PATH=",
+        "openclaw gateway restart"
+      ],
+      "top1_source": "memory/2026-04-19-gateway-fix.md",
+      "top3_sources": [
+        "memory/2026-04-19-gateway-fix.md",
+        "memory/2026-04-19-gateway-fix.md",
+        "memory/2026-04-17-gateway-restart.md"
+      ],
+      "top1_text": "gateway_restart_fix=Node25_PATH_override",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S14",
+      "query": "gateway 修好后怎么验证正常",
+      "domain": "ENGINEER",
+      "expected_sources": [
+        "memory/2026-04-21.md",
+        "MEMORY.md",
+        "memory/2026-04-12.md"
+      ],
+      "expected_keywords": [
+        "Runtime: running",
+        "RPC probe: ok"
+      ],
+      "top1_source": "memory/2026-04-18-skill-hit-test.md",
+      "top3_sources": [
+        "memory/2026-04-18-skill-hit-test.md",
+        "memory/2026-04-19-gateway-fix.md",
+        "memory/2026-04-12.md"
+      ],
+      "top1_text": "### 方案 B，如果 A 还不行",
+      "hit_at_1": false,
+      "hit_at_3": true,
+      "mrr": 0.3333333333333333,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S15",
+      "query": "memory_search 失败后应该怎么 fallback",
+      "domain": "ENGINEER",
+      "expected_sources": [
+        "memory/2026-04-20.md",
+        "TOOLS.md"
+      ],
+      "expected_keywords": [
+        "disabled",
+        "unavailable",
+        "memory_get",
+        "read/rg",
+        "fts-only"
+      ],
+      "top1_source": "memory/2026-04-21.md",
+      "top3_sources": [
+        "memory/2026-04-21.md",
+        "memory/2026-04-18-request-timed-out-before-a-res.md",
+        "memory/2026-04-18-request-timed-out-before-a-res.md"
+      ],
+      "top1_text": "默认回答问题走 OpenClaw 内置 `memory_search`",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S16",
+      "query": "现在默认主 recall 链是哪条",
+      "domain": "ENGINEER",
+      "expected_sources": [
+        "memory/2026-04-21.md"
+      ],
+      "expected_keywords": [
+        "builtin",
+        "OpenClaw 内置",
+        "memory_search"
+      ],
+      "top1_source": "memory/2026-04-18-request-timed-out-before-a-res.md",
+      "top3_sources": [
+        "memory/2026-04-18-request-timed-out-before-a-res.md",
+        "memory/2026-04-18-request-timed-out-before-a-res.md",
+        "memory/2026-04-11.md"
+      ],
+      "top1_text": "- 你把 `model_mode` 切到了 `fallback`",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S17",
+      "query": "custom jsonl 检索链现在定位是什么",
+      "domain": "ENGINEER",
+      "expected_sources": [
+        "memory/2026-04-21.md"
+      ],
+      "expected_keywords": [
+        "fallback",
+        "debug",
+        "benchmark"
+      ],
+      "top1_source": "memory/2026-04-21.md",
+      "top3_sources": [
+        "memory/2026-04-21.md",
+        "memory/2026-04-18-skill-routing.md",
+        "memory/2026-04-21.md"
+      ],
+      "top1_text": "用户自定义的 tools/memory_entry.py... 定位更适合作为 fallback、debug 与实验调参链",
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "mrr": 1.0,
+      "keyword_hit_at_1": true,
+      "keyword_hit_at_3": true
+    },
+    {
+      "sample_id": "S18",
+      "query": "builtin memory search 当前配置是什么",
+      "domain": "ENGINEER",
+      "expected_sources": [
+        "memory/2026-04-21.md"
+      ],
+      "expected_keywords": [
+        "provider=ollama",
+        "model=nomic-embed-text",
+        "vectorEnabled=true"
+      ],
+      "top1_source": "memory/2026-04-21.md",
+      "top3_sources": [
+        "memory/2026-04-21.md",
+        "memory/2026-04-18-skill-hit-test.md",
+        "memory/2026-04-13-dev-mode.md"
+      ],
+      "top1_text": "builtin 当前生效配置已确认 `hybrid.enabled=true`、`vectorWeight=0.7`、`textWeight=0.3`、`candidateMultiplier=4`",
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "mrr": 1.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S19",
+      "query": "README 为什么不能被英文包覆盖",
+      "domain": "ENGINEER",
+      "expected_sources": [
+        "memory/2026-04-19.md",
+        "memory/2026-04-19-startup-context.md"
+      ],
+      "expected_keywords": [
+        "英文 README",
+        "不覆盖",
+        "§10 Runtime Sidecar"
+      ],
+      "top1_source": "memory/2026-04-16-delivery-algorithm.md",
+      "top3_sources": [
+        "memory/2026-04-16-delivery-algorithm.md",
+        "memory/2026-04-18-skill-hit-test.md",
+        "memory/2026-03-30.md"
+      ],
+      "top1_text": "2. **Spark/Hive一线实操深度**",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S20",
+      "query": "兜底模型相关功能后来怎么处理了",
+      "domain": "ENGINEER",
+      "expected_sources": [
+        "memory/2026-04-18.md",
+        "memory/2026-04-19-startup-context.md"
+      ],
+      "expected_keywords": [
+        "llm_fallback",
+        "移除",
+        "runtime/model"
+      ],
+      "top1_source": "memory/2026-04-12-jd-analysis.md",
+      "top3_sources": [
+        "memory/2026-04-12-jd-analysis.md",
+        "memory/2026-04-12-jd-analysis.md",
+        "memory/2026-04-18-skill-hit-test.md"
+      ],
+      "top1_text": "2) “我擅长 OR 与学习方法协同",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S21",
+      "query": "transformer 深度解读 skill 路由问题怎么定性的",
+      "domain": "ENGINEER",
+      "expected_sources": [
+        "memory/2026-04-18.md",
+        "memory/2026-04-18-skill-routing.md",
+        "memory/2026-04-19-startup-context.md"
+      ],
+      "expected_keywords": [
+        "paper-deep-dive",
+        "P1",
+        "available_skills"
+      ],
+      "top1_source": "memory/2026-04-18-skill-hit-test.md",
+      "top3_sources": [
+        "memory/2026-04-18-skill-hit-test.md",
+        "memory/2026-04-18-skill-routing.md",
+        "memory/2026-04-18-skill-hit-test.md"
+      ],
+      "top1_text": "🔀 路由 LEARN | 触发: \"深度解读 transformer论文\"",
+      "hit_at_1": false,
+      "hit_at_3": true,
+      "mrr": 0.5,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S22",
+      "query": "OpenClaw 和 Claude Code 默认怎么比较",
+      "domain": "ENGINEER",
+      "expected_sources": [
+        "memory/2026-04-17.md",
+        "MEMORY.md"
+      ],
+      "expected_keywords": [
+        "OpenClaw 擅长沉淀",
+        "Claude Code 擅长调度"
+      ],
+      "top1_source": "memory/2026-04-17.md",
+      "top3_sources": [
+        "memory/2026-04-17.md",
+        "memory/2026-04-18-skill-hit-test.md",
+        "memory/2026-04-18-skill-hit-test.md"
+      ],
+      "top1_text": "- [ENGINEER] 对外表述优先使用“OpenClaw 擅长沉淀，Claude Code 擅长调度”",
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "mrr": 1.0,
+      "keyword_hit_at_1": true,
+      "keyword_hit_at_3": true
+    },
+    {
+      "sample_id": "S23",
+      "query": "三层架构默认怎么讲",
+      "domain": "ENGINEER",
+      "expected_sources": [
+        "MEMORY.md"
+      ],
+      "expected_keywords": [
+        "OpenClaw 做宿主",
+        "longClaw 做大脑",
+        "sidecar 做基础设施"
+      ],
+      "top1_source": "memory/2026-03-29.md",
+      "top3_sources": [
+        "memory/2026-03-29.md",
+        "memory/2026-04-12-jd-analysis.md",
+        "memory/2026-04-18-skill-hit-test.md"
+      ],
+      "top1_text": "# 2026-03-29",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S24",
+      "query": "dev mode 开了以后回复里必须有什么",
+      "domain": "META",
+      "expected_sources": [
+        "memory/2026-04-21.md",
+        "MEMORY.md"
+      ],
+      "expected_keywords": [
+        "DEV LOG",
+        "每条用户可见回复都必须带"
+      ],
+      "top1_source": "memory/2026-04-19-gateway-fix.md",
+      "top3_sources": [
+        "memory/2026-04-19-gateway-fix.md",
+        "memory/2026-04-18-skill-routing.md",
+        "memory/2026-04-21.md"
+      ],
+      "top1_text": "读取到 10 字段模板与强制规则",
+      "hit_at_1": false,
+      "hit_at_3": true,
+      "mrr": 0.3333333333333333,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S25",
+      "query": "我说关闭前不要主动关 dev mode 这件事记在哪",
+      "domain": "META",
+      "expected_sources": [
+        "memory/2026-04-21.md",
+        "USER.md",
+        "MEMORY.md"
+      ],
+      "expected_keywords": [
+        "不要主动关闭 dev mode"
+      ],
+      "top1_source": "memory/2026-04-18-skill-routing.md",
+      "top3_sources": [
+        "memory/2026-04-18-skill-routing.md",
+        "memory/2026-04-19-gateway-fix.md",
+        "memory/2026-04-21.md"
+      ],
+      "top1_text": "dev_mode=true",
+      "hit_at_1": false,
+      "hit_at_3": true,
+      "mrr": 0.3333333333333333,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S26",
+      "query": "routing_visibility 设成 devlog_only 还算不算显示 routing",
+      "domain": "META",
+      "expected_sources": [
+        "MEMORY.md",
+        "AGENTS.md"
+      ],
+      "expected_keywords": [
+        "DEV LOG",
+        "still counts",
+        "routing only inside"
+      ],
+      "top1_source": "memory/2026-04-18-startup-context.md",
+      "top3_sources": [
+        "memory/2026-04-18-startup-context.md",
+        "memory/2026-04-18-skill-routing.md",
+        "memory/2026-04-21.md"
+      ],
+      "top1_text": "[DEV LOG] routing: unavailable",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S27",
+      "query": "淘宝闪购这个岗位最在意什么",
+      "domain": "JOB",
+      "expected_sources": [
+        "memory/2026-04-12-jd-analysis.md"
+      ],
+      "expected_keywords": [
+        "即时物流调度",
+        "运筹",
+        "跨团队落地"
+      ],
+      "top1_source": "memory/2026-04-12-jd-analysis.md",
+      "top3_sources": [
+        "memory/2026-04-12-jd-analysis.md",
+        "memory/2026-04-17.md",
+        "memory/2026-03-30.md"
+      ],
+      "top1_text": "面试官最在意的3件事",
+      "hit_at_1": true,
+      "hit_at_3": true,
+      "mrr": 1.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S28",
+      "query": "Resume 里以后默认怎么讲 Agent + OR",
+      "domain": "JOB",
+      "expected_sources": [
+        "MEMORY.md"
+      ],
+      "expected_keywords": [
+        "Agent + OR",
+        "delivery/fulfillment",
+        "real-time matching"
+      ],
+      "top1_source": "memory/2026-04-12-jd-analysis.md",
+      "top3_sources": [
+        "memory/2026-04-12-jd-analysis.md",
+        "memory/2026-04-18-skill-hit-test.md",
+        "memory/2026-04-12-jd-analysis.md"
+      ],
+      "top1_text": "它明确要 C++/Java/Python 工程实现 + 运筹优化（VRP/MIP）+ 机器学习",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S29",
+      "query": "我的车和通勤车分别是什么",
+      "domain": "LIFE",
+      "expected_sources": [
+        "MEMORY.md"
+      ],
+      "expected_keywords": [
+        "Tesla",
+        "Merida Duke 600"
+      ],
+      "top1_source": "memory/2026-04-12-jd-analysis.md",
+      "top3_sources": [
+        "memory/2026-04-12-jd-analysis.md",
+        "memory/2026-04-12-jd-analysis.md",
+        "memory/2026-04-18-skill-hit-test.md"
+      ],
+      "top1_text": "2) “我擅长 OR 与学习方法协同",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    },
+    {
+      "sample_id": "S30",
+      "query": "README 最近做了什么架构重写",
+      "domain": "ENGINEER",
+      "expected_sources": [
+        "memory/2026-04-10.md",
+        "memory/2026-04-11.md"
+      ],
+      "expected_keywords": [
+        "control plane",
+        "four explicit innovation axes",
+        "README"
+      ],
+      "top1_source": "memory/2026-04-12-jd-analysis.md",
+      "top3_sources": [
+        "memory/2026-04-12-jd-analysis.md",
+        "memory/2026-04-17.md",
+        "memory/2026-04-18-request-timed-out-before-a-res.md"
+      ],
+      "top1_text": "- Day2: 常见调度/图搜索/DP 编码题",
+      "hit_at_1": false,
+      "hit_at_3": false,
+      "mrr": 0.0,
+      "keyword_hit_at_1": false,
+      "keyword_hit_at_3": false
+    }
+  ]
+}
