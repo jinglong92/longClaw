@@ -146,7 +146,20 @@ Level 4：跨域兜底
 ```bash
 python3 tools/memory_search.py --query "<改写后query>" --domain <ROLE>
 ```
-DEV LOG 显示：检索级别 / query 变体 / 召回数 / 是否触发跨域
+
+**memory_search 失败自动 fallback（强制）**：
+- 若首选 `memory_search` 返回 `disabled=true`、`unavailable=true`、provider/embedding timeout、quota error、或其他工具级错误，不得表述为“没搜到”。
+- 必须立即切换到降级链路：
+  1. `memory_get` 读取 `MEMORY.md` 对应域块
+  2. `memory_get` 读取今天/昨天 `memory/YYYY-MM-DD.md`
+  3. 如仍不足，再做直接文件检索（workspace 内 `read` / `rg`）
+- 降级后回复必须明确区分：
+  - `检索成功但 0 条`
+  - `检索工具不可用，已 fallback`
+- DEV LOG 必须显式写：`fallback engaged`，并说明使用了哪条降级路径。
+- 若本机 `tools/memory_search.py` 可用，可将其作为只读降级检索路径；若其 hybrid embedding 不可用，则自动退回 fts-only，不得再把 embedding 失败升级成整条 recall 失败。
+
+DEV LOG 显示：检索级别 / query 变体 / 召回数 / 是否触发跨域 / 是否 fallback
 
 ---
 
@@ -196,6 +209,22 @@ python3 tools/model_mode.py get
 历史上若存在 `model_mode=fallback`，`model_mode.py get` 会将其**归一为 `primary`** 并写回文件。换模型、换 provider 请在 **OpenClaw 客户端 / `~/.openclaw/openclaw.json`** 配置。
 
 ---
+
+## DEV LOG 渲染前置校验
+
+在输出任何 DEV LOG 前，CTRL 必须先完成以下校验：
+
+1. `format_source = DEV_LOG.md`
+2. `value_source = runtime/tools/session-state.json/tool returns/current turn context`
+3. 不得用 `session-state.json` 推导、替代、覆盖 `DEV_LOG.md` 的字段顺序、字段名称、展示格式
+4. 若本轮尚未读取 `DEV_LOG.md`，不得输出 DEV LOG
+5. 若候选输出命中 `session_id:`、`round:`、`dev_mode:` 这类内置裸字段块，而非 `DEV_LOG.md` 定义的模板字段，则视为格式错误，必须回退并重渲染
+
+快速检查口令：
+
+- 模板从哪里来？→ `DEV_LOG.md`
+- 值从哪里来？→ runtime / tools / session-state
+- 当前输出像不像 `DEV_LOG.md` 示例？→ 若否，禁止发送
 
 ## Session 状态管理
 

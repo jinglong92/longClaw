@@ -11,7 +11,8 @@
 - 系统：macOS（Apple Silicon，arm64）
 - Shell：zsh
 - Python：`uv` 管理（`~/.local/bin/uv`），系统 python3 备用
-- Node：Node 20（via Homebrew，`node` / `npm` 可直接调用）
+- Node：默认运行时为 `~/.longclaw/node20/current/bin` 下的 Node 20（当前观测：v20.20.2）
+- 备用 Node：Homebrew 另有 Node 25（当前观测：`/opt/homebrew/Cellar/node/25.8.2/bin`），部分 OpenClaw 命令需显式 PATH 覆盖使用
 - 包管理：Homebrew（`/opt/homebrew/bin/brew`）
 
 ---
@@ -82,10 +83,12 @@
 - 训练相关：`openclaw_substrate` 模块在 `~/longClaw/openclaw_substrate/`
 
 ### Node / npm
-- Node 20（Homebrew）：`node --version` 应输出 v20.x
-- 全局包：`@openai/codex`（主 LLM，OpenClaw 底层）、`@anthropic-ai/claude-code`（辅助工具）、`@playwright/cli`
+- 默认 Node：`~/.longclaw/node20/current/bin/node`，`node --version` 当前观测为 v20.20.2
+- Homebrew Node：`brew list --versions node` 当前观测为 25.8.2；若走 Homebrew 路径会变成 Node 25，不等于默认运行时
+- 已确认全局包：`@anthropic-ai/claude-code`、`@playwright/cli`
+- 未确认存在：`@openai/codex`（不要再假定已全局安装）
 - 运行：`node script.js` / `npx <tool>`
-- 主 LLM：Codex（`@openai/codex`），OpenClaw 通过此包路由到 Codex API
+- OpenClaw 主会话模型由 OpenClaw 配置决定，不要把本机全局 npm 包是否存在，等同为实际主 LLM 路由事实
 
 ### 内存工具
 - 索引构建：`python3 tools/memory_entry.py`
@@ -109,6 +112,7 @@
 | `uv` 找不到 | PATH 未包含 `~/.local/bin` | 用 `~/.local/bin/uv` 全路径，或 `python3` 备用 |
 | Playwright 失败 | 浏览器未安装 | `npx playwright install chromium` |
 | memory_search 返回空 | index 未构建 | 先运行 `python3 tools/memory_entry.py` |
+| OpenClaw 内置 `memory_search` unavailable / timeout | embedding provider 链路失败（当前已见 Node→Gemini 超时） | 不得表述为“没搜到”；立即 fallback 到 `memory_get` + `read/rg`，如需本地 hybrid 则优先 `python3 tools/memory_search.py`，其 embedding 不可用时自动退回 fts-only |
 
 ---
 
