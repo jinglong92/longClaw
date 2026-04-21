@@ -45,28 +45,45 @@ fi
 
 STATE="memory/heartbeat-state.json"
 if [ -f "$STATE" ]; then
-  HAS=$(python3 - <<'PY'
+  HEARTBEAT_BLOCK=$(python3 - <<'PY'
 import json
 from pathlib import Path
 
 p = Path("memory/heartbeat-state.json")
 try:
     d = json.loads(p.read_text(encoding="utf-8"))
-    print(
-        "yes"
-        if d.get("has_pending")
-        and any(
-            i.get("priority") in ["P0", "P1"] and not i.get("shown")
-            for i in d.get("pending_items", [])
-        )
-        else "no"
-    )
 except Exception:
-    print("no")
+    print("")
+    raise SystemExit(0)
+
+items = [
+    i for i in d.get("pending_items", [])
+    if i.get("priority") in ["P0", "P1"] and not i.get("shown")
+]
+if not (d.get("has_pending") and items):
+    print("")
+    raise SystemExit(0)
+
+lines = [
+    "\n[heartbeat reminder] 在本轮回复开头先简短呈现以下待处理事项（呈现后再正常回复用户）：",
+]
+for item in items[:3]:
+    priority = item.get("priority", "P1")
+    content = item.get("content", "").strip()
+    action = item.get("action", "").strip()
+    line = f"- [{priority}] {content}"
+    if action:
+        line += f" -> {action}"
+    lines.append(line)
+print("\n".join(lines))
 PY
 )
-  if [ "$HAS" = "yes" ]; then
-    echo '[heartbeat] 有待处理事项，请在本轮回复开头读取 memory/heartbeat-state.json 并呈现 P0/P1 pending_items'
+  if [ -n "$HEARTBEAT_BLOCK" ]; then
+    if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+      printf '%s\n' "$HEARTBEAT_BLOCK" >> "$CLAUDE_ENV_FILE"
+    else
+      echo "$HEARTBEAT_BLOCK"
+    fi
   fi
 fi
 
