@@ -3,123 +3,140 @@
 <head>
 <meta charset="UTF-8"/>
 <style>
-  body { margin: 0; background: #ffffff; font-family: 'SF Pro Text', 'PingFang SC', sans-serif; }
-  .canvas { width: 920px; padding: 36px 48px 44px; box-sizing: border-box; }
-  h2 { color: #1e293b; font-size: 17px; font-weight: 700; margin: 0 0 4px; }
-  .subtitle { color: #94a3b8; font-size: 12px; margin: 0 0 28px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f1f5f9; font-family: 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', sans-serif; }
+  .canvas { width: 920px; background: #f1f5f9; padding: 0 0 40px; }
+
+  /* ── 标题区 ── */
+  .hero { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 28px 40px 24px; }
+  .hero-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #64748b; margin-bottom: 8px; }
+  .hero h2 { color: #f8fafc; font-size: 18px; font-weight: 700; margin: 0 0 6px; line-height: 1.3; }
+  .hero .subtitle { color: #94a3b8; font-size: 12px; margin: 0; line-height: 1.5; }
+
+  /* ── 内容区 ── */
+  .body { padding: 24px 32px 0; }
 
   .row { display: flex; gap: 14px; margin-bottom: 14px; }
   .row:last-child { margin-bottom: 0; }
 
-  .block { background: #f8fafc; border-radius: 10px; padding: 16px 16px 14px; border: 1px solid #e2e8f0; }
+  /* ── 卡片 ── */
+  .block { background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.04); overflow: hidden; }
   .block-wide { flex: 2; }
   .block-narrow { flex: 1; }
 
-  .block-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-  .icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .block-header { padding: 16px 18px 14px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 10px; }
+  .icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
   .block-title { font-size: 13px; font-weight: 700; }
+  .block-content { padding: 14px 18px 16px; }
 
-  .item { display: flex; gap: 8px; margin-bottom: 7px; align-items: flex-start; }
+  .badge { display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-bottom: 12px; }
+
+  .item { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start; }
   .item:last-child { margin-bottom: 0; }
-  .dot2 { width: 5px; height: 5px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
-  .item-text { font-size: 11.5px; color: #475569; line-height: 1.55; }
-  .item-text code { background: #f1f5f9; color: #0369a1; padding: 1px 4px; border-radius: 3px; font-size: 10.5px; }
-  .badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 3px; margin-bottom: 8px; }
+  .dot2 { width: 6px; height: 6px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .item-text { font-size: 11.5px; color: #475569; line-height: 1.6; }
+  .item-text code { background: #f1f5f9; color: #0369a1; padding: 1px 5px; border-radius: 4px; font-size: 10.5px; font-family: 'SF Mono', 'Menlo', monospace; }
 
-  .compare { display: flex; gap: 10px; margin-top: 8px; }
-  .compare-col { flex: 1; background: #fff; border-radius: 6px; padding: 10px 12px; border: 1px solid #e2e8f0; }
+  /* ── Before/After 对比 ── */
+  .compare { display: flex; gap: 10px; margin-top: 12px; }
+  .compare-col { flex: 1; border-radius: 8px; padding: 12px 14px; border: 1px solid; }
+  .compare-col.before { background: #fff5f5; border-color: #fca5a5; }
+  .compare-col.after { background: #f0fdf4; border-color: #86efac; }
   .compare-label { font-size: 10px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; margin-bottom: 6px; }
-  .compare-text { font-size: 11px; color: #475569; line-height: 1.6; }
-  .compare-text code { background: #f1f5f9; color: #0369a1; padding: 1px 4px; border-radius: 3px; font-size: 10px; }
+  .compare-col.before .compare-label { color: #dc2626; }
+  .compare-col.after .compare-label { color: #16a34a; }
+  .compare-text { font-size: 11px; color: #475569; line-height: 1.65; }
+  .compare-text code { background: rgba(255,255,255,.8); color: #0369a1; padding: 1px 4px; border-radius: 3px; font-size: 10px; font-family: 'SF Mono', 'Menlo', monospace; }
 
-  /* 颜色 */
+  /* ── 颜色 ── */
+  .ca { border-top: 3px solid #f59e0b; }
   .ca .icon { background: #fef3c7; }
   .ca .dot2 { background: #f59e0b; }
   .ca .block-title { color: #b45309; }
-  .ca .badge { background: #fef3c7; color: #b45309; }
-  .ca .compare-label { color: #b45309; }
+  .ca .badge { background: #fef3c7; color: #92400e; }
 
+  .cb { border-top: 3px solid #ec4899; }
   .cb .icon { background: #fce7f3; }
   .cb .dot2 { background: #ec4899; }
   .cb .block-title { color: #be185d; }
-  .cb .badge { background: #fce7f3; color: #be185d; }
-  .cb .compare-label { color: #be185d; }
-
-  .before { border-left: 3px solid #fca5a5; }
-  .after { border-left: 3px solid #86efac; }
-  .before .compare-label { color: #ef4444; }
-  .after .compare-label { color: #22c55e; }
+  .cb .badge { background: #fce7f3; color: #9d174d; }
 </style>
 </head>
 <body>
 <div class="canvas">
-  <h2>借鉴 Hermes Agent — Skill 依赖声明 · 自进化提议系统</h2>
-  <p class="subtitle">Hermes 是 Anthropic 内部多 agent 框架，longClaw 从中提取了两个核心设计并本地化改造</p>
-
-  <div class="row">
-    <!-- Skill requires -->
-    <div class="block block-wide ca">
-      <div class="block-header">
-        <div class="icon">🔗</div>
-        <div class="block-title">Skill requires 依赖声明</div>
-      </div>
-      <span class="badge">借鉴 Hermes</span>
-      <div class="item"><div class="dot2"></div><div class="item-text">SKILL.md frontmatter 新增 <code>requires</code> 字段，声明该 skill 运行所需的工具能力</div></div>
-      <div class="item"><div class="dot2"></div><div class="item-text">CTRL 在命中触发条件后、加载 SKILL.md 全文<b>之前</b>，先检查 requires</div></div>
-      <div class="item"><div class="dot2"></div><div class="item-text">不满足 → 返回 <code>blocked: missing_tool(web_fetch)</code>，不得假装执行或空转</div></div>
-
-      <div class="compare">
-        <div class="compare-col before">
-          <div class="compare-label">Before</div>
-          <div class="compare-text">skill 命中后直接执行，web_fetch 不可用时 CTRL 自己搜一遍就完事，没有明确的失败信号</div>
-        </div>
-        <div class="compare-col after">
-          <div class="compare-label">After</div>
-          <div class="compare-text"><code>requires: [web_fetch]</code> → 运行前检查 → 不满足时给出 blocked 原因 + 降级建议（如"提供直链或 PDF"）</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 分类 -->
-    <div class="block block-narrow ca">
-      <div class="block-header">
-        <div class="icon">📋</div>
-        <div class="block-title">10 个 Skill 的依赖分类</div>
-      </div>
-      <span class="badge">全量迁移</span>
-      <div class="item"><div class="dot2"></div><div class="item-text"><code>requires: []</code><br>jd-analysis / paper-deep-dive / skill-safety-audit</div></div>
-      <div class="item"><div class="dot2"></div><div class="item-text"><code>requires: [web_fetch]</code><br>fact-check-latest / public-evidence-fetch</div></div>
-      <div class="item"><div class="dot2"></div><div class="item-text"><code>requires: [file_read]</code><br>agent-review</div></div>
-      <div class="item"><div class="dot2"></div><div class="item-text"><code>requires: [file_write]</code><br>research-build / research-execution-protocol / session-compression-flow / multi-agent-bootstrap</div></div>
-    </div>
+  <div class="hero">
+    <div class="hero-eyebrow">Fig 11 · Hermes Borrow</div>
+    <h2>借鉴 Hermes Agent — Skill 依赖声明 · 自进化提议系统</h2>
+    <p class="subtitle">Hermes 是 Anthropic 内部多 agent 框架，longClaw 从中提取了两个核心设计并本地化改造</p>
   </div>
 
-  <div class="row">
-    <!-- Proactive Skill Creation -->
-    <div class="block cb" style="flex:1">
-      <div class="block-header">
-        <div class="icon">✨</div>
-        <div class="block-title">Proactive Skill Creation — 自进化提议系统</div>
-      </div>
-      <span class="badge">借鉴 Hermes 自进化理念</span>
-
-      <div class="compare" style="margin-top:4px">
-        <div class="compare-col before">
-          <div class="compare-label">Hermes 原设计</div>
-          <div class="compare-text">agent 自主发现可复用模式，自动生成新 skill，无需人工介入</div>
+  <div class="body">
+    <div class="row">
+      <!-- Skill requires -->
+      <div class="block block-wide ca">
+        <div class="block-header">
+          <div class="icon">🔗</div>
+          <div class="block-title">Skill requires 依赖声明</div>
         </div>
-        <div class="compare-col after">
-          <div class="compare-label">longClaw 本地化</div>
-          <div class="compare-text">保留"主动提议"，但<b>需要用户确认</b>后才固化为 SKILL.md（安全边界）</div>
+        <div class="block-content">
+          <span class="badge">借鉴 Hermes</span>
+          <div class="item"><div class="dot2"></div><div class="item-text">SKILL.md frontmatter 新增 <code>requires</code> 字段，声明该 skill 运行所需的工具能力</div></div>
+          <div class="item"><div class="dot2"></div><div class="item-text">CTRL 在命中触发条件后、加载 SKILL.md 全文<strong>之前</strong>，先检查 requires</div></div>
+          <div class="item"><div class="dot2"></div><div class="item-text">不满足 → 返回 <code>blocked: missing_tool(web_fetch)</code>，不得假装执行或空转</div></div>
+          <div class="compare">
+            <div class="compare-col before">
+              <div class="compare-label">Before</div>
+              <div class="compare-text">skill 命中后直接执行，web_fetch 不可用时 CTRL 自己搜一遍就完事，没有明确的失败信号</div>
+            </div>
+            <div class="compare-col after">
+              <div class="compare-label">After</div>
+              <div class="compare-text"><code>requires: [web_fetch]</code> → 运行前检查 → 不满足时给出 blocked 原因 + 降级建议（如"提供直链或 PDF"）</div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div style="margin-top:12px">
-        <div class="item"><div class="dot2"></div><div class="item-text"><b>触发优先级重排</b>（对齐 Hermes 自进化理念）：</div></div>
-        <div class="item" style="padding-left:13px"><div class="dot2"></div><div class="item-text">① 复杂流程完成后（≥3步 + 可复用）→ 当轮末尾<b>主动提议</b></div></div>
-        <div class="item" style="padding-left:13px"><div class="dot2"></div><div class="item-text">② 用户明确表达"每次都要..."</div></div>
-        <div class="item" style="padding-left:13px"><div class="dot2"></div><div class="item-text">③ 重复模式检测（≥2次，从 ≥3次 降低）</div></div>
-        <div class="item"><div class="dot2"></div><div class="item-text">提议格式：一句话说明 + 建议 skill 名 + 是否现在创建</div></div>
+      <!-- 分类 -->
+      <div class="block block-narrow ca">
+        <div class="block-header">
+          <div class="icon">📋</div>
+          <div class="block-title">10 个 Skill 的依赖分类</div>
+        </div>
+        <div class="block-content">
+          <span class="badge">全量迁移</span>
+          <div class="item"><div class="dot2"></div><div class="item-text"><code>requires: []</code><br>jd-analysis / paper-deep-dive / skill-safety-audit</div></div>
+          <div class="item"><div class="dot2"></div><div class="item-text"><code>requires: [web_fetch]</code><br>fact-check-latest / public-evidence-fetch</div></div>
+          <div class="item"><div class="dot2"></div><div class="item-text"><code>requires: [file_read]</code><br>agent-review</div></div>
+          <div class="item"><div class="dot2"></div><div class="item-text"><code>requires: [file_write]</code><br>research-build / research-execution-protocol / session-compression-flow / multi-agent-bootstrap</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Proactive Skill Creation -->
+      <div class="block cb" style="flex:1">
+        <div class="block-header">
+          <div class="icon">✨</div>
+          <div class="block-title">Proactive Skill Creation — 自进化提议系统</div>
+        </div>
+        <div class="block-content">
+          <span class="badge">借鉴 Hermes 自进化理念</span>
+          <div class="compare" style="margin-bottom:14px">
+            <div class="compare-col before">
+              <div class="compare-label">Hermes 原设计</div>
+              <div class="compare-text">agent 自主发现可复用模式，自动生成新 skill，无需人工介入</div>
+            </div>
+            <div class="compare-col after">
+              <div class="compare-label">longClaw 本地化</div>
+              <div class="compare-text">保留"主动提议"，但<strong>需要用户确认</strong>后才固化为 SKILL.md（安全边界）</div>
+            </div>
+          </div>
+          <div class="item"><div class="dot2"></div><div class="item-text"><strong>触发优先级重排</strong>（对齐 Hermes 自进化理念）：</div></div>
+          <div class="item" style="padding-left:14px"><div class="dot2"></div><div class="item-text">① 复杂流程完成后（≥3步 + 可复用）→ 当轮末尾<strong>主动提议</strong></div></div>
+          <div class="item" style="padding-left:14px"><div class="dot2"></div><div class="item-text">② 用户明确表达"每次都要..."</div></div>
+          <div class="item" style="padding-left:14px"><div class="dot2"></div><div class="item-text">③ 重复模式检测（≥2次，从 ≥3次 降低）</div></div>
+          <div class="item"><div class="dot2"></div><div class="item-text">提议格式：一句话说明 + 建议 skill 名 + 是否现在创建</div></div>
+        </div>
       </div>
     </div>
   </div>

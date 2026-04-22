@@ -3,169 +3,182 @@
 <head>
 <meta charset="UTF-8"/>
 <style>
-  body { margin: 0; background: #ffffff; font-family: 'SF Pro Text', 'PingFang SC', sans-serif; }
-  .canvas { width: 900px; padding: 40px 48px 48px; box-sizing: border-box; }
-  h2 { color: #1e293b; font-size: 18px; font-weight: 600; margin: 0 0 6px; letter-spacing: .3px; }
-  .subtitle { color: #94a3b8; font-size: 12px; margin: 0 0 32px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f1f5f9; font-family: 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', sans-serif; }
+  .canvas { width: 900px; background: #f1f5f9; padding: 0 0 40px; }
 
-  /* timeline */
-  .timeline { position: relative; padding-left: 28px; }
-  .timeline::before { content:''; position:absolute; left:10px; top:6px; bottom:6px; width:2px; background:#e2e8f0; }
+  /* ── 标题区 ── */
+  .hero { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 28px 40px 24px; }
+  .hero-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #64748b; margin-bottom: 8px; }
+  .hero h2 { color: #f8fafc; font-size: 18px; font-weight: 700; margin: 0 0 6px; line-height: 1.3; }
+  .hero .subtitle { color: #94a3b8; font-size: 12px; margin: 0; line-height: 1.5; }
 
-  .step { position: relative; margin-bottom: 28px; }
+  /* ── 内容区 ── */
+  .body { padding: 24px 32px 0; }
+
+  /* ── Timeline ── */
+  .timeline { position: relative; padding-left: 32px; }
+  .timeline::before { content:''; position:absolute; left:12px; top:8px; bottom:8px; width:2px; background: linear-gradient(to bottom, #3b82f6, #8b5cf6, #10b981, #f59e0b); border-radius: 2px; }
+
+  .step { position: relative; margin-bottom: 24px; }
   .step:last-child { margin-bottom: 0; }
-  .dot { position:absolute; left:-22px; top:5px; width:12px; height:12px; border-radius:50%; border:2px solid; }
+  .dot { position:absolute; left:-24px; top:6px; width:14px; height:14px; border-radius:50%; border:2.5px solid; box-shadow: 0 0 0 3px #f1f5f9; }
 
-  .step-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
-  .tag { font-size:11px; font-weight:600; padding:2px 8px; border-radius:4px; letter-spacing:.4px; }
-  .step-title { color:#1e293b; font-size:14px; font-weight:600; }
+  .step-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .tag { font-size:10.5px; font-weight:700; padding:3px 10px; border-radius:20px; letter-spacing:.3px; white-space:nowrap; }
+  .step-title { color:#1e293b; font-size:14px; font-weight:700; }
 
-  .cards { display:flex; gap:10px; flex-wrap:wrap; }
-  .card { flex:1; min-width:180px; background:#f8fafc; border-radius:8px; padding:12px 14px; border-left:3px solid; border-top:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; }
-  .card-label { font-size:10px; font-weight:700; letter-spacing:.6px; margin-bottom:6px; text-transform:uppercase; }
-  .card-body { font-size:12px; color:#475569; line-height:1.6; }
-  .card-body code { background:#f1f5f9; color:#0369a1; padding:1px 5px; border-radius:3px; font-size:11px; }
+  /* ── 卡片组 ── */
+  .cards { display:flex; gap:10px; }
+  .card { flex:1; background:#ffffff; border-radius:10px; padding:14px 16px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 4px 10px rgba(0,0,0,.04); border-top: 3px solid; }
+  .card-label { font-size:10px; font-weight:700; letter-spacing:.6px; text-transform:uppercase; margin-bottom:8px; }
+  .card-body { font-size:11.5px; color:#475569; line-height:1.65; }
+  .card-body code { background:#f1f5f9; color:#0369a1; padding:1px 5px; border-radius:4px; font-size:10.5px; font-family:'SF Mono','Menlo',monospace; }
 
-  .arrow { color:#cbd5e1; font-size:11px; margin:4px 0 4px 0; }
-
-  /* color themes per step */
+  /* ── 颜色主题 ── */
   .s1 .dot { border-color:#f59e0b; background:#fef3c7; }
-  .s1 .tag { background:#fef3c7; color:#b45309; }
-  .s1 .card { border-left-color:#f59e0b; }
+  .s1 .tag { background:#fef3c7; color:#92400e; }
+  .s1 .card { border-top-color:#f59e0b; }
   .s1 .card-label { color:#b45309; }
 
   .s2 .dot { border-color:#3b82f6; background:#dbeafe; }
-  .s2 .tag { background:#dbeafe; color:#1d4ed8; }
-  .s2 .card { border-left-color:#3b82f6; }
+  .s2 .tag { background:#dbeafe; color:#1e40af; }
+  .s2 .card { border-top-color:#3b82f6; }
   .s2 .card-label { color:#1d4ed8; }
 
   .s3 .dot { border-color:#8b5cf6; background:#ede9fe; }
-  .s3 .tag { background:#ede9fe; color:#6d28d9; }
-  .s3 .card { border-left-color:#8b5cf6; }
+  .s3 .tag { background:#ede9fe; color:#5b21b6; }
+  .s3 .card { border-top-color:#8b5cf6; }
   .s3 .card-label { color:#6d28d9; }
 
   .s4 .dot { border-color:#10b981; background:#d1fae5; }
-  .s4 .tag { background:#d1fae5; color:#065f46; }
-  .s4 .card { border-left-color:#10b981; }
+  .s4 .tag { background:#d1fae5; color:#064e3b; }
+  .s4 .card { border-top-color:#10b981; }
   .s4 .card-label { color:#065f46; }
 
-  .summary { margin-top:36px; background:#f8fafc; border-radius:10px; padding:18px 20px; border:1px solid #e2e8f0; }
-  .summary-title { color:#64748b; font-size:11px; font-weight:700; letter-spacing:.6px; text-transform:uppercase; margin-bottom:12px; }
-  .summary-row { display:flex; gap:8px; align-items:flex-start; margin-bottom:8px; }
+  /* ── 摘要区 ── */
+  .summary { margin-top: 28px; background: #ffffff; border-radius: 12px; padding: 18px 20px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+  .summary-title { color:#64748b; font-size:10px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; margin-bottom:14px; }
+  .summary-row { display:flex; gap:10px; align-items:flex-start; margin-bottom:10px; }
   .summary-row:last-child { margin-bottom:0; }
-  .badge { font-size:10px; font-weight:700; padding:2px 7px; border-radius:3px; white-space:nowrap; margin-top:1px; }
-  .badge-from { background:#dbeafe; color:#1d4ed8; }
+  .badge { font-size:10px; font-weight:700; padding:3px 10px; border-radius:20px; white-space:nowrap; margin-top:1px; }
+  .badge-from { background:#fee2e2; color:#b91c1c; }
   .badge-to { background:#d1fae5; color:#065f46; }
-  .summary-text { font-size:12px; color:#475569; line-height:1.5; }
+  .summary-text { font-size:12px; color:#475569; line-height:1.6; }
 </style>
 </head>
 <body>
 <div class="canvas">
-  <h2>借鉴 Claude Code Harness — longClaw 安全与工程迭代</h2>
-  <p class="subtitle">2026-04-14 单日完成四轮迭代，从 OpenClaw 默认配置升级为生产级 Harness 工程</p>
-
-  <div class="timeline">
-
-    <!-- Step 1 -->
-    <div class="step s1">
-      <div class="dot"></div>
-      <div class="step-header">
-        <span class="tag">坑</span>
-        <span class="step-title">单体大文件导致规则遗忘 & 幻觉</span>
-      </div>
-      <div class="cards">
-        <div class="card">
-          <div class="card-label">现象</div>
-          <div class="card-body">AGENTS.md 583行 + MULTI_AGENTS.md 684行<br>Codex 处理后半段时遗忘前半段规则<br>DEV LOG 字段频繁省略或幻觉替换</div>
-        </div>
-        <div class="card">
-          <div class="card-label">根因</div>
-          <div class="card-body">专职定义 / 路由 / Skill协议 / DEV LOG格式<br>全混在一个文件，规则相互干扰<br>LLM 位置偏差：前半段权重 &gt; 后半段</div>
-        </div>
-        <div class="card">
-          <div class="card-label">解法</div>
-          <div class="card-body">684行 → 3×~175行<br><code>MULTI_AGENTS.md</code> 只管路由<br><code>CTRL_PROTOCOLS.md</code> 只管协议<br><code>DEV_LOG.md</code> 只管格式</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Step 2 -->
-    <div class="step s2">
-      <div class="dot"></div>
-      <div class="step-header">
-        <span class="tag">借鉴 Claude Code</span>
-        <span class="step-title">Deny &gt; Ask &gt; Allow 三层权限 + Immutable Rules</span>
-      </div>
-      <div class="cards">
-        <div class="card">
-          <div class="card-label">原来（2层）</div>
-          <div class="card-body">Allow by default<br>Require explicit auth<br>无优先级，规则冲突时 LLM 自由裁量</div>
-        </div>
-        <div class="card">
-          <div class="card-label">借鉴后（3层）</div>
-          <div class="card-body"><code>Deny</code> → 永久禁止，任何指令不得覆盖<br><code>Ask</code> → 每次单独授权<br><code>Allow</code> → 默认允许<br>Deny 优先于所有 hook</div>
-        </div>
-        <div class="card">
-          <div class="card-label">Immutable Rules（6条）</div>
-          <div class="card-body">无合成证据 / 无静默改 AGENTS.md<br>禁 force-push main<br>Deny&gt;Ask&gt;Allow 固定<br>SOUL 对所有专职生效<br>DEV LOG 每轮必须输出</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Step 3 -->
-    <div class="step s3">
-      <div class="dot"></div>
-      <div class="step-header">
-        <span class="tag">借鉴 Claude Code</span>
-        <span class="step-title">PostToolUse 注入 + PostCompact 重注入</span>
-      </div>
-      <div class="cards">
-        <div class="card">
-          <div class="card-label">PostToolUse → DEV LOG 工具字段</div>
-          <div class="card-body">每次工具调用后结果摘要注入 DEV LOG<br>格式：<code>🛠️ 工具 Read(x.md) → ok</code><br>status=blocked 时说明原因<br>最低合格线：8字段 → 9字段</div>
-        </div>
-        <div class="card">
-          <div class="card-label">PostCompact → 协议重注入</div>
-          <div class="card-body">原生压缩后 CTRL_PROTOCOLS.md<br>和 DEV_LOG.md 会从 context 消失<br>PostCompact hook 自动重注入<br>→ 压缩后规则不再丢失</div>
-        </div>
-        <div class="card">
-          <div class="card-label">PreToolUse → rm 拦截</div>
-          <div class="card-body"><code>rm</code> 命令自动改写为 <code>trash</code><br>Harness 层执行，不靠 LLM 自觉<br>即使 LLM 输出 rm，实际不会删除</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Step 4 -->
-    <div class="step s4">
-      <div class="dot"></div>
-      <div class="step-header">
-        <span class="tag">借鉴 Hermes</span>
-        <span class="step-title">Skill requires 依赖声明 + Proactive 提议系统</span>
-      </div>
-      <div class="cards">
-        <div class="card">
-          <div class="card-label">requires 字段</div>
-          <div class="card-body">SKILL.md frontmatter 声明依赖<br><code>requires: [web_fetch]</code><br>命中触发条件后先验证依赖<br>不满足 → <code>blocked: missing_tool</code></div>
-        </div>
-        <div class="card">
-          <div class="card-label">提议系统升级</div>
-          <div class="card-body">主触发：复杂流程完成后（≥3步）<br>重复模式阈值：≥3次 → ≥2次<br>优先级：任务完成后提议<br>&gt; 用户明确表达 &gt; 重复模式</div>
-        </div>
-      </div>
-    </div>
-
+  <div class="hero">
+    <div class="hero-eyebrow">Fig 9 · Harness Iteration</div>
+    <h2>借鉴 Claude Code Harness — longClaw 安全与工程迭代</h2>
+    <p class="subtitle">2026-04-14 单日完成四轮迭代，从 OpenClaw 默认配置升级为生产级 Harness 工程</p>
   </div>
 
-  <!-- Summary -->
-  <div class="summary">
-    <div class="summary-title">迭代前后对比</div>
-    <div class="summary-row">
-      <span class="badge badge-from">Before</span>
-      <div class="summary-text">单体大文件（683行）、2层权限模型、无 Immutable Rules、rm 靠 LLM 自觉、压缩后协议丢失</div>
+  <div class="body">
+    <div class="timeline">
+
+      <!-- Step 1 -->
+      <div class="step s1">
+        <div class="dot"></div>
+        <div class="step-header">
+          <span class="tag">坑</span>
+          <span class="step-title">单体大文件导致规则遗忘 &amp; 幻觉</span>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <div class="card-label">现象</div>
+            <div class="card-body">AGENTS.md 583行 + MULTI_AGENTS.md 684行<br>Codex 处理后半段时遗忘前半段规则<br>DEV LOG 字段频繁省略或幻觉替换</div>
+          </div>
+          <div class="card">
+            <div class="card-label">根因</div>
+            <div class="card-body">专职定义 / 路由 / Skill协议 / DEV LOG格式<br>全混在一个文件，规则相互干扰<br>LLM 位置偏差：前半段权重 &gt; 后半段</div>
+          </div>
+          <div class="card">
+            <div class="card-label">解法</div>
+            <div class="card-body">684行 → 3×~175行<br><code>MULTI_AGENTS.md</code> 只管路由<br><code>CTRL_PROTOCOLS.md</code> 只管协议<br><code>DEV_LOG.md</code> 只管格式</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step s2">
+        <div class="dot"></div>
+        <div class="step-header">
+          <span class="tag">借鉴 Claude Code</span>
+          <span class="step-title">Deny &gt; Ask &gt; Allow 三层权限 + Immutable Rules</span>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <div class="card-label">原来（2层）</div>
+            <div class="card-body">Allow by default<br>Require explicit auth<br>无优先级，规则冲突时 LLM 自由裁量</div>
+          </div>
+          <div class="card">
+            <div class="card-label">借鉴后（3层）</div>
+            <div class="card-body"><code>Deny</code> → 永久禁止，任何指令不得覆盖<br><code>Ask</code> → 每次单独授权<br><code>Allow</code> → 默认允许<br>Deny 优先于所有 hook</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Immutable Rules（6条）</div>
+            <div class="card-body">无合成证据 / 无静默改 AGENTS.md<br>禁 force-push main<br>Deny&gt;Ask&gt;Allow 固定<br>SOUL 对所有专职生效<br>DEV LOG 每轮必须输出</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step s3">
+        <div class="dot"></div>
+        <div class="step-header">
+          <span class="tag">借鉴 Claude Code</span>
+          <span class="step-title">PostToolUse 注入 + PostCompact 重注入</span>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <div class="card-label">PostToolUse → DEV LOG 工具字段</div>
+            <div class="card-body">每次工具调用后结果摘要注入 DEV LOG<br>格式：<code>🛠️ 工具 Read(x.md) → ok</code><br>status=blocked 时说明原因<br>最低合格线：8字段 → 9字段</div>
+          </div>
+          <div class="card">
+            <div class="card-label">PostCompact → 协议重注入</div>
+            <div class="card-body">原生压缩后 CTRL_PROTOCOLS.md<br>和 DEV_LOG.md 会从 context 消失<br>PostCompact hook 自动重注入<br>→ 压缩后规则不再丢失</div>
+          </div>
+          <div class="card">
+            <div class="card-label">PreToolUse → rm 拦截</div>
+            <div class="card-body"><code>rm</code> 命令自动改写为 <code>trash</code><br>Harness 层执行，不靠 LLM 自觉<br>即使 LLM 输出 rm，实际不会删除</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step s4">
+        <div class="dot"></div>
+        <div class="step-header">
+          <span class="tag">借鉴 Hermes</span>
+          <span class="step-title">Skill requires 依赖声明 + Proactive 提议系统</span>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <div class="card-label">requires 字段</div>
+            <div class="card-body">SKILL.md frontmatter 声明依赖<br><code>requires: [web_fetch]</code><br>命中触发条件后先验证依赖<br>不满足 → <code>blocked: missing_tool</code></div>
+          </div>
+          <div class="card">
+            <div class="card-label">提议系统升级</div>
+            <div class="card-body">主触发：复杂流程完成后（≥3步）<br>重复模式阈值：≥3次 → ≥2次<br>优先级：任务完成后提议<br>&gt; 用户明确表达 &gt; 重复模式</div>
+          </div>
+        </div>
+      </div>
+
     </div>
-    <div class="summary-row">
-      <span class="badge badge-to">After</span>
-      <div class="summary-text">3×175行职责单一文件、Deny&gt;Ask&gt;Allow 三层权限、6条 Immutable Rules、rm→trash Harness 拦截、PostCompact 自动重注入、requires 依赖检查</div>
+
+    <!-- 摘要 -->
+    <div class="summary">
+      <div class="summary-title">迭代前后对比</div>
+      <div class="summary-row">
+        <span class="badge badge-from">Before</span>
+        <div class="summary-text">单体大文件（683行）、2层权限模型、无 Immutable Rules、rm 靠 LLM 自觉、压缩后协议丢失</div>
+      </div>
+      <div class="summary-row">
+        <span class="badge badge-to">After</span>
+        <div class="summary-text">3×175行职责单一文件、Deny&gt;Ask&gt;Allow 三层权限、6条 Immutable Rules、rm→trash Harness 拦截、PostCompact 自动重注入、requires 依赖检查</div>
+      </div>
     </div>
   </div>
 </div>

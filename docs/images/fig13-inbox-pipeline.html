@@ -3,172 +3,181 @@
 <head>
 <meta charset="UTF-8"/>
 <style>
-  body { margin: 0; background: #ffffff; font-family: 'SF Pro Text', 'PingFang SC', sans-serif; }
-  .canvas { width: 920px; padding: 36px 48px 44px; box-sizing: border-box; }
-  h2 { color: #1e293b; font-size: 17px; font-weight: 700; margin: 0 0 4px; }
-  .subtitle { color: #94a3b8; font-size: 12px; margin: 0 0 28px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f1f5f9; font-family: 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', sans-serif; }
+  .canvas { width: 920px; background: #f1f5f9; padding: 0 0 40px; }
 
-  /* 流程主线 */
-  .pipeline { display: flex; align-items: flex-start; gap: 0; margin-bottom: 20px; }
+  /* ── 标题区 ── */
+  .hero { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 28px 40px 24px; }
+  .hero-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #64748b; margin-bottom: 8px; }
+  .hero h2 { color: #f8fafc; font-size: 18px; font-weight: 700; margin: 0 0 6px; line-height: 1.3; }
+  .hero .subtitle { color: #94a3b8; font-size: 12px; margin: 0; line-height: 1.5; }
+
+  /* ── 内容区 ── */
+  .body { padding: 24px 32px 0; }
+
+  /* ── Pipeline ── */
+  .pipeline { display: flex; align-items: stretch; gap: 0; margin-bottom: 20px; }
   .pipe-step { flex: 1; position: relative; }
-  .pipe-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 14px 12px; margin-right: 10px; height: 100%; box-sizing: border-box; }
-  .pipe-arrow { position: absolute; right: -2px; top: 50%; transform: translateY(-50%); color: #cbd5e1; font-size: 18px; z-index: 1; }
+  .pipe-box { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 14px 14px; margin-right: 12px; height: 100%; box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 4px 10px rgba(0,0,0,.04); border-top: 3px solid; }
   .pipe-step:last-child .pipe-box { margin-right: 0; }
+  .pipe-arrow { position: absolute; right: -4px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 20px; z-index: 2; font-weight: 700; }
   .pipe-step:last-child .pipe-arrow { display: none; }
 
-  .step-num { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; margin-bottom: 8px; }
-  .step-title { font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
-  .step-body { font-size: 11px; color: #64748b; line-height: 1.6; }
-  .step-body code { background: #f1f5f9; color: #0369a1; padding: 1px 4px; border-radius: 3px; font-size: 10px; }
+  .step-num { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; margin-bottom: 10px; }
+  .step-title { font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+  .step-body { font-size: 11px; color: #64748b; line-height: 1.7; }
+  .step-body code { background: #f1f5f9; color: #0369a1; padding: 1px 4px; border-radius: 3px; font-size: 10px; font-family: 'SF Mono', 'Menlo', monospace; }
 
-  /* 颜色 */
+  /* ── 颜色 ── */
+  .p1 .pipe-box { border-top-color: #3b82f6; }
   .p1 .step-num { background: #dbeafe; color: #1d4ed8; }
-  .p1 .pipe-box { border-top: 3px solid #3b82f6; }
+  .p2 .pipe-box { border-top-color: #8b5cf6; }
   .p2 .step-num { background: #ede9fe; color: #6d28d9; }
-  .p2 .pipe-box { border-top: 3px solid #8b5cf6; }
+  .p3 .pipe-box { border-top-color: #f59e0b; }
   .p3 .step-num { background: #fef3c7; color: #b45309; }
-  .p3 .pipe-box { border-top: 3px solid #f59e0b; }
+  .p4 .pipe-box { border-top-color: #10b981; }
   .p4 .step-num { background: #d1fae5; color: #065f46; }
-  .p4 .pipe-box { border-top: 3px solid #10b981; }
+  .p5 .pipe-box { border-top-color: #ec4899; }
   .p5 .step-num { background: #fce7f3; color: #be185d; }
-  .p5 .pipe-box { border-top: 3px solid #ec4899; }
 
-  /* 底部两列 */
+  /* ── 底部三列 ── */
   .bottom { display: flex; gap: 14px; }
-  .bottom-block { flex: 1; background: #f8fafc; border-radius: 10px; padding: 14px 16px; border: 1px solid #e2e8f0; }
-  .bottom-title { font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-  .bottom-body { font-size: 11px; color: #64748b; line-height: 1.65; }
-  .bottom-body code { background: #f1f5f9; color: #0369a1; padding: 1px 4px; border-radius: 3px; font-size: 10px; }
+  .bottom-block { flex: 1; background: #ffffff; border-radius: 12px; padding: 16px 18px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+  .bottom-title { font-size: 12.5px; font-weight: 700; color: #1e293b; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .bottom-body { font-size: 11px; color: #64748b; line-height: 1.7; }
+  .bottom-body code { background: #f1f5f9; color: #0369a1; padding: 1px 4px; border-radius: 3px; font-size: 10px; font-family: 'SF Mono', 'Menlo', monospace; }
 
-  .tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 3px; margin-right: 4px; }
+  .tag { display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-right: 4px; }
   .tag-blue { background: #dbeafe; color: #1d4ed8; }
   .tag-green { background: #d1fae5; color: #065f46; }
   .tag-orange { background: #fef3c7; color: #b45309; }
-
-  .divider { border: none; border-top: 1px solid #e2e8f0; margin: 18px 0; }
 </style>
 </head>
 <body>
 <div class="canvas">
-  <h2>个人知识摄入管道 — inbox/ → knowledge_entries.jsonl → memory_search</h2>
-  <p class="subtitle">解决"学到的东西无法被检索"的问题：把任意文本内容变成可被 CTRL 精准召回的结构化知识条目</p>
-
-  <div class="pipeline">
-    <!-- Step 1 -->
-    <div class="pipe-step p1">
-      <div class="pipe-box">
-        <div class="step-num">1</div>
-        <div class="step-title">📥 放入 inbox/</div>
-        <div class="step-body">
-          支持 <code>.md</code> / <code>.txt</code><br>
-          可选 YAML frontmatter<br>
-          指定 domain / tags /<br>
-          importance<br>
-          文件名加日期前缀
-        </div>
-      </div>
-      <div class="pipe-arrow">›</div>
-    </div>
-
-    <!-- Step 2 -->
-    <div class="pipe-step p2">
-      <div class="pipe-box">
-        <div class="step-num">2</div>
-        <div class="step-title">🔍 解析 frontmatter</div>
-        <div class="step-body">
-          提取 domain / tags /<br>
-          importance / title<br>
-          无 frontmatter 时<br>
-          自动推断域（关键词匹配）<br>
-          默认域：LEARN
-        </div>
-      </div>
-      <div class="pipe-arrow">›</div>
-    </div>
-
-    <!-- Step 3 -->
-    <div class="pipe-step p3">
-      <div class="pipe-box">
-        <div class="step-num">3</div>
-        <div class="step-title">✂️ 分块 + 实体提取</div>
-        <div class="step-body">
-          按段落分块<br>
-          400 token / 块<br>
-          80 token 重叠<br>
-          提取公司名 / 技术词 /<br>
-          日期等实体
-        </div>
-      </div>
-      <div class="pipe-arrow">›</div>
-    </div>
-
-    <!-- Step 4 -->
-    <div class="pipe-step p4">
-      <div class="pipe-box">
-        <div class="step-num">4</div>
-        <div class="step-title">💾 写入 JSONL</div>
-        <div class="step-body">
-          追加到<br>
-          <code>knowledge_entries.jsonl</code><br>
-          不覆盖已有条目<br>
-          原文件移动到<br>
-          <code>inbox/processed/</code>
-        </div>
-      </div>
-      <div class="pipe-arrow">›</div>
-    </div>
-
-    <!-- Step 5 -->
-    <div class="pipe-step p5">
-      <div class="pipe-box">
-        <div class="step-num">5</div>
-        <div class="step-title">🔎 双索引检索</div>
-        <div class="step-body">
-          <code>memory_search.py</code><br>
-          <code>load_all()</code> 自动合并<br>
-          memory_entries（对话记忆）<br>
-          + knowledge_entries<br>
-          （inbox 知识库）
-        </div>
-      </div>
-    </div>
+  <div class="hero">
+    <div class="hero-eyebrow">Fig 13 · Inbox Pipeline</div>
+    <h2>个人知识摄入管道 — inbox/ → knowledge_entries.jsonl → memory_search</h2>
+    <p class="subtitle">解决"学到的东西无法被检索"的问题：把任意文本内容变成可被 CTRL 精准召回的结构化知识条目</p>
   </div>
 
-  <hr class="divider"/>
+  <div class="body">
+    <div class="pipeline">
+      <!-- Step 1 -->
+      <div class="pipe-step p1">
+        <div class="pipe-box">
+          <div class="step-num">1</div>
+          <div class="step-title">📥 放入 inbox/</div>
+          <div class="step-body">
+            支持 <code>.md</code> / <code>.txt</code><br>
+            可选 YAML frontmatter<br>
+            指定 domain / tags /<br>
+            importance<br>
+            文件名加日期前缀
+          </div>
+        </div>
+        <div class="pipe-arrow">›</div>
+      </div>
 
-  <div class="bottom">
-    <!-- 左：自动触发 -->
-    <div class="bottom-block">
-      <div class="bottom-title">⏰ 自动触发机制</div>
-      <div class="bottom-body">
-        <span class="tag tag-blue">heartbeat-agent P2</span> 每天 08:30 / 18:00 扫描 inbox/<br><br>
-        发现新文件 → 自动运行 <code>inbox_processor.py</code><br>
-        无需人工干预，处理完写入 heartbeat-state.json<br><br>
-        也可手动触发：<code>python3 tools/inbox_processor.py</code><br>
-        预览模式：<code>--dry-run</code> &nbsp; 统计模式：<code>--stats</code>
+      <!-- Step 2 -->
+      <div class="pipe-step p2">
+        <div class="pipe-box">
+          <div class="step-num">2</div>
+          <div class="step-title">🔍 解析 frontmatter</div>
+          <div class="step-body">
+            提取 domain / tags /<br>
+            importance / title<br>
+            无 frontmatter 时<br>
+            自动推断域（关键词匹配）<br>
+            默认域：LEARN
+          </div>
+        </div>
+        <div class="pipe-arrow">›</div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="pipe-step p3">
+        <div class="pipe-box">
+          <div class="step-num">3</div>
+          <div class="step-title">✂️ 分块 + 实体提取</div>
+          <div class="step-body">
+            按段落分块<br>
+            400 token / 块<br>
+            80 token 重叠<br>
+            提取公司名 / 技术词 /<br>
+            日期等实体
+          </div>
+        </div>
+        <div class="pipe-arrow">›</div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="pipe-step p4">
+        <div class="pipe-box">
+          <div class="step-num">4</div>
+          <div class="step-title">💾 写入 JSONL</div>
+          <div class="step-body">
+            追加到<br>
+            <code>knowledge_entries.jsonl</code><br>
+            不覆盖已有条目<br>
+            原文件移动到<br>
+            <code>inbox/processed/</code>
+          </div>
+        </div>
+        <div class="pipe-arrow">›</div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="pipe-step p5">
+        <div class="pipe-box">
+          <div class="step-num">5</div>
+          <div class="step-title">🔎 双索引检索</div>
+          <div class="step-body">
+            <code>memory_search.py</code><br>
+            <code>load_all()</code> 自动合并<br>
+            memory_entries（对话记忆）<br>
+            + knowledge_entries<br>
+            （inbox 知识库）
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- 中：设计动机 -->
-    <div class="bottom-block">
-      <div class="bottom-title">💡 设计动机</div>
-      <div class="bottom-body">
-        <span class="tag tag-orange">痛点</span> 对话记忆只记"发生了什么"，学到的技术文章、论文笔记无法进入检索范围<br><br>
-        <span class="tag tag-green">解法</span> 双轨索引：memory_entries（对话） + knowledge_entries（知识库），<code>load_all()</code> 统一检索入口<br><br>
-        知识条目与对话记忆共用同一套 FTS + 实体打分机制，无需维护两套检索逻辑
+    <div class="bottom">
+      <!-- 左：自动触发 -->
+      <div class="bottom-block">
+        <div class="bottom-title">⏰ 自动触发机制</div>
+        <div class="bottom-body">
+          <span class="tag tag-blue">heartbeat-agent P2</span> 每天 08:30 / 18:00 扫描 inbox/<br><br>
+          发现新文件 → 自动运行 <code>inbox_processor.py</code><br>
+          无需人工干预，处理完写入 heartbeat-state.json<br><br>
+          也可手动触发：<code>python3 tools/inbox_processor.py</code><br>
+          预览模式：<code>--dry-run</code> &nbsp; 统计模式：<code>--stats</code>
+        </div>
       </div>
-    </div>
 
-    <!-- 右：条目结构 -->
-    <div class="bottom-block">
-      <div class="bottom-title">📄 knowledge_entry 结构</div>
-      <div class="bottom-body">
-        <code>id</code>：kb_ + md5 前8位<br>
-        <code>source_type</code>：knowledge（区别于 memory）<br>
-        <code>domain</code>：JOB / LEARN / ENGINEER…<br>
-        <code>entities</code>：自动提取的实体列表<br>
-        <code>importance</code>：0.1–1.0（frontmatter 或自动估算）<br>
-        <code>status</code>：active / archived
+      <!-- 中：设计动机 -->
+      <div class="bottom-block">
+        <div class="bottom-title">💡 设计动机</div>
+        <div class="bottom-body">
+          <span class="tag tag-orange">痛点</span> 对话记忆只记"发生了什么"，学到的技术文章、论文笔记无法进入检索范围<br><br>
+          <span class="tag tag-green">解法</span> 双轨索引：memory_entries（对话） + knowledge_entries（知识库），<code>load_all()</code> 统一检索入口<br><br>
+          知识条目与对话记忆共用同一套 FTS + 实体打分机制，无需维护两套检索逻辑
+        </div>
+      </div>
+
+      <!-- 右：条目结构 -->
+      <div class="bottom-block">
+        <div class="bottom-title">📄 knowledge_entry 结构</div>
+        <div class="bottom-body">
+          <code>id</code>：kb_ + md5 前8位<br>
+          <code>source_type</code>：knowledge（区别于 memory）<br>
+          <code>domain</code>：JOB / LEARN / ENGINEER…<br>
+          <code>entities</code>：自动提取的实体列表<br>
+          <code>importance</code>：0.1–1.0（frontmatter 或自动估算）<br>
+          <code>status</code>：active / archived
+        </div>
       </div>
     </div>
   </div>

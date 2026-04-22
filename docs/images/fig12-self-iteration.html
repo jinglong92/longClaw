@@ -3,153 +3,169 @@
 <head>
 <meta charset="UTF-8"/>
 <style>
-  body { margin: 0; background: #ffffff; font-family: 'SF Pro Text', 'PingFang SC', sans-serif; }
-  .canvas { width: 920px; padding: 36px 48px 44px; box-sizing: border-box; }
-  h2 { color: #1e293b; font-size: 17px; font-weight: 700; margin: 0 0 4px; }
-  .subtitle { color: #94a3b8; font-size: 12px; margin: 0 0 24px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f1f5f9; font-family: 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', sans-serif; }
+  .canvas { width: 920px; background: #f1f5f9; padding: 0 0 40px; }
 
-  .timeline { position: relative; padding-left: 26px; }
-  .timeline::before { content:''; position:absolute; left:8px; top:4px; bottom:4px; width:2px; background:#e2e8f0; }
+  /* ── 标题区 ── */
+  .hero { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 28px 40px 24px; }
+  .hero-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #64748b; margin-bottom: 8px; }
+  .hero h2 { color: #f8fafc; font-size: 18px; font-weight: 700; margin: 0 0 6px; line-height: 1.3; }
+  .hero .subtitle { color: #94a3b8; font-size: 12px; margin: 0; line-height: 1.5; }
 
-  .step { position: relative; margin-bottom: 20px; }
+  /* ── 内容区 ── */
+  .body { padding: 24px 32px 0; }
+
+  /* ── Timeline ── */
+  .timeline { position: relative; padding-left: 32px; }
+  .timeline::before { content:''; position:absolute; left:12px; top:8px; bottom:8px; width:2px; background: linear-gradient(to bottom, #f59e0b, #3b82f6, #10b981, #8b5cf6); border-radius: 2px; }
+
+  .step { position: relative; margin-bottom: 22px; }
   .step:last-child { margin-bottom: 0; }
-  .dot { position:absolute; left:-22px; top:4px; width:12px; height:12px; border-radius:50%; border:2px solid; }
+  .dot { position:absolute; left:-24px; top:6px; width:14px; height:14px; border-radius:50%; border:2.5px solid; box-shadow: 0 0 0 3px #f1f5f9; }
 
-  .step-header { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
-  .tag { font-size:10px; font-weight:700; padding:2px 7px; border-radius:3px; letter-spacing:.3px; white-space:nowrap; }
-  .step-title { color:#1e293b; font-size:13px; font-weight:700; }
+  .step-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .tag { font-size:10.5px; font-weight:700; padding:3px 10px; border-radius:20px; letter-spacing:.3px; white-space:nowrap; }
+  .step-title { color:#1e293b; font-size:13.5px; font-weight:700; }
 
-  .cards { display:flex; gap:10px; flex-wrap:wrap; }
-  .card { flex:1; min-width:160px; background:#f8fafc; border-radius:8px; padding:10px 12px; border-left:3px solid; border-top:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; }
-  .card-label { font-size:10px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; margin-bottom:5px; }
-  .card-body { font-size:11.5px; color:#475569; line-height:1.55; }
-  .card-body code { background:#f1f5f9; color:#0369a1; padding:1px 4px; border-radius:3px; font-size:10.5px; }
+  /* ── 卡片组 ── */
+  .cards { display:flex; gap:10px; }
+  .card { flex:1; background:#ffffff; border-radius:10px; padding:14px 16px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 4px 10px rgba(0,0,0,.04); border-top: 3px solid; }
+  .card-label { font-size:10px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; margin-bottom:8px; }
+  .card-body { font-size:11.5px; color:#475569; line-height:1.65; }
+  .card-body code { background:#f1f5f9; color:#0369a1; padding:1px 5px; border-radius:4px; font-size:10.5px; font-family:'SF Mono','Menlo',monospace; }
+  .card-body s { color: #94a3b8; }
 
-  /* 颜色 */
+  /* ── 颜色主题 ── */
   .s1 .dot { border-color:#f59e0b; background:#fef3c7; }
-  .s1 .tag { background:#fef3c7; color:#b45309; }
-  .s1 .card { border-left-color:#f59e0b; }
+  .s1 .tag { background:#fef3c7; color:#92400e; }
+  .s1 .card { border-top-color:#f59e0b; }
   .s1 .card-label { color:#b45309; }
 
   .s2 .dot { border-color:#3b82f6; background:#dbeafe; }
-  .s2 .tag { background:#dbeafe; color:#1d4ed8; }
-  .s2 .card { border-left-color:#3b82f6; }
+  .s2 .tag { background:#dbeafe; color:#1e40af; }
+  .s2 .card { border-top-color:#3b82f6; }
   .s2 .card-label { color:#1d4ed8; }
 
   .s3 .dot { border-color:#10b981; background:#d1fae5; }
-  .s3 .tag { background:#d1fae5; color:#065f46; }
-  .s3 .card { border-left-color:#10b981; }
+  .s3 .tag { background:#d1fae5; color:#064e3b; }
+  .s3 .card { border-top-color:#10b981; }
   .s3 .card-label { color:#065f46; }
 
   .s4 .dot { border-color:#8b5cf6; background:#ede9fe; }
-  .s4 .tag { background:#ede9fe; color:#6d28d9; }
-  .s4 .card { border-left-color:#8b5cf6; }
+  .s4 .tag { background:#ede9fe; color:#5b21b6; }
+  .s4 .card { border-top-color:#8b5cf6; }
   .s4 .card-label { color:#6d28d9; }
 </style>
 </head>
 <body>
 <div class="canvas">
-  <h2>自研迭代 — 单体拆分 · Heartbeat · Coding Agent · 检索修复</h2>
-  <p class="subtitle">从工程实践中发现问题、提炼模式、形成自研设计</p>
+  <div class="hero">
+    <div class="hero-eyebrow">Fig 12 · Self Iteration</div>
+    <h2>自研迭代 — 单体拆分 · Heartbeat · Coding Agent · 检索修复</h2>
+    <p class="subtitle">从工程实践中发现问题、提炼模式、形成自研设计</p>
+  </div>
 
-  <div class="timeline">
+  <div class="body">
+    <div class="timeline">
 
-    <!-- Step 1 -->
-    <div class="step s1">
-      <div class="dot"></div>
-      <div class="step-header">
-        <span class="tag">单体拆分</span>
-        <span class="step-title">684行单体 → 3×175行职责单一文件</span>
+      <!-- Step 1 -->
+      <div class="step s1">
+        <div class="dot"></div>
+        <div class="step-header">
+          <span class="tag">单体拆分</span>
+          <span class="step-title">684行单体 → 3×175行职责单一文件</span>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <div class="card-label">问题</div>
+            <div class="card-body">LLM 处理超长文件时位置偏差：前半段权重高，后半段规则频繁被遗忘或幻觉替换</div>
+          </div>
+          <div class="card">
+            <div class="card-label">MULTI_AGENTS.md（175行）</div>
+            <div class="card-body">只管"谁是谁、派谁、怎么并行"<br>专职名单 + 路由规则 + A2A 协议</div>
+          </div>
+          <div class="card">
+            <div class="card-label">CTRL_PROTOCOLS.md（177行）</div>
+            <div class="card-body">只管"Skill加载、压缩、检索"<br>运行协议 + 依赖检查 + 提议系统</div>
+          </div>
+          <div class="card">
+            <div class="card-label">DEV_LOG.md（149行）</div>
+            <div class="card-body">只管"DEV LOG 格式"<br>9字段定义 + 最低合格线 + 强制输出规则</div>
+          </div>
+        </div>
       </div>
-      <div class="cards">
-        <div class="card">
-          <div class="card-label">问题</div>
-          <div class="card-body">LLM 处理超长文件时位置偏差：前半段权重高，后半段规则频繁被遗忘或幻觉替换</div>
+
+      <!-- Step 2 -->
+      <div class="step s2">
+        <div class="dot"></div>
+        <div class="step-header">
+          <span class="tag">Heartbeat Agent</span>
+          <span class="step-title">主动巡检 — 从被动等待到 SessionStart 感知</span>
         </div>
-        <div class="card">
-          <div class="card-label">MULTI_AGENTS.md（175行）</div>
-          <div class="card-body">只管"谁是谁、派谁、怎么并行"<br>专职名单 + 路由规则 + A2A 协议</div>
-        </div>
-        <div class="card">
-          <div class="card-label">CTRL_PROTOCOLS.md（177行）</div>
-          <div class="card-body">只管"Skill加载、压缩、检索"<br>运行协议 + 依赖检查 + 提议系统</div>
-        </div>
-        <div class="card">
-          <div class="card-label">DEV_LOG.md（149行）</div>
-          <div class="card-body">只管"DEV LOG 格式"<br>9字段定义 + 最低合格线 + 强制输出规则</div>
+        <div class="cards">
+          <div class="card">
+            <div class="card-label">架构</div>
+            <div class="card-body">cron 08:30/18:00 → heartbeat-agent 巡检 → 写 heartbeat-state.json → SessionStart hook 读取 → 用户开口时呈现</div>
+          </div>
+          <div class="card">
+            <div class="card-label">三级优先级</div>
+            <div class="card-body"><strong>P0</strong>：今日/明日截止事项<br><strong>P1</strong>：近7天持续跟进<br><strong>P2</strong>：系统健康（索引老化、inbox 新文件）</div>
+          </div>
+          <div class="card">
+            <div class="card-label">自动修复</div>
+            <div class="card-body">P2 检测到 inbox/ 有新文件 → 自动运行 <code>inbox_processor.py</code><br>索引 &gt;90天 → 自动重建</div>
+          </div>
         </div>
       </div>
+
+      <!-- Step 3 -->
+      <div class="step s3">
+        <div class="dot"></div>
+        <div class="step-header">
+          <span class="tag">Coding Agent</span>
+          <span class="step-title">repo-explorer + code-agent — 5步编排闭环</span>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <div class="card-label">repo-explorer（只读子代理）</div>
+            <div class="card-body">6步探索：目标理解→结构扫描→关键词定位→深度读取→依赖追踪→输出结构化文件地图</div>
+          </div>
+          <div class="card">
+            <div class="card-label">code-agent skill（编排层）</div>
+            <div class="card-body">spawn repo-explorer → 制定计划（用户确认）→ 执行修改 → 运行测试（最多重试2次）→ 交付报告</div>
+          </div>
+          <div class="card">
+            <div class="card-label">失败换路策略</div>
+            <div class="card-body">第1次失败 → 检查测试本身<br>第2次失败 → 缩小修改范围<br>第3次失败 → 停止，报告 blocked</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step s4">
+        <div class="dot"></div>
+        <div class="step-header">
+          <span class="tag">检索修复</span>
+          <span class="step-title">四个模块的设计缺陷修复 — 会话状态 · 压缩 · 检索 · 记忆</span>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <div class="card-label">检索扩展条件</div>
+            <div class="card-body"><s>差值 top1-top2 &lt; 0.05</s>（过敏感，频繁触发跨域）<br>→ 改为绝对值 <code>top1 &lt; 0.3</code>，防止低分噪声误触</div>
+          </div>
+          <div class="card">
+            <div class="card-label">记忆老化检测</div>
+            <div class="card-body">importance &lt; 0.4 且 &gt;90天 → 输出 [stale] 列表 → 自动重建索引</div>
+          </div>
+          <div class="card">
+            <div class="card-label">压缩优先级</div>
+            <div class="card-body">明确：原生 compaction &gt; Layer 2<br>原生已触发 → Layer 2 跳过，仅执行 Layer 4 Archive</div>
+          </div>
+        </div>
+      </div>
+
     </div>
-
-    <!-- Step 2 -->
-    <div class="step s2">
-      <div class="dot"></div>
-      <div class="step-header">
-        <span class="tag">Heartbeat Agent</span>
-        <span class="step-title">主动巡检 — 从被动等待到 SessionStart 感知</span>
-      </div>
-      <div class="cards">
-        <div class="card">
-          <div class="card-label">架构</div>
-          <div class="card-body">cron 08:30/18:00 → heartbeat-agent 巡检 → 写 heartbeat-state.json → SessionStart hook 读取 → 用户开口时呈现</div>
-        </div>
-        <div class="card">
-          <div class="card-label">三级优先级</div>
-          <div class="card-body"><b>P0</b>：今日/明日截止事项<br><b>P1</b>：近7天持续跟进<br><b>P2</b>：系统健康（索引老化、inbox 新文件）</div>
-        </div>
-        <div class="card">
-          <div class="card-label">自动修复</div>
-          <div class="card-body">P2 检测到 inbox/ 有新文件 → 自动运行 <code>inbox_processor.py</code><br>索引 &gt;90天 → 自动重建</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Step 3 -->
-    <div class="step s3">
-      <div class="dot"></div>
-      <div class="step-header">
-        <span class="tag">Coding Agent</span>
-        <span class="step-title">repo-explorer + code-agent — 5步编排闭环</span>
-      </div>
-      <div class="cards">
-        <div class="card">
-          <div class="card-label">repo-explorer（只读子代理）</div>
-          <div class="card-body">6步探索：目标理解→结构扫描→关键词定位→深度读取→依赖追踪→输出结构化文件地图</div>
-        </div>
-        <div class="card">
-          <div class="card-label">code-agent skill（编排层）</div>
-          <div class="card-body">spawn repo-explorer → 制定计划（用户确认）→ 执行修改 → 运行测试（最多重试2次）→ 交付报告</div>
-        </div>
-        <div class="card">
-          <div class="card-label">失败换路策略</div>
-          <div class="card-body">第1次失败 → 检查测试本身<br>第2次失败 → 缩小修改范围<br>第3次失败 → 停止，报告 blocked</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Step 4 -->
-    <div class="step s4">
-      <div class="dot"></div>
-      <div class="step-header">
-        <span class="tag">检索修复</span>
-        <span class="step-title">四个模块的设计缺陷修复 — 会话状态 · 压缩 · 检索 · 记忆</span>
-      </div>
-      <div class="cards">
-        <div class="card">
-          <div class="card-label">检索扩展条件</div>
-          <div class="card-body"><s>差值 top1-top2 &lt; 0.05</s>（过敏感，频繁触发跨域）<br>→ 改为绝对值 <code>top1 &lt; 0.3</code>，防止低分噪声误触</div>
-        </div>
-        <div class="card">
-          <div class="card-label">记忆老化检测</div>
-          <div class="card-body">importance &lt; 0.4 且 &gt;90天 → 输出 [stale] 列表 → 自动重建索引</div>
-        </div>
-        <div class="card">
-          <div class="card-label">压缩优先级</div>
-          <div class="card-body">明确：原生 compaction &gt; Layer 2<br>原生已触发 → Layer 2 跳过，仅执行 Layer 4 Archive</div>
-        </div>
-      </div>
-    </div>
-
   </div>
 </div>
 </body>

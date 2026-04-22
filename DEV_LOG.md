@@ -17,7 +17,6 @@
 🧠 Memory   <domain injected + token savings>
 📂 Session  <round + compression state>
 🔍 检索     <retrieval scope + recall>
-⚖️ 置信度   <confidence + basis + conflict>
 🤝 A2A      <cross-agent communication>
 🏷️ 实体     <new/updated entities>
 ```
@@ -81,11 +80,6 @@
 - 若未触发检索工具（Level 1 context 已足够），写 `🔍 检索 scope=context | level=L1 | 无需工具`
 - 若分数未知，写 `top=ephemeral`（不写 unavailable）
 
-### ⚖️ 置信度
-```
-⚖️ 置信度 <X.XX> [依据: <data|inference|experience>] | 冲突: <无|描述>
-```
-
 ### 🤝 A2A
 ```
 🤝 A2A <FROM> → <TO> <task> | confidence=<X.XX> | needs_ctrl=<true|false>
@@ -144,7 +138,6 @@
 🧠 Memory (SYSTEM) | ~80 tokens
 📂 Session 第 8 轮 | recent_turns=8/8 | 未触发压缩
 🔍 检索 scope=LEARN | level=同域近期 | 召回 0 条
-⚖️ 置信度 unavailable [依据: 工具不可用] | 冲突: 无
 ```
 
 ---

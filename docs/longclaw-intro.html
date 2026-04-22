@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>longClaw — AI OS Workspace</title>
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --surface: #141414;
+      --surface2: #1a1a1a;
+      --border: #2a2a2a;
+      --accent: #7c6af7;
+      --accent2: #a78bfa;
+      --accent3: #34d399;
+      --accent4: #f59e0b;
+      --text: #e8e8e8;
+      --text2: #a0a0a0;
+      --text3: #666;
+      --tag-bg: #1e1a3a;
+      --tag-border: #3d3580;
+      --code-bg: #111;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 80px 24px 64px;
+      text-align: center;
+      background: radial-gradient(ellipse 80% 60% at 50% -10%, #2d1f6e33 0%, transparent 70%);
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%237c6af7' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--tag-bg);
+      border: 1px solid var(--tag-border);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 12px;
+      color: var(--accent2);
+      letter-spacing: 0.05em;
+      margin-bottom: 24px;
+    }
+    .hero-badge .dot {
+      width: 6px; height: 6px;
+      background: var(--accent3);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    .hero-title-line1 {
+      font-size: clamp(2.8rem, 7vw, 5rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #fff;
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+    .hero-title-line2 {
+      font-size: clamp(2.8rem, 7vw, 5rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, var(--accent2) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.15;
+      margin-bottom: 24px;
+    }
+    .hero-sub {
+      font-size: clamp(1rem, 2.2vw, 1.15rem);
+      color: var(--text2);
+      line-height: 1.9;
+      margin: 0 auto 20px;
+    }
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      font-size: 12px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: var(--text3);
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+    }
+    .hero-meta .dot-live {
+      width: 7px; height: 7px;
+      background: var(--accent3);
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+      animation: pulse 2s infinite;
+    }
+    .hero-meta .sep { margin: 0 10px; opacity: 0.4; }
+    .hero-cta {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #2563eb;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 12px 28px;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+      padding: 12px 28px;
+      border-radius: 10px;
+      border: 1px solid #3a3a3a;
+      text-decoration: none;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .btn-secondary:hover { border-color: var(--accent2); transform: translateY(-1px); }
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat-num {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent2);
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    /* ── LAYOUT ── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── SECTION ── */
+    .section {
+      margin-top: 64px;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    .section-icon {
+      width: 32px; height: 32px;
+      background: var(--tag-bg);
+      border: 1px solid var(--tag-border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .section-desc {
+      font-size: 13px;
+      color: var(--text3);
+      margin-left: auto;
+    }
+
+    /* ── ARCH DIAGRAM ── */
+    .arch-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 24px;
+      overflow-x: auto;
+    }
+    .arch-diagram {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      min-width: 560px;
+    }
+    .arch-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+    }
+    .arch-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .arch-box.user { border-color: #4a4a6a; color: var(--text2); }
+    .arch-box.ctrl {
+      background: linear-gradient(135deg, #1e1a3a, #2d1f6e44);
+      border-color: var(--accent);
+      color: var(--accent2);
+      font-weight: 700;
+      font-size: 14px;
+      padding: 12px 28px;
+    }
+    .arch-box.agent {
+      border-color: #2a3a2a;
+      color: var(--accent3);
+      font-size: 12px;
+      padding: 8px 12px;
+    }
+    .arch-box.skill {
+      border-color: #3a2a1a;
+      color: var(--accent4);
+      font-size: 11px;
+      padding: 6px 10px;
+    }
+    .arch-box.memory {
+      border-color: #2a2a3a;
+      color: #93c5fd;
+      font-size: 12px;
+    }
+    .arch-box.sidecar {
+      border-color: #1a3a2a;
+      color: #6ee7b7;
+      font-size: 12px;
+    }
+    .arch-arrow {
+      color: var(--text3);
+      font-size: 18px;
+      line-height: 1;
+    }
+    .arch-arrow-v {
+      color: var(--text3);
+      font-size: 18px;
+      text-align: center;
+      margin: 4px 0;
+    }
+    .arch-agents-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .arch-skills-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .arch-bottom {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    /* ── GRID CARDS ── */
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .card:hover {
+      border-color: #3d3580;
+      transform: translateY(-2px);
+    }
+    .card-icon { font-size: 22px; margin-bottom: 10px; }
+    .card-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    .card-desc { font-size: 12px; color: var(--text2); line-height: 1.6; }
+    .card-tag {
+      display: inline-block;
+      margin-top: 10px;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'SF Mono', monospace;
+    }
+    .tag-engineer { background: #1a2a1a; color: var(--accent3); border: 1px solid #2a4a2a; }
+    .tag-learn { background: #1a1a2a; color: #93c5fd; border: 1px solid #2a2a4a; }
+    .tag-search { background: #2a1a1a; color: #fca5a5; border: 1px solid #4a2a2a; }
+    .tag-meta { background: #2a2a1a; color: var(--accent4); border: 1px solid #4a4a2a; }
+    .tag-job { background: #1a2a2a; color: #67e8f9; border: 1px solid #2a4a4a; }
+    .tag-bro { background: #2a1a2a; color: #d8b4fe; border: 1px solid #4a2a4a; }
+
+    /* ── AGENT TABLE ── */
+    .agent-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+    .agent-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .agent-label {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 5px;
+      background: var(--tag-bg);
+      border: 1px solid var(--tag-border);
+      color: var(--accent2);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .agent-info { flex: 1; }
+    .agent-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .agent-desc { font-size: 11px; color: var(--text2); }
+
+    /* ── SKILL LIST ── */
+    .skill-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px;
+    }
+    .skill-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .skill-name {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      color: var(--accent2);
+      flex: 1;
+    }
+    .skill-domain {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    /* ── COMPRESSION LAYERS ── */
+    .layer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .layer-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .layer-num {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .layer-info { flex: 1; }
+    .layer-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .layer-desc { font-size: 12px; color: var(--text2); }
+    .layer-trigger {
+      font-size: 11px;
+      font-family: 'SF Mono', monospace;
+      color: var(--text3);
+      white-space: nowrap;
+    }
+
+    /* ── MEMORY PIPELINE ── */
+    .pipeline {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow-x: auto;
+      padding: 4px 0;
+    }
+    .pipe-step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      text-align: center;
+      flex-shrink: 0;
+      min-width: 120px;
+    }
+    .pipe-step-icon { font-size: 20px; margin-bottom: 6px; }
+    .pipe-step-name { font-size: 12px; font-weight: 600; }
+    .pipe-step-desc { font-size: 11px; color: var(--text2); margin-top: 3px; }
+    .pipe-arrow {
+      color: var(--text3);
+      font-size: 20px;
+      padding: 0 8px;
+      flex-shrink: 0;
+    }
+
+    /* ── CHANGELOG ── */
+    .changelog {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .cl-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      gap: 16px;
+    }
+    .cl-version {
+      font-family: 'SF Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent2);
+      white-space: nowrap;
+      padding-top: 2px;
+      min-width: 56px;
+    }
+    .cl-content { flex: 1; }
+    .cl-date { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+    .cl-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .cl-tag {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--tag-bg);
+      border: 1px solid var(--tag-border);
+      color: var(--text2);
+    }
+    .cl-tag.added { background: #1a2a1a; border-color: #2a4a2a; color: var(--accent3); }
+    .cl-tag.changed { background: #2a2a1a; border-color: #4a4a2a; color: var(--accent4); }
+    .cl-tag.removed { background: #2a1a1a; border-color: #4a2a2a; color: #fca5a5; }
+    .cl-tag.fixed { background: #1a1a2a; border-color: #2a2a4a; color: #93c5fd; }
+
+    /* ── DIVIDER ── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 48px 0 0;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      color: var(--text3);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--accent2); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── NEW BADGE ── */
+    .new-badge {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: #1a3a1a;
+      border: 1px solid var(--accent3);
+      color: var(--accent3);
+      vertical-align: middle;
+      margin-left: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── HIGHLIGHT BOX ── */
+    .highlight-box {
+      background: linear-gradient(135deg, #1e1a3a44, #0d0d0d);
+      border: 1px solid var(--tag-border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+    }
+    .highlight-box p { font-size: 13px; color: var(--text2); line-height: 1.8; }
+    .highlight-box strong { color: var(--text); }
+
+    @media (max-width: 600px) {
+      .hero-stats { gap: 20px; }
+      .pipeline { flex-direction: column; }
+      .pipe-arrow { transform: rotate(90deg); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ HERO -->
+<div class="hero">
+  <div class="hero-badge">
+    <span class="dot"></span>
+    OpenClaw Workspace · v0.6.1
+  </div>
+  <div class="hero-title-line1">longClaw</div>
+  <div class="hero-title-line2">Multi-Agent OS</div>
+  <p class="hero-sub">把单个 AI 助手升级为可扩展的多专家协作运行时<br>工业级记忆检索 · 会话管理 · 完整开发者可观测性</p>
+  <div class="hero-meta">
+    <span class="dot-live"></span>
+    <span>workspace_version: v0.6.1</span>
+    <span class="sep">·</span>
+    <span>2026-04-20</span>
+    <span class="sep">·</span>
+    <span>memory_retrieval: v2</span>
+    <span class="sep">·</span>
+    <span>Mac mini M4</span>
+  </div>
+  <div class="hero-cta">
+    <a href="https://github.com/jinglong92/longclaw" target="_blank" class="btn-primary">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      查看源码
+    </a>
+    <a href="#arch" class="btn-secondary">
+      了解架构 ↓
+    </a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num">10</div>
+      <div class="stat-label">专职代理</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">15</div>
+      <div class="stat-label">Workflow Skills</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">4</div>
+      <div class="stat-label">Subagents</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">4</div>
+      <div class="stat-label">压缩层</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">v0.6.1</div>
+      <div class="stat-label">当前版本</div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ═══════════════════════════════════════════════════ ARCHITECTURE -->
+  <div class="section" id="arch">
+    <div class="section-header">
+      <div class="section-icon">🏗️</div>
+      <div class="section-title">系统架构</div>
+    </div>
+
+    <div class="arch-wrap">
+      <div class="arch-diagram">
+
+        <!-- User -->
+        <div class="arch-row">
+          <div class="arch-box user">👤 User（微信 / CatDesk / CLI）</div>
+        </div>
+        <div class="arch-arrow-v">↕</div>
+
+        <!-- Gateway -->
+        <div class="arch-row">
+          <div class="arch-box user" style="border-color:#3a3a5a; color:#a0a0c0;">🌐 OpenClaw Gateway（WebSocket）</div>
+        </div>
+        <div class="arch-arrow-v">↕</div>
+
+        <!-- CTRL -->
+        <div class="arch-row">
+          <div class="arch-box ctrl">⚡ CTRL 总控</div>
+        </div>
+        <div class="arch-arrow-v">↓</div>
+
+        <!-- Agents -->
+        <div class="arch-agents-row">
+          <div class="arch-box agent">LIFE</div>
+          <div class="arch-box agent">JOB</div>
+          <div class="arch-box agent">WORK</div>
+          <div class="arch-box agent">ENGINEER</div>
+          <div class="arch-box agent">PARENT</div>
+          <div class="arch-box agent">LEARN</div>
+          <div class="arch-box agent">MONEY</div>
+          <div class="arch-box agent">BRO</div>
+          <div class="arch-box agent">SIS</div>
+          <div class="arch-box agent">SEARCH</div>
+        </div>
+        <div class="arch-arrow-v">↓</div>
+
+        <!-- Skills -->
+        <div class="arch-skills-row">
+          <div class="arch-box skill">📄 paper-deep-dive</div>
+          <div class="arch-box skill">🔍 deep-research</div>
+          <div class="arch-box skill">💻 code-agent</div>
+          <div class="arch-box skill">🎭 playwright-cli <span class="new-badge">NEW</span></div>
+          <div class="arch-box skill">🍌 paperbanana</div>
+          <div class="arch-box skill">+ 10 more skills</div>
+        </div>
+        <div class="arch-arrow-v">↕</div>
+
+        <!-- Bottom layer -->
+        <div class="arch-bottom">
+          <div class="arch-box memory">🧠 Memory（JSONL + Hybrid Search）</div>
+          <div class="arch-box sidecar">⚙️ Runtime Sidecar（Heartbeat + Inbox）</div>
+          <div class="arch-box memory" style="border-color:#2a3a3a; color:#67e8f9;">📥 inbox/ 知识摄入管道</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ CORE FEATURES -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">✨</div>
+      <div class="section-title">核心能力</div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-icon">🧭</div>
+        <div class="card-title">语义路由 · Route-Aware Memory</div>
+        <div class="card-desc">CTRL 解析意图后路由到对应专职代理，Memory 检索按域注入（JOB/LEARN/WORK…），避免跨域噪声污染上下文。形式化公式已收录于 arXiv 草稿。</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔄</div>
+        <div class="card-title">4 层 Context Compression</div>
+        <div class="card-desc">Layer 1 Trim（实时截断）→ Layer 2 Summarize → Layer 3 Compact（原生压缩）→ Layer 4 Archive（落盘归档）。PostCompact hook 自动重注入协议文件。</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🤖</div>
+        <div class="card-title">Subagent 并发架构</div>
+        <div class="card-desc">4 个专职 Subagent：search-agent（并发多源搜索）、memory-agent（BRO/SIS 记忆注入）、heartbeat-agent（定时巡检）、repo-explorer（只读 codebase 探索）。</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">⚙️</div>
+        <div class="card-title">Runtime Sidecar</div>
+        <div class="card-desc">常驻后台进程：Heartbeat cron 08:30/18:00 定时巡检，P0/P1 事项写入 heartbeat-state.json；SessionStart hook 自动呈现待处理事项。</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📥</div>
+        <div class="card-title">inbox 知识摄入管道 <span class="new-badge">v0.5</span></div>
+        <div class="card-desc">inbox/ 目录作为知识入口，支持 .md/.txt + YAML frontmatter 指定域/标签/重要性。inbox_processor.py 自动分块（400 token，80 重叠）写入 knowledge_entries.jsonl。</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔒</div>
+        <div class="card-title">执行完整性 · Deny &gt; Ask &gt; Allow</div>
+        <div class="card-desc">三层授权模型，6 条 Immutable Rules。doing: 仅在同轮已发起工具调用时合法，done: 必须有执行证据（diff / stdout / commit hash）。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ AGENTS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">👥</div>
+      <div class="section-title">10 个专职代理</div>
+      <div class="section-desc">CTRL 总控不在列表内</div>
+    </div>
+
+    <div class="agent-grid">
+      <div class="agent-card">
+        <div class="agent-label">LIFE</div>
+        <div class="agent-info">
+          <div class="agent-name">生活助理</div>
+          <div class="agent-desc">日程 / 家务 / 出行 / 健康</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-label">JOB</div>
+        <div class="agent-info">
+          <div class="agent-name">求职助手</div>
+          <div class="agent-desc">岗位 / 简历 / 面试 / 投递</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-label">WORK</div>
+        <div class="agent-info">
+          <div class="agent-name">职场顾问</div>
+          <div class="agent-desc">晋升 / 沟通 / 策略</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-label">ENGINEER</div>
+        <div class="agent-info">
+          <div class="agent-name">工程顾问</div>
+          <div class="agent-desc">技术方案 / 架构 / 代码质量</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-label">PARENT</div>
+        <div class="agent-info">
+          <div class="agent-name">育儿顾问</div>
+          <div class="agent-desc">作息 / 教育 / 亲子</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-label">LEARN</div>
+        <div class="agent-info">
+          <div class="agent-name">学习教练</div>
+          <div class="agent-desc">学习路径 / 复盘</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-label">MONEY</div>
+        <div class="agent-info">
+          <div class="agent-name">理财顾问</div>
+          <div class="agent-desc">预算 / 配置 / 风险</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-label">BRO</div>
+        <div class="agent-info">
+          <div class="agent-name">闲聊哥们</div>
+          <div class="agent-desc">轻松幽默陪聊</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-label">SIS</div>
+        <div class="agent-info">
+          <div class="agent-name">姐妹视角</div>
+          <div class="agent-desc">女性沟通与关系视角</div>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-label">SEARCH</div>
+        <div class="agent-info">
+          <div class="agent-name">信息检索</div>
+          <div class="agent-desc">搜索 / 查询 / 汇总</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ SUBAGENTS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🔀</div>
+      <div class="section-title">4 个 Subagents</div>
+      <div class="section-desc">由 CTRL 按需 spawn，权限最小化</div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-icon">🔍</div>
+        <div class="card-title">search-agent</div>
+        <div class="card-desc">并发多源搜索，仅有 WebFetch / Read / Grep 权限。由 deep-research skill 触发，spawn 2-3 个并发实例，RRF 融合后返回综合报告。</div>
+        <span class="card-tag tag-search">SEARCH</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🧠</div>
+        <div class="card-title">memory-agent</div>
+        <div class="card-desc">BRO/SIS 路由时后台检索近期记忆，只读。由 memory-companion skill 触发，注入情绪状态和上次话题，让陪伴有"记得你"的感觉。</div>
+        <span class="card-tag tag-bro">BRO/SIS</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">💓</div>
+        <div class="card-title">heartbeat-agent</div>
+        <div class="card-desc">cron 08:30/18:00 定时巡检，P0/P1 事项写入 heartbeat-state.json。SessionStart hook 读取状态，用户开口时呈现待处理事项。</div>
+        <span class="card-tag tag-meta">META</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🗂️</div>
+        <div class="card-title">repo-explorer <span class="new-badge">v0.3</span></div>
+        <div class="card-desc">只读 codebase 探索，5 步流程返回结构化文件地图。由 code-agent skill 触发，探索完成后交由主 agent 执行修改。</div>
+        <span class="card-tag tag-engineer">ENGINEER</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ SKILLS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🧩</div>
+      <div class="section-title">15 个 Workflow Skills</div>
+      <div class="section-desc">Progressive Disclosure · 命中即触发</div>
+    </div>
+
+    <div class="highlight-box">
+      <p>Skills 采用 <strong>Progressive Disclosure</strong> 机制：会话启动时扫描 <code style="font-family:monospace;font-size:12px;color:var(--accent2)">skills/</code> 目录建立 index，命中触发条件时加载全文，执行完退出 context。所有 skill 均声明 <code style="font-family:monospace;font-size:12px;color:var(--accent2)">requires</code> 字段，依赖检查不通过时返回 <code style="font-family:monospace;font-size:12px;color:#fca5a5">blocked: missing_tool</code>，不得空转。</p>
+    </div>
+
+    <div class="skill-list">
+      <div class="skill-item">
+        <div class="skill-name">paper-deep-dive</div>
+        <span class="card-tag tag-learn" style="font-size:10px;padding:2px 7px;">LEARN</span>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">jd-analysis</div>
+        <span class="card-tag tag-job" style="font-size:10px;padding:2px 7px;">JOB</span>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">agent-review</div>
+        <span class="card-tag tag-engineer" style="font-size:10px;padding:2px 7px;">ENGINEER</span>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">research-build</div>
+        <span class="card-tag tag-engineer" style="font-size:10px;padding:2px 7px;">ENGINEER</span>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">research-execution-protocol</div>
+        <span class="card-tag tag-engineer" style="font-size:10px;padding:2px 7px;">ENGINEER</span>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">fact-check-latest</div>
+        <span class="card-tag tag-search" style="font-size:10px;padding:2px 7px;">SEARCH</span>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">public-evidence-fetch</div>
+        <span class="card-tag tag-search" style="font-size:10px;padding:2px 7px;">SEARCH</span>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">skill-safety-audit</div>
+        <span class="card-tag tag-meta" style="font-size:10px;padding:2px 7px;">META</span>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">session-compression-flow</div>
+        <span class="card-tag tag-meta" style="font-size:10px;padding:2px 7px;">META</span>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">multi-agent-bootstrap</div>
+        <span class="card-tag tag-meta" style="font-size:10px;padding:2px 7px;">META</span>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">paperbanana</div>
+        <span class="card-tag tag-learn" style="font-size:10px;padding:2px 7px;">LEARN</span>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">deep-research</div>
+        <span class="card-tag tag-search" style="font-size:10px;padding:2px 7px;">SEARCH</span>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">code-agent</div>
+        <span class="card-tag tag-engineer" style="font-size:10px;padding:2px 7px;">ENGINEER</span>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">memory-companion</div>
+        <span class="card-tag tag-bro" style="font-size:10px;padding:2px 7px;">BRO/SIS</span>
+      </div>
+      <div class="skill-item">
+        <div class="skill-name">proactive-heartbeat</div>
+        <span class="card-tag tag-meta" style="font-size:10px;padding:2px 7px;">META</span>
+      </div>
+    </div>
+
+    <div style="margin-top:16px; padding:14px 18px; background:var(--surface); border:1px solid #1a3a1a; border-radius:10px; display:flex; align-items:center; gap:12px;">
+      <span style="font-size:18px;">🎭</span>
+      <div>
+        <div style="font-size:13px; font-weight:600; margin-bottom:3px;">playwright-cli <span class="new-badge">v0.6</span></div>
+        <div style="font-size:12px; color:var(--text2);">浏览器自动化完整技能包，含 session 管理、元素操作、请求 mock、视频录制、tracing、测试生成等 10 个 reference 文档。从 v0.6.0 引入，Skills 总数升至 16 个（含 openclaw-paperbanana）。</div>
+      </div>
+      <span class="card-tag tag-engineer" style="font-size:10px;padding:2px 7px;white-space:nowrap;">ENGINEER</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ COMPRESSION -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🗜️</div>
+      <div class="section-title">4 层 Context Compression</div>
+      <div class="section-desc">Layer 0/A/B → Layer 1/2/3/4（v0.4.2 重命名）</div>
+    </div>
+
+    <div class="layer-list">
+      <div class="layer-item">
+        <div class="layer-num" style="background:#1a2a1a; color:var(--accent3); border:1px solid #2a4a2a;">1</div>
+        <div class="layer-info">
+          <div class="layer-name">Layer 1 · Trim</div>
+          <div class="layer-desc">工具输出实时截断（借鉴 Claude Code Tool Result Budgeting）。保留前 500 字符，追加截断尾注，静默执行不计入 compression_count。</div>
+        </div>
+        <div class="layer-trigger">任意工具输出 &gt; 500 字符</div>
+      </div>
+      <div class="layer-item">
+        <div class="layer-num" style="background:#2a2a1a; color:var(--accent4); border:1px solid #4a4a2a;">2</div>
+        <div class="layer-info">
+          <div class="layer-name">Layer 2 · Summarize</div>
+          <div class="layer-desc">对话历史摘要压缩，保留关键决策和结论，清理冗余中间步骤。</div>
+        </div>
+        <div class="layer-trigger">round &gt; 20</div>
+      </div>
+      <div class="layer-item">
+        <div class="layer-num" style="background:#1a1a2a; color:#93c5fd; border:1px solid #2a2a4a;">3</div>
+        <div class="layer-info">
+          <div class="layer-name">Layer 3 · Compact</div>
+          <div class="layer-desc">OpenClaw 原生 compaction，触发后 PostCompact hook 自动重注入 CTRL_PROTOCOLS.md + DEV_LOG.md，确保协议不丢失。</div>
+        </div>
+        <div class="layer-trigger">原生触发</div>
+      </div>
+      <div class="layer-item">
+        <div class="layer-num" style="background:#2a1a2a; color:#d8b4fe; border:1px solid #4a2a4a;">4</div>
+        <div class="layer-info">
+          <div class="layer-name">Layer 4 · Archive</div>
+          <div class="layer-desc">独立触发，不受前三层影响。完整归档到 memory/YYYY-MM-DD.md，更新 MEMORY.md 长期记忆，为新会话提供衔接上下文。</div>
+        </div>
+        <div class="layer-trigger">手动 / session-compression-flow</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ INBOX PIPELINE -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">📥</div>
+      <div class="section-title">inbox 知识摄入管道</div>
+      <div class="section-desc">v0.5.0 新增</div>
+    </div>
+
+    <div class="arch-wrap" style="padding:24px;">
+      <div class="pipeline">
+        <div class="pipe-step">
+          <div class="pipe-step-icon">📄</div>
+          <div class="pipe-step-name">inbox/</div>
+          <div class="pipe-step-desc">.md / .txt<br>YAML frontmatter</div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">
+          <div class="pipe-step-icon">⚙️</div>
+          <div class="pipe-step-name">inbox_processor.py</div>
+          <div class="pipe-step-desc">解析域/标签<br>分块 400 token</div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">
+          <div class="pipe-step-icon">🗄️</div>
+          <div class="pipe-step-name">knowledge_entries.jsonl</div>
+          <div class="pipe-step-desc">追加写入<br>不覆盖</div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">
+          <div class="pipe-step-icon">🔍</div>
+          <div class="pipe-step-name">memory_search.py</div>
+          <div class="pipe-step-desc">双索引合并<br>对话 + 知识库</div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">
+          <div class="pipe-step-icon">✅</div>
+          <div class="pipe-step-name">processed/</div>
+          <div class="pipe-step-desc">自动归档<br>heartbeat 扫描</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ MEMORY -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🧠</div>
+      <div class="section-title">记忆系统</div>
+    </div>
+
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-icon">📅</div>
+        <div class="card-title">Daily Memory</div>
+        <div class="card-desc">memory/YYYY-MM-DD.md，每日原始日志，记录当天任务进展、对话上下文、工作中间状态。</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🗂️</div>
+        <div class="card-title">Long-term Memory</div>
+        <div class="card-desc">MEMORY.md 分域块设计（[SYSTEM]/[JOB]/[WORK]/[LEARN]…），按域注入，避免跨域噪声。</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📚</div>
+        <div class="card-title">Knowledge Base</div>
+        <div class="card-desc">knowledge_entries.jsonl，inbox 管道写入，memory_search.py 双索引合并检索，覆盖对话记忆 + 知识库。</div>
+      </div>
+    </div>
+
+    <div style="margin-top:14px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 20px;">
+      <div style="font-size:12px; color:var(--text2); line-height:1.8;">
+        <strong style="color:var(--text);">四级检索扩展</strong>：当前 session → 同域近 7 天 → 同域长期 → 跨域兜底（跨域时 DEV LOG 标注）。
+        检索扩展阈值：top1 绝对分数 &lt; 0.3 时扩展（非差值判断，避免低分区间过敏感）。
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ HARNESS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🔧</div>
+      <div class="section-title">Harness 工程改造</div>
+      <div class="section-desc">.claude/settings.json</div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-icon">🔁</div>
+        <div class="card-title">PostCompact Hook</div>
+        <div class="card-desc">原生压缩后自动重注入 CTRL_PROTOCOLS.md + DEV_LOG.md，确保压缩后协议不丢失，CTRL 行为不退化。</div>
+        <span class="card-tag tag-meta">META</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">👁️</div>
+        <div class="card-title">FileChanged Hook</div>
+        <div class="card-desc">配置文件变更时自动感知，CTRL 在下一轮可获知最新配置状态，无需手动重载。</div>
+        <span class="card-tag tag-meta">META</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🛡️</div>
+        <div class="card-title">PreToolUse Hook</div>
+        <div class="card-desc">rm 命令自动改写为 trash（updatedInput 机制），可恢复优先于永久删除。</div>
+        <span class="card-tag tag-meta">META</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌅</div>
+        <div class="card-title">SessionStart Hook</div>
+        <div class="card-desc">检测 heartbeat-state.json，有 P0/P1 事项时提示 CTRL 呈现；同时注入 CTRL_PROTOCOLS.md + DEV_LOG.md 确保第一轮格式正确。</div>
+        <span class="card-tag tag-meta">META</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ DESIGN INSPIRATION -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">🔬</div>
+      <div class="section-title">设计借鉴</div>
+      <div class="section-desc">逆向学习 · 本地化改造 · 非盲目迭代</div>
+    </div>
+
+    <div class="highlight-box" style="border-color:#2a3a2a; background:linear-gradient(135deg,#0d1a0d44,#0d0d0d);">
+      <p>longClaw 的核心设计不是凭个人经验盲目迭代，而是对 <strong>Claude Code 内部 Harness 架构</strong>和 <strong>Hermes Agent 框架</strong>进行逆向分析后，提取可迁移的设计模式，再结合本地场景做改造落地。以下是三个主要借鉴来源及其具体映射。</p>
+    </div>
+
+    <!-- Source 1: Claude Code -->
+    <div style="margin-bottom:20px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+        <div style="width:28px;height:28px;background:#1a1a2a;border:1px solid #3d3580;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">①</div>
+        <div style="font-size:14px;font-weight:600;color:var(--accent2);">借鉴 Claude Code — 权限模型 · Hook 工程 · 压缩设计</div>
+        <div style="font-size:11px;color:var(--text3);margin-left:auto;">sourcemap 逆向分析 → 三维度落地</div>
+      </div>
+      <div class="grid-3">
+        <div class="card" style="border-color:#2a2a4a;">
+          <div style="font-size:11px;font-family:monospace;color:var(--text3);margin-bottom:8px;">Claude Code 原设计</div>
+          <div class="card-title" style="color:var(--accent2);">Deny &gt; Ask &gt; Allow 三层权限</div>
+          <div class="card-desc">Deny 规则优先于所有 hook，任何 prompt 指令不得覆盖，解决规则冲突时 LLM 自由裁量的漏洞。</div>
+          <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+            <div style="font-size:11px;color:var(--accent3);margin-bottom:4px;">↳ longClaw 落地</div>
+            <div style="font-size:11px;color:var(--text2);">写入 6 条 Immutable Rules（无合成证据、禁 force-push main、SOUL 对所有专职生效等），任何 skill 或用户指令不得覆盖。</div>
+          </div>
+        </div>
+        <div class="card" style="border-color:#2a2a4a;">
+          <div style="font-size:11px;font-family:monospace;color:var(--text3);margin-bottom:8px;">Claude Code 原设计</div>
+          <div class="card-title" style="color:var(--accent2);">Hook Config Snapshots</div>
+          <div class="card-desc">PostCompact 后自动重注入关键配置，FileChanged 监听配置变更，PreToolUse 在执行层拦截危险命令。</div>
+          <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+            <div style="font-size:11px;color:var(--accent3);margin-bottom:4px;">↳ longClaw 落地</div>
+            <div style="font-size:11px;color:var(--text2);">PostCompact 重注入 CTRL_PROTOCOLS.md + DEV_LOG.md；PreToolUse 把 rm 改写为 trash，不靠 LLM 自觉。</div>
+          </div>
+        </div>
+        <div class="card" style="border-color:#2a2a4a;">
+          <div style="font-size:11px;font-family:monospace;color:var(--text3);margin-bottom:8px;">Claude Code 原设计</div>
+          <div class="card-title" style="color:var(--accent2);">Tool Result Budgeting</div>
+          <div class="card-desc">每次工具输出做 budget 限制，超出截断，防止单条超长输出污染后续检索 context。</div>
+          <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+            <div style="font-size:11px;color:var(--accent3);margin-bottom:4px;">↳ longClaw 落地</div>
+            <div style="font-size:11px;color:var(--text2);">新增 Layer 1 Trim：单次工具输出 &gt; 500 字符立即截断，静默执行，不计入 compression_count。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Source 2: Hermes -->
+    <div style="margin-bottom:20px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+        <div style="width:28px;height:28px;background:#1a2a1a;border:1px solid #2a4a2a;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">②</div>
+        <div style="font-size:14px;font-weight:600;color:var(--accent3);">借鉴 Hermes Agent — Skill 依赖声明 · 自进化提议系统</div>
+        <div style="font-size:11px;color:var(--text3);margin-left:auto;">Anthropic 内部多 agent 框架 → 本地化改造</div>
+      </div>
+      <div class="grid-2">
+        <div class="card" style="border-color:#2a4a2a;">
+          <div style="font-size:11px;font-family:monospace;color:var(--text3);margin-bottom:8px;">Hermes 原设计</div>
+          <div class="card-title" style="color:var(--accent3);">requires 依赖声明</div>
+          <div class="card-desc">Agent 执行前检查前置条件，不满足时明确失败而非假装执行。把运行时失败提前到启动前，给用户明确的失败信号。</div>
+          <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+            <div style="font-size:11px;color:var(--accent3);margin-bottom:4px;">↳ longClaw 落地</div>
+            <div style="font-size:11px;color:var(--text2);">每个 SKILL.md frontmatter 新增 <code style="font-family:monospace;color:var(--accent2)">requires</code> 字段，CTRL 命中触发条件后先验证依赖，不满足返回 <code style="font-family:monospace;color:#fca5a5">blocked: missing_tool</code>，不空转。15 个 skill 全量迁移，分四类：无依赖 / 需 web_fetch / 需 file_read / 需 file_write。</div>
+          </div>
+        </div>
+        <div class="card" style="border-color:#2a4a2a;">
+          <div style="font-size:11px;font-family:monospace;color:var(--text3);margin-bottom:8px;">Hermes 原设计</div>
+          <div class="card-title" style="color:var(--accent3);">Proactive Skill Creation 自进化</div>
+          <div class="card-desc">Agent 能自主发现可复用模式并生成新 skill，减少用户重复描述同一流程的认知负担。</div>
+          <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+            <div style="font-size:11px;color:var(--accent3);margin-bottom:4px;">↳ longClaw 落地（加安全边界）</div>
+            <div style="font-size:11px;color:var(--text2);">保留"主动提议"理念，但需用户确认后才固化为 SKILL.md。触发优先级：复杂流程完成后（≥3步+可复用）当轮末尾主动提议；重复模式检测阈值从 ≥3 次降至 ≥2 次。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Source 3: Self-iteration -->
+    <div>
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+        <div style="width:28px;height:28px;background:#2a1a1a;border:1px solid #4a2a2a;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">③</div>
+        <div style="font-size:14px;font-weight:600;color:var(--accent4);">自研迭代 — 被问题逼出来的工程经验</div>
+        <div style="font-size:11px;color:var(--text3);margin-left:auto;">非借鉴，是实践中发现的规律</div>
+      </div>
+      <div class="grid-2">
+        <div class="card" style="border-color:#4a3a1a;">
+          <div class="card-icon">📐</div>
+          <div class="card-title" style="color:var(--accent4);">单体文件拆分经验法则</div>
+          <div class="card-desc">684 行 MULTI_AGENTS.md 把专职定义、路由规则、Skill 协议、DEV LOG 格式全混在一起，LLM 处理时后半段规则频繁遗忘。按关注点分离拆成三个职责单一文件（175 / 177 / 149 行），每个文件头部声明"本文件管什么、不管什么"。</div>
+          <div style="margin-top:10px;padding:8px 12px;background:#1a1a0d;border:1px solid #3a3a1a;border-radius:6px;font-size:11px;color:var(--accent4);font-family:monospace;">经验法则：单配置文件 &gt; ~200 行警惕，&gt; 400 行必然出现遗忘/幻觉</div>
+        </div>
+        <div class="card" style="border-color:#4a3a1a;">
+          <div class="card-icon">💓</div>
+          <div class="card-title" style="color:var(--accent4);">Heartbeat 主动巡检</div>
+          <div class="card-desc">原来只能等用户问"我有什么待办"，Heartbeat 把被动等待变成主动推送。cron 08:30/18:00 触发巡检，P0/P1 事项写入 heartbeat-state.json，SessionStart hook 在用户开口时自动呈现。P2 系统健康检查还会自动修复：发现 inbox/ 有新文件自动运行处理器，发现索引 &gt;90 天自动重建。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ CHANGELOG -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon">📋</div>
+      <div class="section-title">版本历史</div>
+    </div>
+
+    <div class="changelog">
+      <div class="cl-item">
+        <div class="cl-version">v0.6.1</div>
+        <div class="cl-content">
+          <div class="cl-date">2026-04-18</div>
+          <div class="cl-tags">
+            <span class="cl-tag removed">Removed 本地 LLM 兜底层</span>
+            <span class="cl-tag changed">model_mode 精简为 auto/primary</span>
+          </div>
+        </div>
+      </div>
+      <div class="cl-item">
+        <div class="cl-version">v0.6.0</div>
+        <div class="cl-content">
+          <div class="cl-date">2026-04-18</div>
+          <div class="cl-tags">
+            <span class="cl-tag added">Added playwright-cli skill</span>
+            <span class="cl-tag added">Added openclaw-paperbanana skill</span>
+            <span class="cl-tag changed">脚本归档至 scripts/</span>
+          </div>
+        </div>
+      </div>
+      <div class="cl-item">
+        <div class="cl-version">v0.5.1</div>
+        <div class="cl-content">
+          <div class="cl-date">2026-04-18</div>
+          <div class="cl-tags">
+            <span class="cl-tag fixed">Fixed Heartbeat cron 全链路</span>
+            <span class="cl-tag fixed">Fixed DEV LOG 模板第一轮不生效</span>
+            <span class="cl-tag fixed">Fixed Skill 不进 registry（目录拍平）</span>
+            <span class="cl-tag added">docs/longclaw-practice.md 大幅扩充</span>
+          </div>
+        </div>
+      </div>
+      <div class="cl-item">
+        <div class="cl-version">v0.5.0</div>
+        <div class="cl-content">
+          <div class="cl-date">2026-04-17</div>
+          <div class="cl-tags">
+            <span class="cl-tag added">Added inbox/ 知识摄入管道</span>
+            <span class="cl-tag added">Added inbox_processor.py</span>
+            <span class="cl-tag added">memory_search 双索引合并</span>
+          </div>
+        </div>
+      </div>
+      <div class="cl-item">
+        <div class="cl-version">v0.4.2</div>
+        <div class="cl-content">
+          <div class="cl-date">2026-04-17</div>
+          <div class="cl-tags">
+            <span class="cl-tag changed">压缩层重命名 Layer 0/A/B → 1/2/3/4</span>
+            <span class="cl-tag added">heartbeat 跨 session 统计</span>
+            <span class="cl-tag added">记忆机制 Mermaid 原理图</span>
+          </div>
+        </div>
+      </div>
+      <div class="cl-item">
+        <div class="cl-version">v0.3.0</div>
+        <div class="cl-content">
+          <div class="cl-date">2026-04-14</div>
+          <div class="cl-tags">
+            <span class="cl-tag added">Added repo-explorer subagent</span>
+            <span class="cl-tag added">Added code-agent skill</span>
+            <span class="cl-tag added">Added Proactive Heartbeat Agent</span>
+            <span class="cl-tag added">Added deep-research + memory-companion</span>
+            <span class="cl-tag changed">AGENTS.md 重构 583→189 行</span>
+          </div>
+        </div>
+      </div>
+      <div class="cl-item">
+        <div class="cl-version">v0.1.0</div>
+        <div class="cl-content">
+          <div class="cl-date">2026-04-10</div>
+          <div class="cl-tags">
+            <span class="cl-tag added">10 个 Workflow Skills</span>
+            <span class="cl-tag added">Memory 检索工具</span>
+            <span class="cl-tag added">PROFILE_CONTRACT.md</span>
+          </div>
+        </div>
+      </div>
+      <div class="cl-item">
+        <div class="cl-version">v0.0.1</div>
+        <div class="cl-content">
+          <div class="cl-date">2026-03-21</div>
+          <div class="cl-tags">
+            <span class="cl-tag added">Initial Setup · OpenClaw 基础架构</span>
+            <span class="cl-tag added">10 专职代理 + CTRL 总控</span>
+            <span class="cl-tag added">SOUL.md 人格契约</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+</div>
+
+<footer>
+  <p>longClaw · v0.6.1 · Built on <a href="https://openclaw.ai" target="_blank">OpenClaw</a> · Running on Mac mini M4</p>
+  <p style="margin-top:6px; color: var(--text3);">10 Agents · 15 Skills · 4 Subagents · 4 Compression Layers · Runtime Sidecar</p>
+</footer>
+
+</body>
+</html>
