@@ -8,8 +8,9 @@ SQL directly elsewhere in the codebase.
 
 from __future__ import annotations
 
+import json
 import sqlite3
-from typing import Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from .db import get_connection
 from ..logging.logger import get_logger
@@ -106,3 +107,78 @@ def insert_note(
         conn.commit()
     except Exception as exc:
         logger.error("Failed to insert note: %s", exc)
+
+
+# ---------------------------------------------------------------------------
+# Project operations
+# ---------------------------------------------------------------------------
+
+def upsert_project(
+    conn: sqlite3.Connection,
+    project_id: str,
+    name: str,
+    goal: str,
+    current_focus: str = "",
+    next_action: str = "",
+    status: str = "active",
+    constraints: Optional[List[str]] = None,
+    related_paths: Optional[List[str]] = None,
+    related_urls: Optional[List[str]] = None,
+) -> None:
+    """Insert or update a project record."""
+    sql = """
+    INSERT INTO projects (
+        project_id, name, goal, current_focus, next_action, status,
+        constraints_json, related_paths_json, related_urls_json, updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    ON CONFLICT(project_id) DO UPDATE SET
+        name=excluded.name,
+        goal=excluded.goal,
+        current_focus=excluded.current_focus,
+        next_action=excluded.next_action,
+        status=excluded.status,
+        constraints_json=excluded.constraints_json,
+        related_paths_json=excluded.related_paths_json,
+        related_urls_json=excluded.related_urls_json,
+        updated_at=excluded.updated_at
+    """
+    try:
+        conn.execute(sql, (
+            project_id,
+            name,
+            goal,
+            current_focus,
+            next_action,
+            status,
+            json.dumps(constraints or [], ensure_ascii=False),
+            json.dumps(related_paths or [], ensure_ascii=False),
+            json.dumps(related_urls or [], ensure_ascii=False),
+        ))
+        conn.commit()
+    except Exception as exc:
+        logger.error("Failed to upsert project %s: %s", project_id, exc)
+
+
+def insert_project_event(
+    conn: sqlite3.Connection,
+    project_id: str,
+    event_type: str,
+    summary: Optional[str] = None,
+    payload: Optional[Dict[str, Any]] = None,
+) -> None:
+    """Log a project event (e.g. research_writeback, code_writeback, status_change)."""
+    sql = """
+    INSERT INTO project_events (project_id, event_type, summary, payload_json)
+    VALUES (?, ?, ?, ?)
+    """
+    try:
+        conn.execute(sql, (
+            project_id,
+            event_type,
+            summary,
+            json.dumps(payload or {}, ensure_ascii=False) if payload else None,
+        ))
+        conn.commit()
+    except Exception as exc:
+        logger.error("Failed to insert project event for %s: %s", project_id, exc)

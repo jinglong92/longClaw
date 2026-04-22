@@ -94,3 +94,43 @@ Agent(search-agent): 任务C — <具体搜索指令>（如有）
 - 最多并发 3 个 SearchAgent（OpenClaw 并行上限）
 - 单个 agent 超时（>60s）时跳过该维度，标注 `[超时，跳过]`
 - 所有 agent 都失败时，降级为单路 fact-check-latest
+
+---
+
+## Project Writeback Contract
+
+**触发条件**：MEMORY.md 存在 `[PROJECT]` 块，且当前调研与项目 `goal` 相关。
+
+**Step 5（在综合报告输出后执行）**：
+
+将调研结果写回 project memory，格式如下：
+
+```yaml
+project_writeback:
+  project_id: <从 [PROJECT] 块读取>
+  research_topic: <本次调研主题>
+  summary: <2-3句话的核心结论>
+  key_findings:
+    - <发现1>
+    - <发现2>
+    - <发现3>（最多5条）
+  uncertainties:
+    - <尚不确定的点>（如有）
+  next_actions:
+    - <基于调研结论，建议的下一步>
+  sources:
+    - <URL1>
+    - <URL2>
+  written_at: <YYYY-MM-DD HH:MM>
+```
+
+**写回目标**（双路径）：
+
+1. **MEMORY.md [PROJECT] 块**：更新 `current_focus` 为调研结论摘要，`next_action` 为建议的下一步。
+2. **memory/YYYY-MM-DD.md**：追加一条 `[research_writeback]` 条目，包含完整 `project_writeback` 内容。
+
+**写回规则**：
+- 写回内容是高密度摘要，不是原文全量
+- 若用户明确说"不用写回"，跳过此步骤
+- 写回后在报告末尾追加一行：`✅ 已写回 project memory（project: <project_id>）`
+- 若无 [PROJECT] 块，跳过此步骤，不提示

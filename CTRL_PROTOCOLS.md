@@ -108,6 +108,52 @@ requires: ["file_write", "shell_exec"] → 两项都需满足
 
 ---
 
+## Project Context（项目感知）
+
+CTRL 在每轮组装上下文时，**优先读取 MEMORY.md 的 [PROJECT] 块**，将当前项目状态注入执行上下文。
+
+### 读取优先级
+
+```
+[PROJECT] 块（MEMORY.md）→ 当前 session 上下文 → Level 2/3 记忆检索
+```
+
+### [PROJECT] 块格式
+
+```
+[PROJECT]
+id: <project_id>
+name: <项目名>
+goal: <一句话目标>
+current_focus: <当前聚焦点>
+next_action: <下一步行动>
+status: active | paused | completed | archived
+constraints:
+- <约束1>
+[/PROJECT]
+```
+
+### CTRL 行为规则
+
+1. **有 [PROJECT] 块时**：每轮回复前先读取，将 `goal` / `current_focus` / `next_action` 作为任务上下文，使回复与项目推进方向保持一致。
+
+2. **research / coding 任务完成后**：提示用户更新 [PROJECT] 块的 `current_focus` 和 `next_action`，或由 skill 的 `project_writeback` contract 自动写回。
+
+3. **无 [PROJECT] 块时**：按普通 session 处理，不强制要求项目上下文。
+
+4. **DEV LOG 中显示**：当 [PROJECT] 块存在时，DEV LOG 的 `🧩 Skill` 行后追加一行：
+   ```
+   🗂️ Project   <id> | focus: <current_focus> | next: <next_action>
+   ```
+
+### 与 memory_store 的关系
+
+[PROJECT] 块是 MEMORY.md 的一部分（人类可读、可手动编辑）。
+`core/project/project_store.py` 是机器写入路径（JSON 持久化，skill writeback 使用）。
+两者同步规则：skill writeback 写 project_store 后，同时更新 MEMORY.md 的 [PROJECT] 块。
+
+---
+
 ## Memory Retrieval（4 级作用域）
 
 **核心原则**：先决定搜哪里，再决定怎么搜。

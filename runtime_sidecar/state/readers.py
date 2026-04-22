@@ -8,6 +8,7 @@ information from the ledger.  They are used by CLI tools such as
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from typing import Any, Dict, Iterable, List, Optional
 
@@ -37,6 +38,53 @@ def latest_note_timestamp() -> Optional[str]:
     sql = "SELECT created_at FROM notes ORDER BY created_at DESC LIMIT 1"
     rows = _fetch_all(sql, [])
     return rows[0]["created_at"] if rows else None
+
+
+# ---------------------------------------------------------------------------
+# Project operations
+# ---------------------------------------------------------------------------
+
+def get_active_project() -> Optional[Dict[str, Any]]:
+    """Return the most recently updated active project, or None."""
+    sql = """
+    SELECT * FROM projects
+    WHERE status = 'active'
+    ORDER BY updated_at DESC
+    LIMIT 1
+    """
+    rows = _fetch_all(sql, [])
+    if not rows:
+        return None
+    row = dict(rows[0])
+    # Deserialise JSON fields
+    for field in ("constraints_json", "related_paths_json", "related_urls_json"):
+        key = field.replace("_json", "")
+        try:
+            row[key] = json.loads(row.pop(field, "[]") or "[]")
+        except (json.JSONDecodeError, TypeError):
+            row[key] = []
+    return row
+
+
+def get_recent_project_events(project_id: str, limit: int = 5) -> List[Dict[str, Any]]:
+    """Return the most recent events for a project."""
+    sql = """
+    SELECT event_id, project_id, event_type, summary, payload_json, created_at
+    FROM project_events
+    WHERE project_id = ?
+    ORDER BY created_at DESC
+    LIMIT ?
+    """
+    rows = _fetch_all(sql, [project_id, limit])
+    result = []
+    for row in rows:
+        d = dict(row)
+        try:
+            d["payload"] = json.loads(d.pop("payload_json") or "{}")
+        except (json.JSONDecodeError, TypeError):
+            d["payload"] = {}
+        result.append(d)
+    return result
 
 
 def search_records(table: str, query: str, limit: int = 100) -> List[Dict[str, Any]]:

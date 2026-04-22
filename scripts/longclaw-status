@@ -2,19 +2,24 @@
 """
 Status reporting script for the longClaw runtime sidecar.
 
-This CLI queries the sidecar ledger to provide a summary of current state
-including counts of sessions, route decisions, tool events and the
-timestamp of the most recent note.  It prints human‑readable output by
-default and can emit JSON via the `--json` flag.
+Outputs project-centric situational awareness so you can restore context
+at a glance after being away.  Falls back to system-level stats when no
+project is active.
+
+Usage:
+    scripts/longclaw-status          # human-readable
+    scripts/longclaw-status --json   # machine-readable
+    scripts/longclaw-status --system # system stats only (old behaviour)
 """
 
 import argparse
 import json
 import os
 import sys
-from typing import Any, Dict
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional
 
-# Ensure the repository root is on sys.path so that runtime_sidecar can be imported
+# Ensure the repository root is on sys.path
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
@@ -22,40 +27,192 @@ if REPO_ROOT not in sys.path:
 from runtime_sidecar.state import db, readers, writers
 
 
-def gather_status() -> Dict[str, Any]:
-    # Ensure schema exists
+# ---------------------------------------------------------------------------
+# Project layer (optional — gracefully absent before Day 2 artifacts exist)
+# ---------------------------------------------------------------------------
+
+def _load_active_project() -> Optional[Dict[str, Any]]:
+    # Primary source: JSON store (human-editable, fast)
+    try:
+        from core.project.project_store import ProjectStore
+        store = ProjectStore()
+        p = store.get_active()
+        if p is not None:
+            return p.to_dict()
+    except Exception:
+        pass
+    # Fallback: SQLite ledger
+    try:
+        return readers.get_active_project()
+    except Exception:
+        return None
+
+
+def _load_recent_writebacks(limit: int = 3) -> list:
+    """Return the most recent project writeback notes from today's memory log."""
+    try:
+        from datetime import date
+        today = date.today().strftime("%Y-%m-%d")
+        log_path = os.path.join(REPO_ROOT, "memory", f"{today}.md")
+        if not os.path.exists(log_path):
+            return []
+        entries = []
+        with open(log_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        # Look for [research_writeback] and [code_writeback] markers
+        import re
+        pattern = r"\[(research_writeback|code_writeback)\](.*?)(?=\[(?:research_writeback|code_writeback)\]|\Z)"
+        matches = re.findall(pattern, content, re.DOTALL)
+        for kind, body in matches[-limit:]:
+            entries.append({"kind": kind, "preview": body.strip()[:120]})
+        return entries
+    except Exception:
+        return []
+
+
+# ---------------------------------------------------------------------------
+# System layer
+# ---------------------------------------------------------------------------
+
+def _gather_system_status() -> Dict[str, Any]:
     conn = db.get_connection()
     writers.initialise_schema(conn)
-    status: Dict[str, Any] = {}
-    status["db_path"] = db._determine_db_path()
-    # Check existence of db file
-    status["db_exists"] = bool(status["db_path"] and os.path.exists(status["db_path"]))  # type: ignore
-    status["sessions"] = readers.count_records("sessions")
-    status["route_decisions"] = readers.count_records("route_decisions")
-    status["tool_events"] = readers.count_records("tool_events")
-    status["latest_note"] = readers.latest_note_timestamp()
-    return status
+    db_path = db._determine_db_path()
+    return {
+        "db_path": db_path,
+        "db_exists": bool(db_path and os.path.exists(db_path)),
+        "sessions": readers.count_records("sessions"),
+        "route_decisions": readers.count_records("route_decisions"),
+        "tool_events": readers.count_records("tool_events"),
+        "latest_note": readers.latest_note_timestamp(),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Formatting helpers
+# ---------------------------------------------------------------------------
+
+_STATUS_ICON = {
+    "active": "🟢",
+    "paused": "⏸️",
+    "completed": "✅",
+    "archived": "📦",
+}
+
+
+def _fmt_project(p: Dict[str, Any]) -> str:
+    icon = _STATUS_ICON.get(p.get("status", ""), "❓")
+    lines = [
+        f"┌─ PROJECT ─────────────────────────────────────────────",
+        f"│  {icon} [{p['status']}]  {p['name']}  ({p['project_id']})",
+        f"│  Goal:    {p['goal']}",
+        f"│  Focus:   {p.get('current_focus') or '—'}",
+        f"│  Next:    {p.get('next_action') or '—'}",
+        f"│  Updated: {p.get('updated_at', '—')}",
+    ]
+    constraints = p.get("constraints", [])
+    if constraints:
+        lines.append(f"│  Constraints: {' · '.join(constraints)}")
+    lines.append(f"└───────────────────────────────────────────────────────")
+    return "\n".join(lines)
+
+
+def _fmt_writebacks(entries: list) -> str:
+    if not entries:
+        return "  (no writebacks today)"
+    lines = []
+    for e in entries:
+        kind_label = "🔬 research" if e["kind"] == "research_writeback" else "🛠️ code"
+        lines.append(f"  {kind_label}: {e['preview']}")
+    return "\n".join(lines)
+
+
+def _fmt_system(s: Dict[str, Any]) -> str:
+    latest = s["latest_note"] or "N/A"
+    return (
+        f"  DB: {s['db_path']}  ({'exists' if s['db_exists'] else 'missing'})\n"
+        f"  Sessions: {s['sessions']}  |  Routes: {s['route_decisions']}  "
+        f"|  Tool events: {s['tool_events']}\n"
+        f"  Last note: {latest}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def _load_recent_project_events(project_id: str, limit: int = 3) -> list:
+    try:
+        return readers.get_recent_project_events(project_id, limit=limit)
+    except Exception:
+        return []
+
+
+def gather_full_status() -> Dict[str, Any]:
+    result: Dict[str, Any] = {}
+    result["project"] = _load_active_project()
+    result["recent_writebacks"] = _load_recent_writebacks()
+    if result["project"]:
+        result["recent_events"] = _load_recent_project_events(
+            result["project"]["project_id"]
+        )
+    else:
+        result["recent_events"] = []
+    result["system"] = _gather_system_status()
+    return result
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="longClaw sidecar status")
-    parser.add_argument("--json", action="store_true", help="Output status in JSON format")
+    parser = argparse.ArgumentParser(description="longClaw status")
+    parser.add_argument("--json", action="store_true", help="JSON output")
+    parser.add_argument("--system", action="store_true", help="System stats only")
     args = parser.parse_args()
-    status = gather_status()
+
+    if args.system:
+        s = _gather_system_status()
+        if args.json:
+            print(json.dumps(s, indent=2))
+        else:
+            print("── System ──────────────────────────────────────────────")
+            print(_fmt_system(s))
+        return 0
+
+    status = gather_full_status()
+
     if args.json:
-        print(json.dumps(status, indent=2))
+        print(json.dumps(status, indent=2, ensure_ascii=False))
+        return 0
+
+    # Human-readable project view
+    print()
+    project = status["project"]
+    if project:
+        print(_fmt_project(project))
     else:
-        print(f"Sidecar DB path: {status['db_path']}")
-        print(f"DB exists: {'yes' if status['db_exists'] else 'no'}")
-        print(f"Sessions: {status['sessions']}")
-        print(f"Route decisions: {status['route_decisions']}")
-        print(f"Tool events: {status['tool_events']}")
-        latest = status['latest_note']
-        print(f"Last note timestamp: {latest if latest else 'N/A'}")
+        print("┌─ PROJECT ─────────────────────────────────────────────")
+        print("│  No active project.  Add a [PROJECT] block to MEMORY.md")
+        print("│  or run:  python3 -c \"from core.project.project_store import ProjectStore; ...\"")
+        print("└───────────────────────────────────────────────────────")
+
+    writebacks = status["recent_writebacks"]
+    print()
+    print("── Recent Writebacks (today) ───────────────────────────")
+    print(_fmt_writebacks(writebacks))
+
+    events = status.get("recent_events", [])
+    if events:
+        print()
+        print("── Recent Project Events ────────────────────────────────")
+        for e in events:
+            print(f"  [{e['event_type']}]  {e.get('summary', '')}  ({e['created_at'][:16]})")
+
+    sys_s = status["system"]
+    print()
+    print("── System ──────────────────────────────────────────────")
+    print(_fmt_system(sys_s))
+    print()
     return 0
 
 
 if __name__ == "__main__":
-    import os
-    import sys
     sys.exit(main())

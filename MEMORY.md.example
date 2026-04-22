@@ -64,3 +64,46 @@
 [META]
 
 系统元信息：workspace 演化记录、重要决策日志。
+
+---
+
+[PROJECT]
+
+当前项目上下文。CTRL 在每轮组装上下文时优先读取此块，用于恢复项目态势感知。
+
+格式约定（复制模板后按实际填写）：
+
+```
+[PROJECT]
+id: <project_id>
+name: <项目名>
+goal: <一句话目标>
+current_focus: <当前聚焦点>
+next_action: <下一步行动>
+status: active
+constraints:
+- <约束1>
+- <约束2>
+[/PROJECT]
+```
+
+示例：
+
+```
+[PROJECT]
+id: longclaw-productization
+name: longClaw 产品化
+goal: turn longClaw into a project-based AI workspace for technical users
+current_focus: project-aware memory writeback
+next_action: connect deep-research writeback to project store
+status: active
+constraints:
+- keep architecture minimal
+- no new CLI entry except init/doctor/status
+[/PROJECT]
+```
+
+**使用规则**：
+- 同一时间只保留一个活跃 [PROJECT] 块（当前最重要的项目）
+- 每次 research / coding 任务完成后，更新 current_focus 和 next_action
+- 项目完成后把 status 改为 completed，并迁移到 [META] 做归档记录

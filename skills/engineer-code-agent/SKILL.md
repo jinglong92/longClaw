@@ -122,3 +122,40 @@ git checkout -- <文件>  # 回滚单个文件
 - 不删除失败的测试用例
 - 最多 3 轮重试，超出则停止并报告
 - 每次修改前必须有 readback 证据
+
+---
+
+## Project Writeback Contract
+
+**触发条件**：MEMORY.md 存在 `[PROJECT]` 块，且当前任务与项目 `goal` 相关。
+
+**Step 5 完成后执行**（在交付报告之后）：
+
+将任务结果写回 project memory，格式如下：
+
+```yaml
+project_writeback:
+  project_id: <从 [PROJECT] 块读取>
+  task_goal: <本次任务的一句话目标>
+  files_touched:
+    - <文件路径>: <改动描述>
+  validation_result: passed | partial | failed
+  validation_detail: <测试命令 + 结果摘要>
+  open_risks:
+    - <遗留风险>（如有）
+  next_actions:
+    - <基于本次任务结果，建议的下一步>
+  written_at: <YYYY-MM-DD HH:MM>
+```
+
+**写回目标**（双路径）：
+
+1. **MEMORY.md [PROJECT] 块**：更新 `current_focus` 为任务状态摘要，`next_action` 为建议的下一步。
+2. **memory/YYYY-MM-DD.md**：追加一条 `[code_writeback]` 条目，包含完整 `project_writeback` 内容。
+
+**写回规则**：
+- `validation_result` 必须如实反映验证结果，不得在测试失败时写 `passed`
+- `open_risks` 必须包含所有已知未解决的问题
+- 若用户明确说"不用写回"，跳过此步骤
+- 写回后在交付报告末尾追加一行：`✅ 已写回 project memory（project: <project_id>）`
+- 若无 [PROJECT] 块，跳过此步骤，不提示

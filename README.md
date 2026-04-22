@@ -1,12 +1,108 @@
-# longClaw Workspace
+# longClaw
 
 语言 / Language: **简体中文** | [English](README.en.md)
 
-> 基于 [OpenClaw](https://github.com/openclaw/openclaw) 深度改造的个人 AI 操作系统——
-> 把单个 AI 助手升级为**可扩展的多专家协作运行时**，
-> 带工业级记忆检索、会话管理和完整的开发者可观测性。
+**longClaw 是一个 project-based AI workspace**，专为需要持续推进复杂任务的技术用户设计。
 
-**🌐 快速概览页面**：[longClaw 介绍站点](https://htmlpreview.github.io/?https://gist.githubusercontent.com/jinglong92/4e8c97b038c48f585ab95876a7efdcd2/raw/f7b6e00ae8e44139ce4a7820a6d3a7ec64f3dace/index.html) — 可视化展示系统架构与核心能力，建议先看这里。
+它不是聊天机器人。它知道你在做什么项目、上次做到哪里、下一步该干什么——跨 session 不失忆。
+
+---
+
+## 它解决什么问题
+
+你有没有遇到过：
+
+- 调研了半天，下次开新 session 又要从头解释背景
+- 改了代码，但没人记得为什么改、验证结果是什么、下一步是什么
+- AI 给了很好的答案，但下次问不到了
+
+longClaw 的核心能力就是解决这三件事：**让 AI 记住你的项目上下文，让每次调研和代码任务的结果自动写回，让你随时能恢复项目态势**。
+
+---
+
+## 最强的两件事
+
+### 1. Deep Research — 调研结果跨 session 可追溯
+
+触发 `search-deep-research` skill，并发多源调研，结果自动写回当前 project 的 memory。下次同项目继续时，CTRL 能直接引用上次的发现，不用重新解释背景。
+
+```
+你：帮我深度调研 vLLM 的 continuous batching 实现
+→ 并发 spawn search-agent×3，RRF 融合多源结果
+→ 自动写回 project memory：summary + key_findings + next_actions
+→ 下次：你提到上次调研，CTRL 直接接上
+```
+
+### 2. Code Agent — 代码任务有始有终、改动被记住
+
+触发 `engineer-code-agent` skill，有 task 开始、实施、验证、写回。第二天回来，系统知道上次改了什么文件、验证结果是什么、下一步该干什么。
+
+```
+你：帮我重构这个模块的错误处理
+→ task 开始，明确 goal 和验收标准
+→ 实施 + 验证
+→ 自动写回：files_touched + validation_result + next_actions
+→ 下次：你说"继续上次的任务"，直接接上
+```
+
+---
+
+## 它和普通 AI 助手有什么不同
+
+| | 普通 AI 助手 | longClaw |
+|---|---|---|
+| **项目上下文** | 每次 session 重新解释 | 持久化 project memory，跨 session 可恢复 |
+| **调研结果** | 聊完就消失 | 自动写回，下次可引用 |
+| **代码任务** | 改完就结束 | 记录改动状态和下一步 |
+| **态势感知** | 无 | `longclaw status` 一眼恢复项目现状 |
+| **多专家仲裁** | 单 Agent | 10 个专职代理 + CTRL 仲裁，不打架 |
+
+---
+
+## Quick Start
+
+**前提**：已安装 [OpenClaw](https://github.com/openclaw/openclaw)，workspace 目录已创建。
+
+```bash
+# 1. Clone 本仓库
+git clone https://github.com/jinglong92/longClaw.git
+cd longClaw
+
+# 2. 把通用配置复制到你的 OpenClaw workspace
+cp AGENTS.md SOUL.md MULTI_AGENTS.md /path/to/your-workspace/
+cp -r skills/ /path/to/your-workspace/
+
+# 3. 从模板创建你自己的私有配置（这 3 个文件不会被推送到 GitHub）
+cp USER.md.example /path/to/your-workspace/USER.md
+cp MEMORY.md.example /path/to/your-workspace/MEMORY.md
+# 然后编辑 USER.md，填入你的名字、职业、偏好、当前上下文
+
+# 4. 安装 memory 检索工具（可选，增强检索能力）
+cp -r tools/ /path/to/your-workspace/
+cd /path/to/your-workspace
+python3 tools/memory_entry.py    # 构建索引
+python3 tools/memory_search.py --query "测试" --verbose  # 验证
+
+# 5. 查看当前项目状态
+scripts/longclaw-status
+```
+
+**需要自己创建的私有文件**（不在 repo 里，不会推送）：
+
+| 文件 | 来源 | 要改什么 |
+|------|------|---------|
+| `USER.md` | 从 `USER.md.example` 复制 | 你的名字、职业、偏好、当前上下文、专属术语定义 |
+| `MEMORY.md` | 从 `MEMORY.md.example` 复制 | 从空白开始，随对话积累长期记忆 |
+| `memory/` | 自动生成 | 每日对话日志，由 CTRL 自动写入 |
+
+**可以直接复用（不需要改）**：
+`AGENTS.md` · `SOUL.md` · `MULTI_AGENTS.md` · `skills/` · `tools/` · `runtime_sidecar/` · `scripts/longclaw-doctor` · `scripts/longclaw-status`
+
+---
+
+## 架构详解（进阶）
+
+以下内容面向想了解内部设计的用户。
 
 ---
 
@@ -76,49 +172,6 @@
 
 ---
 
-## Quick Start
-
-**前提**：已安装 [OpenClaw](https://github.com/openclaw/openclaw)，workspace 目录已创建。
-
-```bash
-# 1. Clone 本仓库
-git clone https://github.com/jinglong92/longClaw.git
-cd longClaw
-
-# 2. 把通用配置复制到你的 OpenClaw workspace
-cp AGENTS.md SOUL.md MULTI_AGENTS.md /path/to/your-workspace/
-cp -r skills/ /path/to/your-workspace/
-
-# 3. 从模板创建你自己的私有配置（这 3 个文件不会被推送到 GitHub）
-cp USER.md.example /path/to/your-workspace/USER.md
-cp MEMORY.md.example /path/to/your-workspace/MEMORY.md
-# 然后编辑 USER.md，填入你的名字、职业、偏好、当前上下文
-
-# 4. 安装 memory 检索工具（可选，增强检索能力）
-cp -r tools/ /path/to/your-workspace/
-cd /path/to/your-workspace
-python3 tools/memory_entry.py    # 构建索引
-python3 tools/memory_search.py --query "测试" --verbose  # 验证
-
-# 5. 在 OpenClaw 对话中说"开启 dev mode"，验证 Dev Mode 与路由/证据规则
-
-# 6. 可选：同步当前基线脚本
-bash refactor_workspace_baseline.sh
-```
-
-**需要自己创建的私有文件**（不在 repo 里，不会推送）：
-
-| 文件 | 来源 | 要改什么 |
-|------|------|---------|
-| `USER.md` | 从 `USER.md.example` 复制 | 你的名字、职业、偏好、当前上下文、专属术语定义 |
-| `MEMORY.md` | 从 `MEMORY.md.example` 复制 | 从空白开始，随对话积累长期记忆 |
-| `memory/` | 自动生成 | 每日对话日志，由 CTRL 自动写入 |
-
-**可以直接复用（不需要改）**：
-`AGENTS.md` · `SOUL.md` · `MULTI_AGENTS.md` · `skills/` · `tools/` · `runtime_sidecar/` · `scripts/longclaw-doctor` · `scripts/longclaw-status`
-
----
-
 ## 目录
 
 1. [三系统定位对比](#1-三系统定位对比)
@@ -130,7 +183,7 @@ bash refactor_workspace_baseline.sh
 7. [文件索引](#7-文件索引)
 8. [当前边界](#8-当前边界)
 9. [设计借鉴说明](#9-设计借鉴说明)
-10. [Runtime Sidecar（本迭代新增）](#10-runtime-sidecar本迭代新增)
+10. [Runtime Sidecar](#10-runtime-sidecar本迭代新增)
 
 ---
 

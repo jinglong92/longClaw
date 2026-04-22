@@ -41,3 +41,26 @@ CREATE TABLE IF NOT EXISTS notes (
   content TEXT,
   created_at TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS projects (
+  project_id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  goal TEXT NOT NULL,
+  current_focus TEXT DEFAULT '',
+  next_action TEXT DEFAULT '',
+  status TEXT DEFAULT 'active',
+  constraints_json TEXT DEFAULT '[]',
+  related_paths_json TEXT DEFAULT '[]',
+  related_urls_json TEXT DEFAULT '[]',
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS project_events (
+  event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id TEXT NOT NULL,
+  event_type TEXT NOT NULL,
+  summary TEXT,
+  payload_json TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
