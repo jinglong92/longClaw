@@ -5,6 +5,67 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.8.0] — 2026-04-22
+
+### Fixed — 压缩执行链三处断裂
+
+- **Layer 1 Trim 执行链打通**：新增 `PostToolUse` hook
+  - `runtime_sidecar/plugins/post_tool_use.py`：工具输出 > 500 字符时写 `trim_event` note
+  - `scripts/hooks/hook_dispatcher_post_tool_use.sh`：bash bridge 向 Claude 注入 `hookSpecificOutput.updatedOutput` 实现截断
+  - 修复 bridge 脚本中 `$INPUT` 被 `cat` 消耗后 heredoc 读到空的 bug，改为两段独立 `printf '%s' "$INPUT" | python3 -c` pipe
+  - `hook_events.py` 新增 `POST_TOOL_USE`；`event_bus.py` 注册 `post_tool_use` plugin
+  - `.claude/settings.json` 注册 `PostToolUse` hook（全工具覆盖）
+
+- **Layer 2 Summarize 触发条件重写**：原 `round > 20` 在 ephemeral session 下永远不成立
+  - 触发条件改为：工具事件数 > 30 OR trim_event 累计 > 10（仅 persistent session）
+  - `UserPromptSubmit` plugin 每轮检查 `should_trigger_layer2_summarize()`，条件满足时注入 `[layer2-summarize]` 提示
+  - 新增 `_load_session_type()` 读取 `session-state.json`，ephemeral session 明确豁免
+  - `readers.py` 新增 `count_session_tool_events()` / `count_session_trim_events()` / `should_trigger_layer2_summarize()`
+
+- **PostCompact 重注入改覆写**：原 `>>` 追加导致多次 compaction 后 `CLAUDE_ENV_FILE` 膨胀，改为 `>` 覆写
+
+- **PostCompact 写结构化状态**：原只写裸字符串 "PostCompact triggered"
+  - `schema.sql` 新增 `compact_events` 表（`tool_events_before` / `trim_events_before` / `trigger_source` / `summary_hint`）
+  - `post_compact.py` 重写，写 `compact_events` + 向后兼容 note
+  - `writers.py` 新增 `insert_compact_event()`；`readers.py` 新增 `get_latest_compact_event()`
+  - `hook_dispatcher_post_compact.sh` 传入 `turn_count` / `trigger_source` / `summary_hint`
+
+### Fixed — 自审发现两处
+
+- `post_tool_use.py`：`output_length or len(output)` 在值为 0 时错误 fallback，改为 `is not None` 判断
+- `readers.should_trigger_layer2_summarize()` 返回值从 `bool` 改为 reason 字符串，调用方直接用 reason 构建提示，消除三次查询变一次的冗余
+
+### Changed
+
+- **`CTRL_PROTOCOLS.md`**：
+  - 新增 Session 形态说明表（persistent vs ephemeral），明确各层触发条件差异
+  - Layer 2 触发条件更新（`round > 20` → 工具事件数/trim 次数阈值）
+  - 补 Layer 编号跳跃说明（Layer 3 = 原生 compaction，不在 workspace 层实现）
+  - Skill Index 数量修正（11 → 15）
+  - Session 状态管理节同步新触发条件，消除文档内矛盾
+
+- **`post_tool_use.py` / `user_prompt_submit.py`**：`initialise_schema` 改为模块级懒初始化（`_SCHEMA_INITIALISED` flag），避免高频 hook 每次调用都执行
+
+### Docs
+
+- **`docs/longclaw-practice.md`**：
+  - §一 问题4：PostCompact 重注入改覆写说明，补 `compact_events` 查询示例
+  - §2.1：压缩设计从"只说 Layer 1"扩展为四层完整对比表（触发/执行主体/session 形态）
+  - §8.2：插件行为表补 PostToolUse，修正 UserPromptSubmit / PostCompact 描述，补 ephemeral 豁免说明
+  - §九（新增）：上下文加载与 compaction 生存规则（三类来源 / native whitelist / 规则放哪里 / MULTI_AGENTS.md 缺口）
+  - 演进历程：新增 2026-04-22 条目
+
+- **`docs/architecture-boundary.md`**：重写全文
+  - 补充三类上下文来源对比（bootstrap / startup-context / hook 注入）
+  - 明确 native post-compaction refresh 只保护 `AGENTS.md` 的指定 section
+  - 补充 MULTI_AGENTS.md 未被注入的已知缺口及三种修法
+  - 修正原文"OpenClaw owns MULTI_AGENTS.md / CTRL_PROTOCOLS.md"的错误表述
+  - 补充 subagent bootstrap 文档与代码的已知差异
+
+- **`README.md`**：修正"CLAUDE.md 加载"描述，改为准确的 bootstrap files 列表
+
+---
+
 ## [v0.7.1] — 2026-04-21
 
 ### Added
