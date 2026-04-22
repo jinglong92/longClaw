@@ -35,6 +35,7 @@ class EventBus:
         plugin_names = [
             "session_start",
             "post_compact",
+            "post_tool_use",
             "file_changed",
             "pre_tool_use",
             "user_prompt_submit",

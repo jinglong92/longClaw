@@ -52,6 +52,16 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/hooks/hook_dispatcher_post_tool_use.sh"
+          }
+        ]
+      }
     ]
   }
 }
