@@ -18,15 +18,12 @@ cd "$ROOT"
 mkdir -p memory
 echo "$(date '+%F %T') [hook] PostToolUse bridge invoked" >> memory/sidecar-hooks.log
 
-TRIM_THRESHOLD=500
-
+# Read stdin once into variable — must happen before any heredoc or pipe
 INPUT="$(cat || true)"
 
-# Parse output and metadata from the hook payload
-python3 - "$TRIM_THRESHOLD" <<'PY'
+# ── sidecar ledger (fire-and-forget, same pattern as pre_tool_use bridge) ───
+printf '%s' "$INPUT" | python3 -c "
 import json, os, sys
-
-threshold = int(sys.argv[1])
 
 try:
     raw = json.loads(sys.stdin.read())
@@ -40,44 +37,49 @@ def pick(*keys):
             return v
     return None
 
-tool_name   = raw.get("tool_name") or raw.get("tool", "unknown")
-output      = raw.get("output") or raw.get("tool_result") or ""
+tool_name  = raw.get('tool_name') or raw.get('tool', 'unknown')
+output     = raw.get('output') or raw.get('tool_result') or ''
 if not isinstance(output, str):
     output = json.dumps(output, ensure_ascii=False)
-output_len  = len(output)
-session_id  = pick("CLAUDE_SESSION_ID", "SESSION_ID", "OPENCLAW_SESSION_ID")
+output_len = len(output)
 
-# ── sidecar ledger (fire-and-forget) ────────────────────────────────────────
 ctx = {
-    "session_id": session_id,
-    "tool_name": tool_name,
-    "output_length": output_len,
-    "output": "",   # don't pass full output to ledger
+    'session_id':    pick('CLAUDE_SESSION_ID', 'SESSION_ID', 'OPENCLAW_SESSION_ID'),
+    'tool_name':     tool_name,
+    'output_length': output_len,
+    'output':        '',   # do not store full output in ledger
 }
-import subprocess, json as _json
-try:
-    subprocess.run(
-        ["python3", "-m", "runtime_sidecar.hook_dispatcher", "PostToolUse"],
-        input=_json.dumps(ctx).encode(),
-        capture_output=True,
-        timeout=5,
-    )
-except Exception:
-    pass
+print(json.dumps(ctx, ensure_ascii=False))
+" | python3 -m runtime_sidecar.hook_dispatcher PostToolUse >/dev/null 2>> memory/sidecar-hooks.log || true
 
 # ── Layer 1 Trim ─────────────────────────────────────────────────────────────
-if output_len > threshold:
-    truncated = output[:threshold]
-    footnote = (
-        f"\n[截断：原始输出 {output_len} 字符，已保留前 {threshold} 字符。"
-        f"如需完整内容请说"展开上一条工具输出"。]"
+TRIM_THRESHOLD=500
+
+printf '%s' "$INPUT" | python3 -c "
+import json, sys
+
+THRESHOLD = $TRIM_THRESHOLD
+
+try:
+    raw = json.loads(sys.stdin.read())
+except Exception:
+    sys.exit(0)
+
+output = raw.get('output') or raw.get('tool_result') or ''
+if not isinstance(output, str):
+    output = json.dumps(output, ensure_ascii=False)
+
+if len(output) > THRESHOLD:
+    truncated = output[:THRESHOLD]
+    footnote  = (
+        '\n[截断：原始输出 ' + str(len(output)) + ' 字符，已保留前 ' + str(THRESHOLD) + ' 字符。'
+        '如需完整内容请说\u201c展开上一条工具输出\u201d。]'
     )
-    updated = truncated + footnote
     result = {
-        "hookSpecificOutput": {
-            "hookEventName": "PostToolUse",
-            "updatedOutput": updated,
+        'hookSpecificOutput': {
+            'hookEventName': 'PostToolUse',
+            'updatedOutput': truncated + footnote,
         }
     }
     print(json.dumps(result, ensure_ascii=False))
-PY
+"

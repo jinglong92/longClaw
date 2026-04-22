@@ -65,20 +65,25 @@ def should_trigger_layer2_summarize(
     session_type: str = "persistent",
     tool_event_threshold: int = 30,
     trim_event_threshold: int = 10,
-) -> bool:
-    """Return True if Layer 2 Summarize should trigger for this session.
+) -> str:
+    """Return the trigger reason if Layer 2 Summarize should fire, else ''.
 
     Rules (from CTRL_PROTOCOLS.md):
-    - Ephemeral sessions: never trigger (return False immediately)
+    - Ephemeral sessions: never trigger (return '' immediately)
     - Persistent sessions: trigger if tool_events > 30 OR trim_events > 10
+
+    Returning the reason string avoids callers having to re-query counts
+    just to build a human-readable message.
     """
     if session_type == "ephemeral":
-        return False
+        return ""
     tool_count = count_session_tool_events(session_id)
     if tool_count > tool_event_threshold:
-        return True
+        return f"tool_events={tool_count}>{tool_event_threshold}"
     trim_count = count_session_trim_events(session_id)
-    return trim_count > trim_event_threshold
+    if trim_count > trim_event_threshold:
+        return f"trim_events={trim_count}>{trim_event_threshold}"
+    return ""
 
 
 def get_latest_compact_event(session_id: str) -> Optional[Dict[str, Any]]:

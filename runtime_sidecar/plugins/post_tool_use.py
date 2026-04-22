@@ -25,6 +25,16 @@ HANDLED_EVENTS = [HookEventType.POST_TOOL_USE.value]
 
 TRIM_THRESHOLD = 500  # characters
 
+_SCHEMA_INITIALISED = False
+
+
+def _ensure_schema() -> None:
+    global _SCHEMA_INITIALISED
+    if not _SCHEMA_INITIALISED:
+        conn = db.get_connection()
+        writers.initialise_schema(conn)
+        _SCHEMA_INITIALISED = True
+
 
 def handle_event(context: Dict[str, Any]) -> Dict[str, Any]:
     """Handle PostToolUse.
@@ -42,13 +52,14 @@ def handle_event(context: Dict[str, Any]) -> Dict[str, Any]:
     - trim_threshold: int
     - session_id: str
     """
+    _ensure_schema()
     conn = db.get_connection()
-    writers.initialise_schema(conn)
 
     session_id = context.get("session_id", "unknown")
     tool_name = context.get("tool_name", "unknown")
     output = context.get("output", "")
-    output_length = context.get("output_length") or len(output)
+    raw_len = context.get("output_length")
+    output_length = raw_len if raw_len is not None else len(output)
     turn_id = context.get("turn_id")
 
     trimmed = output_length > TRIM_THRESHOLD
