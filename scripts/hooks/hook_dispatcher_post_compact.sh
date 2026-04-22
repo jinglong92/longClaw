@@ -6,10 +6,12 @@ cd "$ROOT"
 mkdir -p memory
 echo "$(date '+%F %T') [hook] PostCompact bridge invoked" >> memory/sidecar-hooks.log
 
-# 保留原有协议重注入语义
+# 协议重注入：覆写而非追加，防止多次 compaction 后内容膨胀
 if [ -n "${CLAUDE_ENV_FILE:-}" ] && [ -f CTRL_PROTOCOLS.md ] && [ -f DEV_LOG.md ]; then
-  printf '\n[PostCompact: re-injecting critical protocols]\n' >> "$CLAUDE_ENV_FILE"
-  cat CTRL_PROTOCOLS.md DEV_LOG.md >> "$CLAUDE_ENV_FILE"
+  {
+    printf '[PostCompact: re-injecting critical protocols]\n'
+    cat CTRL_PROTOCOLS.md DEV_LOG.md
+  } > "$CLAUDE_ENV_FILE"
 fi
 
 # sidecar ledger 旁路记录（传入结构化上下文）
