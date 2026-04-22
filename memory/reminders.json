@@ -1,0 +1,24 @@
+{
+  "timezone": "Asia/Shanghai",
+  "items": [
+    {
+      "id": "reminder_2026_04_22_test_retry",
+      "title": "提醒链路二次验收",
+      "content": "如果你看到这条，说明投递最后一跳也通了",
+      "due_at": "2026-04-22T11:24:30+08:00",
+      "chat_id": "o9cq802fWfRMLbme2kzXdHFEwIyw@im.wechat",
+      "reply_tag": "[[reply_to_current]]",
+      "status": "due",
+      "due_detected_at": "2026-04-22T11:37:58.071741+08:00"
+    },
+    {
+      "id": "reminder_2026_04_23_longclaw_productization",
+      "title": "强化 longClaw 产品化方案",
+      "content": "明天上午处理这件事",
+      "due_at": "2026-04-23T09:00:00+08:00",
+      "chat_id": "o9cq802fWfRMLbme2kzXdHFEwIyw@im.wechat",
+      "reply_tag": "[[reply_to_current]]",
+      "status": "pending"
+    }
+  ]
+}
