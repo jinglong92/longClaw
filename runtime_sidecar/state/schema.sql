@@ -41,3 +41,14 @@ CREATE TABLE IF NOT EXISTS notes (
   content TEXT,
   created_at TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS compact_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id TEXT NOT NULL,
+  compacted_at TEXT DEFAULT (datetime('now')),
+  turn_count_before INTEGER,
+  tool_events_before INTEGER,
+  trim_events_before INTEGER,
+  summary_hint TEXT,
+  trigger_source TEXT
+);

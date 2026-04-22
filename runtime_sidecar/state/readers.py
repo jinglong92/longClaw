@@ -39,6 +39,60 @@ def latest_note_timestamp() -> Optional[str]:
     return rows[0]["created_at"] if rows else None
 
 
+def count_session_tool_events(session_id: str) -> int:
+    """Return the number of tool_events recorded for a given session.
+
+    Used by Layer 2 Summarize to decide whether compression should trigger
+    for persistent sessions (threshold: > 30).
+    """
+    sql = "SELECT COUNT(*) as cnt FROM tool_events WHERE session_id = ?"
+    rows = _fetch_all(sql, [session_id])
+    return int(rows[0]["cnt"]) if rows else 0
+
+
+def count_session_trim_events(session_id: str) -> int:
+    """Return the number of Layer 1 trim_event notes for a given session.
+
+    Used by Layer 2 Summarize as a secondary trigger (threshold: > 10).
+    """
+    sql = "SELECT COUNT(*) as cnt FROM notes WHERE session_id = ? AND kind = 'trim_event'"
+    rows = _fetch_all(sql, [session_id])
+    return int(rows[0]["cnt"]) if rows else 0
+
+
+def should_trigger_layer2_summarize(
+    session_id: str,
+    session_type: str = "persistent",
+    tool_event_threshold: int = 30,
+    trim_event_threshold: int = 10,
+) -> bool:
+    """Return True if Layer 2 Summarize should trigger for this session.
+
+    Rules (from CTRL_PROTOCOLS.md):
+    - Ephemeral sessions: never trigger (return False immediately)
+    - Persistent sessions: trigger if tool_events > 30 OR trim_events > 10
+    """
+    if session_type == "ephemeral":
+        return False
+    tool_count = count_session_tool_events(session_id)
+    if tool_count > tool_event_threshold:
+        return True
+    trim_count = count_session_trim_events(session_id)
+    return trim_count > trim_event_threshold
+
+
+def get_latest_compact_event(session_id: str) -> Optional[Dict[str, Any]]:
+    """Return the most recent compact_event for a session, or None."""
+    sql = """
+    SELECT * FROM compact_events
+    WHERE session_id = ?
+    ORDER BY compacted_at DESC
+    LIMIT 1
+    """
+    rows = _fetch_all(sql, [session_id])
+    return dict(rows[0]) if rows else None
+
+
 def search_records(table: str, query: str, limit: int = 100) -> List[Dict[str, Any]]:
     """Perform a simple LIKE search across all text columns of a table."""
     conn = get_connection()

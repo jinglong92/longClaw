@@ -12,7 +12,7 @@ if [ -n "${CLAUDE_ENV_FILE:-}" ] && [ -f CTRL_PROTOCOLS.md ] && [ -f DEV_LOG.md 
   cat CTRL_PROTOCOLS.md DEV_LOG.md >> "$CLAUDE_ENV_FILE"
 fi
 
-# sidecar ledger 旁路记录
+# sidecar ledger 旁路记录（传入结构化上下文）
 python3 - <<'PY' | python3 -m runtime_sidecar.hook_dispatcher PostCompact >/dev/null 2>> memory/sidecar-hooks.log || true
 import json
 import os
@@ -24,8 +24,18 @@ def pick(*keys):
             return v
     return None
 
+# CLAUDE_TURN_COUNT is set by some OpenClaw versions; fall back to None
+turn_count = os.environ.get("CLAUDE_TURN_COUNT")
+try:
+    turn_count = int(turn_count) if turn_count else None
+except (TypeError, ValueError):
+    turn_count = None
+
 ctx = {
     "session_id": pick("CLAUDE_SESSION_ID", "SESSION_ID", "OPENCLAW_SESSION_ID"),
+    "turn_count_before": turn_count,
+    "trigger_source": os.environ.get("COMPACT_TRIGGER_SOURCE", "native_compaction"),
+    "summary_hint": os.environ.get("COMPACT_SUMMARY_HINT"),
 }
 print(json.dumps(ctx, ensure_ascii=False))
 PY

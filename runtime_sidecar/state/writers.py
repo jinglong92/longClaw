@@ -106,3 +106,41 @@ def insert_note(
         conn.commit()
     except Exception as exc:
         logger.error("Failed to insert note: %s", exc)
+
+
+def insert_compact_event(
+    conn: sqlite3.Connection,
+    session_id: str,
+    turn_count_before: Optional[int] = None,
+    tool_events_before: Optional[int] = None,
+    trim_events_before: Optional[int] = None,
+    summary_hint: Optional[str] = None,
+    trigger_source: Optional[str] = None,
+) -> None:
+    """Record a structured compact event when PostCompact fires.
+
+    Fields:
+    - turn_count_before: number of turns in the session before compaction
+    - tool_events_before: tool_events count before compaction (from ledger)
+    - trim_events_before: trim_event note count before compaction
+    - summary_hint: short description of what was compacted (optional)
+    - trigger_source: 'native_compaction' | 'layer2_summarize' | 'manual'
+    """
+    sql = """
+    INSERT INTO compact_events
+        (session_id, turn_count_before, tool_events_before, trim_events_before,
+         summary_hint, trigger_source)
+    VALUES (?, ?, ?, ?, ?, ?)
+    """
+    try:
+        conn.execute(sql, (
+            session_id,
+            turn_count_before,
+            tool_events_before,
+            trim_events_before,
+            summary_hint,
+            trigger_source,
+        ))
+        conn.commit()
+    except Exception as exc:
+        logger.error("Failed to insert compact event for %s: %s", session_id, exc)

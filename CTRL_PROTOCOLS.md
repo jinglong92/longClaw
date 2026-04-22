@@ -68,6 +68,17 @@ requires: ["file_write", "shell_exec"] → 两项都需满足
 
 优先级：原生 compaction > Layer 1（Trim）> Layer 2（Summarize）。Layer 4（Archive）独立触发，不受前三层影响。
 
+### Session 形态说明（影响 Layer 2 触发逻辑）
+
+longClaw 存在两种 session 形态，压缩策略不同：
+
+| 形态 | 描述 | Layer 2 触发 |
+|------|------|-------------|
+| **Persistent**（持久型）| Claude Code / OpenClaw 桌面端，单 session 多轮 | 工具事件数 > 30，或本 session 内 trim_event 累计 > 10 |
+| **Ephemeral**（短暂型）| 微信 bot / Telegram / 每条消息新 session | **不触发 Layer 2**（单轮无法积累），依赖 Layer 4 Archive 跨 session 归档 |
+
+session 形态由 `memory/session-state.json` 的 `session_type` 字段标识（`persistent` / `ephemeral`，默认 `persistent`）。
+
 ### Layer 1：Trim（工具输出实时截断）（借鉴 Claude Code Tool Result Budgeting）
 
 **触发**：任意一条工具输出 > 500 字符，当轮立即执行，无需等待轮数累积。
@@ -76,14 +87,19 @@ requires: ["file_write", "shell_exec"] → 两项都需满足
 - 保留工具输出前 500 字符
 - 追加截断尾注：`[截断：原始输出 N 字符，已保留前 500 字符。如需完整内容请说"展开上一条工具输出"。]`
 - 静默执行，不写入 session-state.json，不计入 compression_count
+- **执行链**：由 PostToolUse hook 触发（`scripts/hooks/hook_dispatcher_post_tool_use.sh`），sidecar 写 `trim_event` note 到 SQLite
 
-**设计理由**：换电诊断工具返回通常为结构化 JSON，500 字符可覆盖关键字段（故障码/时间戳/车辆ID）。实时截断比等到 round > 20 更轻量，防止单条超长输出污染后续检索上下文。
+**设计理由**：工具输出截断不依赖轮数，任何 session 形态下均有效。
 
-### Layer 2：Summarize（轻量摘要）（token 压力驱动，静默）
+### Layer 2：Summarize（轻量摘要）（token 压力驱动，仅 persistent session）
 
-**触发**（满足任一，且原生 compaction 未触发）：
-- 对话轮数 > 20
-- （注：单次工具输出 > 500 字符已由 Layer 1（Trim）处理，不再作为 Layer 2 触发条件）
+**触发条件**（满足任一，且原生 compaction 未触发，且 `session_type=persistent`）：
+- 本 session 内 **工具事件数 > 30**（由 `runtime_sidecar/state/readers.py` 的 `count_session_tool_events()` 查询）
+- 本 session 内 **trim_event 累计 > 10**（Layer 1 已截断 10 次，说明上下文压力已高）
+
+**不触发条件**：
+- `session_type=ephemeral`（每条消息新 session，轮数永远为 1，round > 20 永远不成立）
+- 原生 compaction 已触发
 
 **执行**：
 - 生成压缩摘要块替换中间历史，保留关键结论

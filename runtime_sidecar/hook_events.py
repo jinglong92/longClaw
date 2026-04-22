@@ -20,6 +20,7 @@ class HookEventType(str, Enum):
 
     SESSION_START = "SessionStart"
     POST_COMPACT = "PostCompact"
+    POST_TOOL_USE = "PostToolUse"
     FILE_CHANGED = "FileChanged"
     PRE_TOOL_USE = "PreToolUse"
     USER_PROMPT_SUBMIT = "UserPromptSubmit"
