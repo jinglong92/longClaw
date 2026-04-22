@@ -34,12 +34,21 @@ _NODE="/opt/homebrew/opt/node/bin/node"
 _ENTRY="/opt/homebrew/lib/node_modules/openclaw/dist/entry.js"
 _WS="$WORKSPACE_DIR"
 _LOG="/tmp/longclaw_heartbeat.log"
-_MODEL="openai-codex/gpt-5.3-codex"
+# 模型名：留空则使用 OpenClaw 当前默认模型（推荐）
+# 如需指定，可在此处设置，例如：_MODEL="claude-opus-4-5"
+# 注意：硬编码模型名在 OpenClaw 升级后可能失效，留空更稳定
+_MODEL="${LONGCLAW_HEARTBEAT_MODEL:-}"
 _MSG="执行一次 heartbeat 巡检：读取 HEARTBEAT.md 与 .claude/agents/heartbeat-agent.md，按其中流程静默完成巡检；只写入 memory/heartbeat-state.json，不发送任何外部消息。完成后输出一句话，包含 last_check。"
 
-# system crontab 仅作兜底；显式传入模型，避免 isolated/background 任务漂到已失效的本地 provider
-CRON_MORNING="30 8 * * * cd '$_WS' && OPENCLAW_AGENT_MODEL='$_MODEL' $_NODE $_ENTRY agent --agent main --message '$_MSG' --timeout 180 --json >> $_LOG 2>&1 # longclaw_heartbeat"
-CRON_EVENING="0 18 * * * cd '$_WS' && OPENCLAW_AGENT_MODEL='$_MODEL' $_NODE $_ENTRY agent --agent main --message '$_MSG' --timeout 180 --json >> $_LOG 2>&1 # longclaw_heartbeat"
+# system crontab 仅作兜底
+# 若 _MODEL 非空则传入，否则不传（使用 OpenClaw 默认模型）
+if [ -n "$_MODEL" ]; then
+  _MODEL_ENV="OPENCLAW_AGENT_MODEL='$_MODEL'"
+else
+  _MODEL_ENV=""
+fi
+CRON_MORNING="30 8 * * * cd '$_WS' && $_MODEL_ENV $_NODE $_ENTRY agent --agent main --message '$_MSG' --timeout 180 --json >> $_LOG 2>&1 # longclaw_heartbeat"
+CRON_EVENING="0 18 * * * cd '$_WS' && $_MODEL_ENV $_NODE $_ENTRY agent --agent main --message '$_MSG' --timeout 180 --json >> $_LOG 2>&1 # longclaw_heartbeat"
 
 install_system_cron() {
   # 读取现有 crontab，去掉旧的 longclaw heartbeat 条目，加入新的。
@@ -109,30 +118,32 @@ install_gateway_cron() {
   remove_gateway_job_by_name "$GATEWAY_CRON_AM_NAME"
   remove_gateway_job_by_name "$GATEWAY_CRON_PM_NAME"
 
+  # 构建 --model 参数（仅在 _MODEL 非空时传入）
+  _MODEL_ARGS=()
+  if [ -n "$_MODEL" ]; then
+    _MODEL_ARGS=(--model "$_MODEL")
+  fi
+
   $OPENCLAW_CMD cron add \
     --name "$GATEWAY_CRON_AM_NAME" \
     --agent main \
     --session isolated \
-    --no-deliver \
-    --light-context \
-    --model "$_MODEL" \
     --timeout-seconds 180 \
     --cron "30 8 * * *" \
     --tz "Asia/Shanghai" \
     --message "$_MSG" \
+    "${_MODEL_ARGS[@]}" \
     >/dev/null
 
   $OPENCLAW_CMD cron add \
     --name "$GATEWAY_CRON_PM_NAME" \
     --agent main \
     --session isolated \
-    --no-deliver \
-    --light-context \
-    --model "$_MODEL" \
     --timeout-seconds 180 \
     --cron "0 18 * * *" \
     --tz "Asia/Shanghai" \
     --message "$_MSG" \
+    "${_MODEL_ARGS[@]}" \
     >/dev/null
 }
 
