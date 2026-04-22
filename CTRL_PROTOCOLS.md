@@ -11,7 +11,7 @@
 
 OpenClaw 运行时原生支持 Progressive Disclosure：会话启动时扫描 `skills/` 目录建立 index，命中触发条件时加载全文，执行完退出 context。longClaw 在此基础上扩展了 `requires` 依赖检查和强制触发规则。
 
-### Skill Index（当前 11 个）
+### Skill Index（当前 15 个）
 
 ```
 paper-deep-dive              | LEARN    | 论文深度解读
@@ -68,6 +68,8 @@ requires: ["file_write", "shell_exec"] → 两项都需满足
 
 优先级：原生 compaction > Layer 1（Trim）> Layer 2（Summarize）。Layer 4（Archive）独立触发，不受前三层影响。
 
+> **编号说明**：Layer 3 即原生 compaction（OpenClaw 运行时内置，不在 workspace 层实现），故 workspace 层编号从 Layer 1 跳到 Layer 2 再到 Layer 4，无 Layer 3。
+
 ### Session 形态说明（影响 Layer 2 触发逻辑）
 
 longClaw 存在两种 session 形态，压缩策略不同：
@@ -98,7 +100,7 @@ session 形态由 `memory/session-state.json` 的 `session_type` 字段标识（
 - 本 session 内 **trim_event 累计 > 10**（Layer 1 已截断 10 次，说明上下文压力已高）
 
 **不触发条件**：
-- `session_type=ephemeral`（每条消息新 session，轮数永远为 1，round > 20 永远不成立）
+- `session_type=ephemeral`（每条消息新 session，工具事件无法跨轮积累）
 - 原生 compaction 已触发
 
 **执行**：
@@ -258,7 +260,7 @@ python3 tools/model_mode.py get
 session_id 命名：`openclaw_{domain}_{YYYY-MM-DD}`（如 `openclaw_job_2026-04-14`）
 
 三层状态：
-- Layer 1（短期）：recent_turns，超 20 轮触发 Layer 2（Summarize）压缩
+- Layer 1（短期）：recent_turns，工具事件数 > 30 或 trim_event > 10 时触发 Layer 2（仅 persistent session）
 - Layer 2（中期）：summary + entities，LLM 摘要 + 关键实体
 - Layer 3（长期）：key_conclusions，写入 MEMORY.md，跨 session 可检索
 
