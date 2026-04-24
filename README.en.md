@@ -34,7 +34,7 @@ Say **"开启 dev mode"** in conversation to activate session-scoped hard state,
 [DEV LOG]
 🔀 Route    JOB | trigger: "offer, interview" | mode: single-specialist
 🧠 Memory   [SYSTEM]+[JOB] | ~380 tokens | 72% saved
-📂 Session  round 5 | recent_turns=5/20 | compression not triggered
+📂 Session  round 5 | recent_turns=5/20 | ctx=unavailable/200k | compression not triggered
 🔍 Retrieval scope=JOB | level=same-domain archive | recalled 3 | top=[0.91, 0.78, 0.62]
 ⚖️ Confidence 0.88 [basis: data+experience] | conflict: none
 🤝 A2A      JOB → PARENT time conflict coordination | confidence=0.85 | needs_ctrl=false

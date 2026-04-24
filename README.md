@@ -130,7 +130,7 @@ scripts/longclaw-status
 [DEV LOG]
 🔀 路由     JOB | 触发: "offer、面试" | 模式: 单专职
 🧠 Memory   [SYSTEM]+[JOB] | ~380 tokens | 节省 72%
-📂 Session  第 5 轮 | recent_turns=5/20 | 未触发压缩
+📂 Session  第 5 轮 | recent_turns=5/20 | ctx=unavailable/200k | 未触发压缩
 🔍 检索     scope=JOB | level=同域归档 | 召回 3 条 | top=[0.91, 0.78, 0.62]
 ⚖️ 置信度   0.88 [依据: 数据+经验] | 冲突: 无
 🤝 A2A      JOB → PARENT 时间冲突协调 | confidence=0.85 | needs_ctrl=false

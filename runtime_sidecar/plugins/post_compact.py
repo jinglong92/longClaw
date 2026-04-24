@@ -18,7 +18,7 @@ from typing import Any, Dict, Optional
 
 from ..hook_events import HookEventType
 from ..logging.logger import get_logger
-from ..state import db, readers, writers
+from ..state import db, readers, session_state, writers
 
 logger = get_logger(__name__)
 
@@ -31,8 +31,12 @@ def handle_event(context: Dict[str, Any]) -> Dict[str, Any]:
     Expected context keys:
     - session_id: session identifier
     - turn_count_before: turns in session before compaction (optional)
+    - current_turn_count: current turn count after compaction (optional)
     - summary_hint: short description of what was compacted (optional)
     - trigger_source: 'native_compaction' | 'layer2_summarize' | 'manual' (optional)
+    - current_context_tokens: current assembled context tokens after compaction (optional)
+    - context_limit_tokens: context budget ceiling, e.g. 200000 (optional)
+    - context_usage_source: source label such as host_exact (optional)
     """
     conn = db.get_connection()
     writers.initialise_schema(conn)
@@ -45,6 +49,19 @@ def handle_event(context: Dict[str, Any]) -> Dict[str, Any]:
     turn_count_before: Optional[int] = context.get("turn_count_before")
     summary_hint: Optional[str] = context.get("summary_hint")
     trigger_source: str = context.get("trigger_source") or "native_compaction"
+    turn_count = session_state.extract_turn_count(context)
+    context_usage = session_state.extract_context_usage(context)
+
+    writers.upsert_session(
+        conn,
+        {
+            "session_id": session_id,
+            **turn_count,
+            **context_usage,
+        },
+    )
+    session_state.merge_turn_count(session_id=session_id, **turn_count)
+    session_state.merge_context_usage(session_id=session_id, **context_usage)
 
     # Snapshot current sidecar counts before they reset
     tool_events_before = readers.count_session_tool_events(session_id)
@@ -84,4 +101,6 @@ def handle_event(context: Dict[str, Any]) -> Dict[str, Any]:
         "tool_events_before": tool_events_before,
         "trim_events_before": trim_events_before,
         "trigger_source": trigger_source,
+        **turn_count,
+        **context_usage,
     }

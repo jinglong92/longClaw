@@ -238,6 +238,9 @@ python3 tools/model_mode.py get
 4. 若本轮尚未读取 `DEV_LOG.md`，不得输出 DEV LOG
 5. 若候选输出命中 `session_id:`、`round:`、`dev_mode:` 这类内置裸字段块，而非 `DEV_LOG.md` 定义的模板字段，则视为格式错误，必须回退并重渲染
 
+其中 `📂 Session.recent_turns` 优先读取 host 注入并同步到 runtime / `session-state.json` 的 turn count；缺失时回退 `unavailable/20`
+其中 `📂 Session.ctx` 优先读取 host 注入并同步到 runtime / `session-state.json` 的 context usage 字段；缺失时回退 `unavailable/200k`
+
 ### Dev Mode 激活回合绑定（强制）
 
 为避免与 `AGENTS.md` 的 session-state 写入时机冲突，DEV LOG 的展示判定必须使用：

@@ -71,10 +71,12 @@
 ```
 - `第 <N> 轮` 指本次 session 内的轮次（ephemeral，不跨 session 累积）
 - `recent_turns=<n/20>` 表示**当前轮次进度 / Layer 2 触发阈值**；阈值变化时，这里的分母也必须同步更新
+- `recent_turns` 的推荐来源是 host 在 hook context 中注入的 `current_turn_count`（常见映射：`CLAUDE_TURN_COUNT`）
 - 若 session-state.json 不存在或未写入，写 `ephemeral session`（不写 unavailable）
 - 跨 session 统计由 heartbeat-agent 负责，不在此字段体现
 - `ctx=<current/200k>` 记录**当前上下文占用 / 200k 自动压缩阈值**；数值必须来自 runtime 或工具返回，禁止估算
 - `ctx` 单位优先使用 runtime 原生单位；若为 token budget，推荐写法如 `ctx=84k/200k`
+- `ctx` 的推荐来源是 host 在 hook context 中注入的 `current_context_tokens` / `context_limit_tokens`
 - 若当前上下文占用暂不可读取，写 `ctx=unavailable/200k`
 - 本文件只定义 DEV LOG 的展示格式；真正的自动压缩执行逻辑仍以 `CTRL_PROTOCOLS.md` 为准
 

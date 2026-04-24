@@ -8,6 +8,9 @@ An event consists of:
 
 * `name`: the identifier of the hook event (e.g. "SessionStart").
 * `context`: an opaque dictionary containing metadata passed by the host.
+  Common optional keys include session metadata (`session_id`, `topic_key`)
+  and observability fields such as `current_turn_count`, `current_context_tokens`,
+  `context_limit_tokens`, and `context_usage_source`.
 """
 
 from dataclasses import dataclass

@@ -98,6 +98,23 @@ def get_latest_compact_event(session_id: str) -> Optional[Dict[str, Any]]:
     return dict(rows[0]) if rows else None
 
 
+def get_session_context_usage(session_id: str) -> Optional[Dict[str, Any]]:
+    sql = """
+    SELECT
+      current_turn_count,
+      current_context_tokens,
+      context_limit_tokens,
+      context_usage_source,
+      last_turn_count_at,
+      last_context_usage_at
+    FROM sessions
+    WHERE session_id = ?
+    LIMIT 1
+    """
+    rows = _fetch_all(sql, [session_id])
+    return dict(rows[0]) if rows else None
+
+
 def search_records(table: str, query: str, limit: int = 100) -> List[Dict[str, Any]]:
     """Perform a simple LIKE search across all text columns of a table."""
     conn = get_connection()

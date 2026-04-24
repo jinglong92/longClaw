@@ -36,8 +36,12 @@ except (TypeError, ValueError):
 ctx = {
     "session_id": pick("CLAUDE_SESSION_ID", "SESSION_ID", "OPENCLAW_SESSION_ID"),
     "turn_count_before": turn_count,
+    "current_turn_count": turn_count,
     "trigger_source": os.environ.get("COMPACT_TRIGGER_SOURCE", "native_compaction"),
     "summary_hint": os.environ.get("COMPACT_SUMMARY_HINT"),
+    "current_context_tokens": pick("CLAUDE_CURRENT_CONTEXT_TOKENS", "CURRENT_CONTEXT_TOKENS", "OPENCLAW_CURRENT_CONTEXT_TOKENS"),
+    "context_limit_tokens": pick("CLAUDE_CONTEXT_LIMIT_TOKENS", "CONTEXT_LIMIT_TOKENS", "OPENCLAW_CONTEXT_LIMIT_TOKENS"),
+    "context_usage_source": pick("CLAUDE_CONTEXT_USAGE_SOURCE", "CONTEXT_USAGE_SOURCE", "OPENCLAW_CONTEXT_USAGE_SOURCE"),
 }
 print(json.dumps(ctx, ensure_ascii=False))
 PY

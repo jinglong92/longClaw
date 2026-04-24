@@ -18,7 +18,7 @@ from typing import Any, Dict
 
 from ..hook_events import HookEventType
 from ..logging.logger import get_logger
-from ..state import db, readers, writers
+from ..state import db, readers, session_state, writers
 
 logger = get_logger(__name__)
 
@@ -97,6 +97,8 @@ def handle_event(context: Dict[str, Any]) -> Dict[str, Any]:
     conn = db.get_connection()
 
     session_id = context.get("session_id") or "sidecar-host-unknown"
+    turn_count = session_state.extract_turn_count(context)
+    context_usage = session_state.extract_context_usage(context)
 
     writers.upsert_session(
         conn,
@@ -106,9 +108,13 @@ def handle_event(context: Dict[str, Any]) -> Dict[str, Any]:
             "platform": context.get("platform"),
             "profile": context.get("profile"),
             "topic_key": context.get("topic_key"),
+            **turn_count,
+            **context_usage,
             "compacted_from": None,
         },
     )
+    session_state.merge_turn_count(session_id=session_id, **turn_count)
+    session_state.merge_context_usage(session_id=session_id, **context_usage)
 
     prompt_preview = context.get("prompt_preview") or ""
     preview = prompt_preview[:500] if isinstance(prompt_preview, str) else ""
@@ -129,4 +135,6 @@ def handle_event(context: Dict[str, Any]) -> Dict[str, Any]:
         "heartbeat": _load_heartbeat_message(),
         "layer2_summarize": layer2_hint,
         "session_id": session_id,
+        **turn_count,
+        **context_usage,
     }

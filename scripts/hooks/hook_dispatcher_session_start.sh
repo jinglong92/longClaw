@@ -76,6 +76,10 @@ ctx = {
     "platform": pick("OPENCLAW_PLATFORM", "PLATFORM", "HOSTNAME"),
     "profile": pick("CLAUDE_PROFILE", "PROFILE"),
     "topic_key": pick("CLAUDE_TOPIC_KEY", "TOPIC_KEY"),
+    "current_turn_count": pick("CLAUDE_TURN_COUNT", "TURN_COUNT", "OPENCLAW_TURN_COUNT"),
+    "current_context_tokens": pick("CLAUDE_CURRENT_CONTEXT_TOKENS", "CURRENT_CONTEXT_TOKENS", "OPENCLAW_CURRENT_CONTEXT_TOKENS"),
+    "context_limit_tokens": pick("CLAUDE_CONTEXT_LIMIT_TOKENS", "CONTEXT_LIMIT_TOKENS", "OPENCLAW_CONTEXT_LIMIT_TOKENS"),
+    "context_usage_source": pick("CLAUDE_CONTEXT_USAGE_SOURCE", "CONTEXT_USAGE_SOURCE", "OPENCLAW_CONTEXT_USAGE_SOURCE"),
 }
 print(json.dumps(ctx, ensure_ascii=False))
 PY

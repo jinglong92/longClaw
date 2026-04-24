@@ -6,6 +6,12 @@ CREATE TABLE IF NOT EXISTS sessions (
   platform TEXT,
   profile TEXT,
   topic_key TEXT,
+  current_turn_count INTEGER,
+  current_context_tokens INTEGER,
+  context_limit_tokens INTEGER,
+  context_usage_source TEXT,
+  last_turn_count_at TEXT,
+  last_context_usage_at TEXT,
   started_at TEXT DEFAULT (datetime('now')),
   ended_at TEXT,
   compacted_from TEXT

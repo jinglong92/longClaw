@@ -9,12 +9,21 @@ SQL directly elsewhere in the codebase.
 from __future__ import annotations
 
 import sqlite3
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from .db import get_connection
 from ..logging.logger import get_logger
 
 logger = get_logger(__name__)
+
+_SESSION_COLUMNS = {
+    "current_turn_count": "INTEGER",
+    "current_context_tokens": "INTEGER",
+    "context_limit_tokens": "INTEGER",
+    "context_usage_source": "TEXT",
+    "last_turn_count_at": "TEXT",
+    "last_context_usage_at": "TEXT",
+}
 
 
 def initialise_schema(conn: Optional[sqlite3.Connection] = None) -> None:
@@ -29,22 +38,68 @@ def initialise_schema(conn: Optional[sqlite3.Connection] = None) -> None:
         with open(schema_path, "r", encoding="utf-8") as f:
             schema_sql = f.read()
         conn.executescript(schema_sql)
+        _ensure_session_columns(conn)
         conn.commit()
     except Exception as exc:
         logger.error("Failed to initialise schema: %s", exc)
 
 
-def upsert_session(conn: sqlite3.Connection, record: Dict[str, Optional[str]]) -> None:
+def _ensure_session_columns(conn: sqlite3.Connection) -> None:
+    existing = {row[1] for row in conn.execute("PRAGMA table_info(sessions)").fetchall()}
+    for column, column_type in _SESSION_COLUMNS.items():
+        if column in existing:
+            continue
+        conn.execute(f"ALTER TABLE sessions ADD COLUMN {column} {column_type}")
+
+
+def _normalize_session_record(record: Dict[str, Any]) -> Dict[str, Any]:
+    normalized = dict(record)
+    for key in (
+        "session_id",
+        "parent_session_id",
+        "platform",
+        "profile",
+        "topic_key",
+        "current_turn_count",
+        "current_context_tokens",
+        "context_limit_tokens",
+        "context_usage_source",
+        "last_turn_count_at",
+        "last_context_usage_at",
+        "compacted_from",
+    ):
+        normalized.setdefault(key, None)
+    return normalized
+
+
+def upsert_session(conn: sqlite3.Connection, record: Dict[str, Any]) -> None:
     """Insert or update a session record."""
+    record = _normalize_session_record(record)
     sql = """
-    INSERT INTO sessions (session_id, parent_session_id, platform, profile, topic_key, compacted_from)
-    VALUES (:session_id, :parent_session_id, :platform, :profile, :topic_key, :compacted_from)
+    INSERT INTO sessions (
+      session_id, parent_session_id, platform, profile, topic_key,
+      current_turn_count,
+      current_context_tokens, context_limit_tokens, context_usage_source,
+      last_turn_count_at, last_context_usage_at, compacted_from
+    )
+    VALUES (
+      :session_id, :parent_session_id, :platform, :profile, :topic_key,
+      :current_turn_count,
+      :current_context_tokens, :context_limit_tokens, :context_usage_source,
+      :last_turn_count_at, :last_context_usage_at, :compacted_from
+    )
     ON CONFLICT(session_id) DO UPDATE SET
-      parent_session_id=excluded.parent_session_id,
-      platform=excluded.platform,
-      profile=excluded.profile,
-      topic_key=excluded.topic_key,
-      compacted_from=excluded.compacted_from
+      parent_session_id=COALESCE(excluded.parent_session_id, sessions.parent_session_id),
+      platform=COALESCE(excluded.platform, sessions.platform),
+      profile=COALESCE(excluded.profile, sessions.profile),
+      topic_key=COALESCE(excluded.topic_key, sessions.topic_key),
+      current_turn_count=COALESCE(excluded.current_turn_count, sessions.current_turn_count),
+      current_context_tokens=COALESCE(excluded.current_context_tokens, sessions.current_context_tokens),
+      context_limit_tokens=COALESCE(excluded.context_limit_tokens, sessions.context_limit_tokens),
+      context_usage_source=COALESCE(excluded.context_usage_source, sessions.context_usage_source),
+      last_turn_count_at=COALESCE(excluded.last_turn_count_at, sessions.last_turn_count_at),
+      last_context_usage_at=COALESCE(excluded.last_context_usage_at, sessions.last_context_usage_at),
+      compacted_from=COALESCE(excluded.compacted_from, sessions.compacted_from)
     """
     try:
         conn.execute(sql, record)

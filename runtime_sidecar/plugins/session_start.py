@@ -13,7 +13,7 @@ from typing import Any, Dict
 
 from ..hook_events import HookEventType
 from ..logging.logger import get_logger
-from ..state import db, writers
+from ..state import db, session_state, writers
 
 logger = get_logger(__name__)
 
@@ -54,6 +54,10 @@ def handle_event(context: Dict[str, Any]) -> Dict[str, Any]:
     - platform: platform name (e.g. "Mac mini").
     - profile: user profile JSON string.
     - topic_key: conversation topic.
+    - current_turn_count: current turn count for this session (optional)
+    - current_context_tokens: current assembled context tokens (optional)
+    - context_limit_tokens: context budget ceiling, e.g. 200000 (optional)
+    - context_usage_source: source label such as host_exact (optional)
     """
     # Ensure database is initialised
     conn = db.get_connection()
@@ -65,16 +69,21 @@ def handle_event(context: Dict[str, Any]) -> Dict[str, Any]:
         session_id = f"sidecar-{uuid.uuid4()}"
         logger.info("Generated sidecar session_id %s", session_id)
 
+    turn_count = session_state.extract_turn_count(context)
     session_record = {
         "session_id": session_id,
         "parent_session_id": context.get("parent_session_id"),
         "platform": context.get("platform"),
         "profile": context.get("profile"),
         "topic_key": context.get("topic_key"),
+        **turn_count,
+        **session_state.extract_context_usage(context),
         "compacted_from": None,
     }
 
     writers.upsert_session(conn, session_record)
+    session_state.merge_turn_count(session_id=session_id, **turn_count)
+    session_state.merge_context_usage(session_id=session_id, **session_state.extract_context_usage(context))
 
     # Check heartbeat state for critical alerts
     heartbeat_msg = _load_heartbeat()
@@ -85,5 +94,7 @@ def handle_event(context: Dict[str, Any]) -> Dict[str, Any]:
         "message": "Session started. Protocols injected.",
         "heartbeat": heartbeat_msg,
         "session_id": session_id,
+        **turn_count,
+        **session_state.extract_context_usage(context),
     }
     return msg
