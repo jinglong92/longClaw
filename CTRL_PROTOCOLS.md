@@ -16,7 +16,7 @@ OpenClaw 运行时原生支持 Progressive Disclosure：会话启动时扫描 `s
 ```
 paper-deep-dive              | LEARN    | 论文深度解读
 jd-analysis                  | JOB      | 分析岗位 JD，匹配度评级
-agent-review                 | ENGINEER | workspace 配置审查
+longclaw-checkup             | ENGINEER | longClaw 运行时体检/诊断
 research-build               | ENGINEER | 需求→实现闭环
 research-execution-protocol  | ENGINEER | 复杂排障/修 bug
 fact-check-latest            | SEARCH   | 核查最新信息

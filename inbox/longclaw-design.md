@@ -418,7 +418,7 @@ Allow（默认）
 ```
 [DEV LOG]
 🔀 路由     ENGINEER | 触发: "改配置" | 模式: normal debug
-🧩 Skill    命中: agent-review | step=completed
+🧩 Skill    命中: longclaw-checkup | step=completed
 🛠️ 工具     Edit(AGENTS.md) → +18行 | status=ok
 🧠 Memory   (SYSTEM)+[ENGINEER] | ~210 tokens | 节省 72%
 📂 Session  第 5 轮（ephemeral）| 未触发压缩

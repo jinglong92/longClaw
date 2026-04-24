@@ -83,7 +83,7 @@ ENGINEER / code-editor 使用文件地图执行修改
 
 1. **上下文隔离**：探索过程会产生大量中间结果（文件列表、grep 输出），用 subagent 隔离后这些噪声不会污染主 context
 2. **并发可能性**：未来可以同时 spawn 多个 repo-explorer 探索不同方向
-3. **可复用**：repo-explorer 的结果可以被 code-agent / agent-review / research-execution-protocol 共用
+3. **可复用**：repo-explorer 的结果可以被 code-agent / longclaw-checkup / research-execution-protocol 共用
 
 **关键设计**：结构化输出
 
@@ -130,7 +130,7 @@ Step 5：交付报告
 code-agent（编排层）
     ├── 探索阶段 → repo-explorer（subagent）
     ├── 排障阶段 → research-execution-protocol（优先级更高）
-    └── 审查阶段 → agent-review（workspace 配置审查）
+    └── 诊断阶段 → longclaw-checkup（workspace 运行体检）
 ```
 
 ---

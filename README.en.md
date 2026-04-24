@@ -217,20 +217,7 @@ High-frequency complex tasks hardened as workflow skills, following **Progressiv
 - On trigger match: load full `SKILL.md`, execute immediately (same turn, no deferral)
 - After completion: SKILL.md exits context; DEV LOG continues every turn regardless
 
-Current 10 skills (see [§ Workflow Skills](#5-workflow-skills)):
-
-| Skill | Trigger | Output |
-|-------|---------|--------|
-| `jd-analysis` | Receive JD text/screenshot | Capability model + match score + action items |
-| `paper-deep-dive` | Send paper title/abstract | Methodology + comparison + interview-ready summary |
-| `agent-review` | Review workspace config | Rule conflicts + token efficiency + vulnerability list |
-| `fact-check-latest` | Ask about latest info/prices | `[F]`/`[I]`/`[missing]` categorized with time-expiry |
-| `research-execution-protocol` | Complex impl/debugging/verification | Evidence-driven execution chain, min change, verified closure |
-| `research-build` | "Implement this directly" | Acceptance criteria → min change → immediate verify → rollback |
-| `skill-safety-audit` | External skill/script intake review | Risk rating, compatibility judgment, integration advice |
-| `session-compression-flow` | round>20 / manual request / topic switch | Compression → write to memory → index rebuild → continuity |
-| `multi-agent-bootstrap` | Setup/migrate multi-agent architecture | Beginner-friendly config + visible routing + change summary |
-| `public-evidence-fetch` | "Give me verbatim snippet" / "no summary, give evidence" | exact query + URL + verbatim snippet + paragraph position |
+Current skills are on-demand workflow plugins covering five broad areas: engineering execution, retrieval/evidence, learning/generation, system operations, and governance/migration (see [§ Workflow Skills](#5-workflow-skills)).
 
 **Skill conflict priority**: `skill-safety-audit` (highest) > `research-execution-protocol` > `research-build` (lowest)
 
@@ -285,7 +272,7 @@ flowchart TD
 
     W --> K1["jd-analysis"]
     W --> K2["paper-deep-dive"]
-    W --> K3["agent-review / research-*"]
+    W --> K3["longclaw-checkup / research-*"]
     W --> K4["fact-check / evidence-fetch"]
     W --> K5["session-compression / safety-audit"]
 
@@ -378,47 +365,15 @@ python3 tools/memory_search.py --query "dispatch capacity" --domain ENGINEER --h
 
 ## 5. Workflow Skills
 
-10 high-frequency tasks hardened as workflow skills. Loaded on demand, not resident in prompt. Trigger match fires execution immediately — no user reminder needed. Each step executes in the same turn it is declared; no deferral to next turn.
+Workflow skills are easiest to read as a short category map:
 
-### jd-analysis
-Trigger: receive JD text / screenshot / link
-Output: job decoding (hard/soft/implicit requirements) → match rating (A/B+/B/C) → resume narrative advice → this-week action list
-
-### paper-deep-dive
-Trigger: send paper title / arXiv link / abstract / method snippet / tech blog / preprint
-Output (8 modules): Essence → Methodology (formula + pseudocode) → SOTA comparison → Reviewer#2 critique → deployment assessment → Insights → Decision Card → interview-ready summary
-
-### agent-review
-Trigger: "review my workspace" / "check config for issues"
-Output: rule consistency (AGENTS.md vs MULTI_AGENTS.md conflicts) → token efficiency analysis → vulnerability list (P0/P1/P2)
-
-### fact-check-latest
-Trigger: ask about latest prices / news / tech versions / policy changes
-Output: `[F]` confirmed info (≥2 independent sources) / `[I]` inferred info (1 source) → time-expiry note + source list
-
-### research-execution-protocol *(priority: 2nd highest)*
-Trigger: fix bug / modify code / debug config / verify environment / "keep looking" / "give me closure" / "you're just talking, not doing"
-Output: `[FACT]/[HYP]/[TEST]/[RESULT]/[NEXT]` structured execution chain; evidence before judgment, verify before claiming done, systematic path-switching on failure
-
-### research-build *(priority: lowest)*
-Trigger: "implement this directly" / clear target + code location, wants change plan or direct modification
-Output: acceptance criteria → minimum change plan → immediate verification → explicit rollback points
-
-### skill-safety-audit *(priority: highest)*
-Trigger: give GitHub repo / SKILL.md / shell script for evaluation; about to introduce new automation/hook/daemon
-Output: risk rating (P0-P2), compatibility judgment, integration advice
-
-### session-compression-flow
-Trigger: round > 20 (CTRL auto-checks on every session-state.json write) / user requests compression / topic switch signal
-Output: compression trigger → write to daily log + MEMORY.md domain → index rebuild → next-session continuity
-
-### multi-agent-bootstrap
-Trigger: create/migrate multi-agent architecture, add role definitions, enforce routing visibility
-Output: beginner-friendly multi-agent config + visible routing + change summary
-
-### public-evidence-fetch
-Trigger: "give me verbatim snippet" / "no summary, give evidence" / "exact query + URL + snippet"
-Output: exact query + URL + verbatim snippet + paragraph/section marker + one-sentence mapping
+| Category | Representative skills |
+|----------|-----------------------|
+| Engineering execution | `code-agent`, `research-execution-protocol`, `research-build` |
+| Retrieval and evidence | `deep-research`, `fact-check-latest`, `public-evidence-fetch` |
+| Learning and generation | `paper-deep-dive`, `paperbanana` |
+| System operations | `longclaw-checkup`, `session-compression-flow`, `proactive-heartbeat` |
+| Governance and migration | `skill-safety-audit`, `multi-agent-bootstrap`, `memory-companion`, `jd-analysis` |
 
 ---
 
@@ -485,7 +440,7 @@ Shows: same-domain priority + entity-hit weighted ranking + hybrid semantic gap-
 |------|---------|
 | [skills/job-jd-analysis/SKILL.md](skills/job-jd-analysis/SKILL.md) | JD analysis |
 | [skills/learn-paper-deep-dive/SKILL.md](skills/learn-paper-deep-dive/SKILL.md) | Paper deep dive |
-| [skills/engineer-agent-review/SKILL.md](skills/engineer-agent-review/SKILL.md) | Workspace review |
+| [skills/engineer-longclaw-checkup/SKILL.md](skills/engineer-longclaw-checkup/SKILL.md) | Runtime checkup |
 | [skills/search-fact-check-latest/SKILL.md](skills/search-fact-check-latest/SKILL.md) | Latest fact check |
 | [skills/engineer-research-execution-protocol/SKILL.md](skills/engineer-research-execution-protocol/SKILL.md) | Research execution protocol |
 | [skills/engineer-research-build/SKILL.md](skills/engineer-research-build/SKILL.md) | Research build workflow |

@@ -30,11 +30,12 @@
 - 依赖工具：无外部工具，纯 LLM 推理
 - 输入支持：JD 文本 / 截图文字 / 招聘网站链接（需 WebFetch 能力）
 
-### agent-review
+### longclaw-checkup
 - 触发路由：ENGINEER
-- 依赖工具：本地文件读取（`Read` / `cat`）
+- 依赖工具：本地文件读取、shell 命令执行
 - 工作路径：`~/longClaw/`（当前 workspace 根目录）
-- 核心文件：`AGENTS.md` / `MULTI_AGENTS.md` / `skills/**/SKILL.md`
+- 核心入口：`scripts/longclaw-doctor` / `scripts/longclaw-status`
+- 深挖文件：`.claude/settings.json` / `runtime_sidecar/**` / `memory/state.db` / `AGENTS.md` / `CTRL_PROTOCOLS.md`
 
 ### research-build / research-execution-protocol
 - 触发路由：ENGINEER

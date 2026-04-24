@@ -25,7 +25,7 @@ requires: ["file_read", "file_write", "shell_exec"]
 
 ## 不触发条件
 - 只需要解释代码（用普通 ENGINEER 回复）
-- 只需要 review（用 agent-review skill）
+- 只需要体检/诊断 workspace 运行状态（用 `longclaw-checkup`）
 - 需要先排障定位（用 research-execution-protocol skill）
 
 ---

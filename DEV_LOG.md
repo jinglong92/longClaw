@@ -129,7 +129,7 @@
 [DEV LOG]
 🔀 路由 ENGINEER | 触发: "改配置" | 模式: normal debug / 单专职
 🤖 模型 openai-codex/gpt-5.4 | effort=adaptive
-🧩 Skill 命中: agent-review | trigger=workspace 配置审查 | loaded=yes | step=completed
+🧩 Skill 命中: longclaw-checkup | trigger=体检 workspace 运行状态 | loaded=yes | step=completed
 🛠️ 工具 Edit(AGENTS.md) → 插入 Immutable Rules 节，+18行 | status=ok
         Bash(git commit) → hash=f951b9a | status=ok
 🧠 Memory (SYSTEM)+[ENGINEER] | ~210 tokens | 节省 72%
