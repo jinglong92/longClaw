@@ -61,8 +61,8 @@ Four specialized subagents (model: inherit, uses main session's Codex), each wit
 - `heartbeat-agent`: cron-scheduled inspection, read + write heartbeat-state.json + auto index freshness check
 - `repo-explorer`: codebase exploration for code-agent, read-only, returns structured file map
 
-**📊 Local Training Substrate (Local-first)**
-Real interactions can be distilled into training assets: Trace collection → Judge scoring → Dataset building → MLX / LLaMA-Factory local training. Full pipeline runs on Mac mini M4, no data upload to cloud.
+**📊 Optimization Loop (Reserved)**
+Future optimization assets are reserved as an extension path; current repo focuses on arbitration, memory, and retrieval.
 
 ---
 
@@ -72,7 +72,7 @@ Real interactions can be distilled into training assets: Trace collection → Ju
 | **Partially inspired by** | [Hermes Agent](https://github.com/NousResearch/hermes-agent) (Nous Research, MIT, 40k ⭐) |
 | **Underlying LLM** | Codex (via OpenClaw runtime) |
 | **Runtime** | Mac mini M4 (24/7 local), WhatsApp / Telegram / Discord interfaces |
-| **Core extensions** | Multi-expert arbitration, domain-aware memory, vector retrieval, subagent concurrency, harness hooks, training substrate |
+| **Core extensions** | Multi-expert arbitration, domain-aware memory, vector retrieval, subagent concurrency, harness hooks |
 
 ---
 
@@ -143,7 +143,7 @@ longClaw, official OpenClaw, and Hermes Agent all belong to the "personal AI ope
 |--------|-------------|---------------|
 | **Official OpenClaw** | "The AI that actually does things" | Single Agent + local execution + self-evolution |
 | **Hermes Agent** | Self-improving AI agent | Single Agent + multi-tool + auto skill learning |
-| **longClaw (this repo)** | Personal AI OS, multi-expert arbitration + optimizable | Multi-Agent + CTRL arbitration + training substrate |
+| **longClaw (this repo)** | Personal AI OS, multi-expert arbitration + optimizable | Multi-Agent + CTRL arbitration + retrieval-first workflow |
 
 ### 1.2 Architecture comparison
 
@@ -166,7 +166,7 @@ longClaw (this repo):
            ├── Confidence protocol + P0-P4 conflict arbitration + Risk Audit
            ├── Domain-aware memory injection (~80% token savings)
            ├── route-aware retrieval (FTS + Hybrid Embedding)
-           └── openclaw_substrate (Trace→Judge→Dataset→Training)
+           └── optimization loop reserved path (currently disabled)
 ```
 
 ### 1.3 Capability matrix
@@ -180,11 +180,11 @@ longClaw (this repo):
 | **Vector retrieval** | ❌ | ⚠️ FTS-only | ✅ route-aware + Hybrid Embedding |
 | **User profile layer** | ❌ | ❌ | ✅ USER.md independent profile |
 | **Auto skill generation** | ✅ agent writes SKILL.md | ✅ auto-refines | ⚠️ proposal system (user confirms) |
-| **Local training substrate** | ❌ | ❌ | ✅ Trace→Judge→Dataset→MLX |
+| **Local optimization loop (reserved)** | ❌ | ❌ | ⚠️ reserved, currently disabled |
 | **50+ integration ecosystem** | ✅ ClawHub | ✅ Skills Hub | ✅ inherits OpenClaw |
 | **Open source** | ✅ MIT | ✅ MIT | ✅ MIT |
 
-> longClaw's execution layer (code execution / file r/w / browser control / 50+ integrations) is provided by the OpenClaw software running on Mac mini M4. This repo is the workspace configuration layer, adding arbitration, memory, retrieval, and training on top.
+> longClaw's execution layer (code execution / file r/w / browser control / 50+ integrations) is provided by the OpenClaw software running on Mac mini M4. This repo is the workspace configuration layer, adding arbitration, memory, and retrieval on top.
 
 ---
 
@@ -238,17 +238,9 @@ $$S(q,d) = S_{\text{fts}} + 0.4 \cdot N_{\text{entity}} + 0.05 \cdot \text{imp}(
 
 Optional Hybrid mode: FTS candidates → Ollama nomic-embed-text (768-dim) → RRF fusion
 
-### 2.5 Local Training Substrate (openclaw_substrate)
+### 2.5 Local Optimization Loop (Reserved)
 
-Unique to longClaw — official OpenClaw and Hermes both lack this:
-
-$$\text{Interaction} \rightarrow \text{Trace} \rightarrow \text{Judge} \rightarrow \text{Dataset} \rightarrow \text{Replay / Optimize}$$
-
-- `trace_plane`: records canonical trace (request/response/routing/retries)
-- `judge_plane`: rule-based evaluation + reward signals
-- `dataset_builder`: builds SFT/GRPO trainable datasets
-- `shadow_eval`: baseline vs candidate replay comparison
-- `backends/`: local MLX-LM + LLaMA-Factory export paths
+An optimization loop extension remains a reserved direction but is not enabled in the current repository.
 
 ---
 
@@ -265,7 +257,7 @@ flowchart TD
     C --> R["Routing Plane\nMULTI_AGENTS.md"]
     C --> W["Workflow Plane\nskills/*/SKILL.md"]
     C --> RET["Retrieval Plane\ntools/memory_search.py\nFTS + Hybrid Embedding"]
-    C --> T["Training Plane\nopenclaw_substrate/*"]
+    C --> T["Optimization Plane\nreserved"]
 
     R --> S1["LIFE / JOB / WORK / ENGINEER / PARENT"]
     R --> S2["LEARN / MONEY / BRO / SIS / SEARCH"]
@@ -311,7 +303,7 @@ sequenceDiagram
 
 ## 4. Memory Retrieval System
 
-> Added 2026-04-10. Independent from `openclaw_substrate`, in `tools/` directory. No external dependencies for FTS mode.
+> Added 2026-04-10, in `tools/` directory. No external dependencies for FTS mode.
 
 ### Retrieval architecture
 
@@ -456,16 +448,6 @@ Shows: same-domain priority + entity-hit weighted ranking + hybrid semantic gap-
 | [tools/memory_entry.py](tools/memory_entry.py) | MEMORY.md + daily logs → JSONL entries (with stale detection) |
 | [tools/memory_search.py](tools/memory_search.py) | Route-aware FTS + hybrid embedding retrieval |
 
-### Local training substrate
-
-| File | Purpose |
-|------|---------|
-| [openclaw_substrate/gateway.py](openclaw_substrate/gateway.py) | OpenAI-compatible API gateway |
-| [openclaw_substrate/trace_plane.py](openclaw_substrate/trace_plane.py) | Trace recording and state assembly |
-| [openclaw_substrate/judge_plane.py](openclaw_substrate/judge_plane.py) | Rule-based evaluation + reward signals |
-| [openclaw_substrate/dataset_builder.py](openclaw_substrate/dataset_builder.py) | Training dataset construction |
-| [openclaw_substrate/shadow_eval.py](openclaw_substrate/shadow_eval.py) | Baseline vs candidate replay comparison |
-
 ### Historical design materials
 
 - [multi-agent/ARCHITECTURE.md](multi-agent/ARCHITECTURE.md)
@@ -479,11 +461,11 @@ Shows: same-domain priority + entity-hit weighted ranking + hybrid semantic gap-
 
 | Boundary | Notes |
 |----------|-------|
-| Workspace extension layer | longClaw is an OpenClaw workspace extension. OpenClaw native capabilities (hooks / permissions / compaction / skill loading) are available out of the box; longClaw adds arbitration, domain-aware memory, retrieval, and training on top |
+| Workspace extension layer | longClaw is an OpenClaw workspace extension. OpenClaw native capabilities (hooks / permissions / compaction / skill loading) are available out of the box; longClaw adds arbitration, domain-aware memory, and retrieval on top |
 | Skill auto-generation | Proposal system (user confirms before writing), not OpenClaw-style auto-write |
 | Memory retrieval quality | Depends on MEMORY.md factual entry density; config/rule text has limited semantic differentiation |
 | Hybrid retrieval benefit | Minimal when corpus is mostly config/rule text; significant once factual daily logs accumulate |
-| openclaw_substrate | Training pipeline defined, not yet active (primary: Codex via OpenClaw) |
+| Local optimization loop | Implementation removed for now; short-term disabled (primary: Codex via OpenClaw) |
 | Parallel concurrency | Capped at ≤2 specialists; no increase without execution-layer support |
 
 ---
@@ -500,7 +482,6 @@ This repo is the workspace configuration layer, extending:
 - `MULTI_AGENTS.md` (10 specialist agents, A2A protocol, confidence arbitration)
 - `MEMORY.md` (domain-blocked injection)
 - `tools/` directory (independent memory retrieval tools)
-- `openclaw_substrate/` (local training substrate)
 
 ### Hermes Agent
 
@@ -520,7 +501,7 @@ This repo is the workspace configuration layer, extending:
 |-----------|-------------|
 | Multi-Agent arbitration + Risk Audit | 10 specialists + CTRL arbitration + P0-P4 priority arbitration |
 | USER.md user profile layer | Independent user context file, foundation for personalized advice |
-| openclaw_substrate training substrate | Trace → Judge → Dataset → MLX training loop |
+| Local optimization loop (reserved) | Can be restored later without affecting current workflow |
 | Route-aware scope filter | Narrows retrieval scope by routing domain before searching |
 
 ---
@@ -531,7 +512,7 @@ This repo is the workspace configuration layer, extending:
 
 ## Contributing
 
-Contributions to Workflow Skills, retrieval tools, or training substrate are welcome.
+Contributions to Workflow Skills and retrieval tools are welcome.
 
 Lowest-friction contribution: create a `SKILL.md` under `skills/<domain>-<skill-name>/`, describing a specific reusable workflow (see `skills/job-jd-analysis/` as reference).
 

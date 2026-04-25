@@ -17,7 +17,7 @@ DEFAULT_ENTRIES = Path("tools/artifacts/memory_entries.jsonl")
 DOMAIN_HINTS = {
     "JOB": ["job", "career", "offer", "interview", "岗位", "面试", "投递", "简历", "薪资"],
     "LEARN": ["learn", "paper", "study", "论文", "学习", "GRPO", "SFT", "RAG"],
-    "ENGINEER": ["engineer", "code", "deploy", "架构", "代码", "openclaw", "substrate"],
+    "ENGINEER": ["engineer", "code", "deploy", "架构", "代码", "openclaw", "optimization-loop"],
     "WORK": ["work", "promotion", "职场", "绩效", "晋升", "汇报"],
     "MONEY": ["money", "finance", "invest", "理财", "投资", "股票"],
     "LIFE": ["life", "health", "travel", "生活", "健康", "Tesla"],

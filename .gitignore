@@ -18,7 +18,6 @@ USER.md
 artifacts/
 .claude/settings.local.json
 .claude/todos.json
-openclaw_substrate/configs/local.runtime.json
 
 # Hook markers
 memory/.session_round_reset

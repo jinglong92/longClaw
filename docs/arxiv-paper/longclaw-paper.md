@@ -359,7 +359,7 @@ longClaw has operated continuously on Mac mini M4 (Apple Silicon, 24/7) since 20
 
 We presented longClaw, a personal AI operating system that addresses token efficiency, multi-agent coordination, and execution integrity through three core contributions: Route-Aware Memory Injection (RAMI), a four-level retrieval protocol with entity-weighted BM25 scoring, and an Execution Integrity Framework with harness-layer enforcement. Our production deployment demonstrates that these mechanisms are practical and stable for 24/7 personal assistant use.
 
-Future work includes: (1) replacing BM25 with LLM-based semantic retrieval (analogous to Claude Code's side-query mechanism), (2) implementing fork-agent cache sharing for A2A parallel execution, and (3) integrating the openclaw_substrate training pipeline for online policy improvement.
+Future work includes: (1) replacing BM25 with LLM-based semantic retrieval (analogous to Claude Code's side-query mechanism), (2) implementing fork-agent cache sharing for A2A parallel execution, and (3) integrating a reserved local optimization loop for online policy improvement.
 
 ---
 

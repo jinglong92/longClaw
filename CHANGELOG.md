@@ -328,7 +328,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `multi-agent-bootstrap`：多代理架构初始化
   - `public-evidence-fetch`：公开网页证据抓取
 - **Memory 检索工具**：`tools/memory_entry.py`（JSONL 索引构建）+ `tools/memory_search.py`（route-aware FTS + Hybrid Embedding）
-- **openclaw_substrate 训练底座**：Trace → Judge → Dataset → MLX/LLaMA-Factory 完整 pipeline 设计
+- **本地优化闭环（预留）**：Trace → Judge → Dataset → MLX/LLaMA-Factory pipeline 设计
 - **PROFILE_CONTRACT.md**：用户背景、风险优先级、简历快照，各专职代理解释口径统一
 - **CONTRIBUTING.md**：贡献指南
 - **Privacy**：MEMORY.md / memory/ / USER.md 加入 .gitignore

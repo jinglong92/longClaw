@@ -1,6 +1,6 @@
 #!/bin/bash
 # apply_workspace_integrity_patch.sh
-# 目标：只改 workspace 层，不碰 substrate
+# 目标：只改 workspace 层，不碰预留优化闭环
 # 作用：
 #   1) 执行完整性硬化：无证据不报完成
 #   2) 检索顺序收口：先 scope，再 recall
@@ -430,7 +430,7 @@ append_if_absent "README.md" "## 当前工作区约束（patch note）" '
 
 ## 当前工作区约束（patch note）
 
-以下能力若未下沉到 substrate/runtime，则视为 **workspace-level behavior contract**：
+以下能力若未下沉到优化闭环/runtime，则视为 **workspace-level behavior contract**：
 - DEV LOG 显示规则
 - routing presentation override
 - heartbeat silent mode

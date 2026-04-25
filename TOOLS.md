@@ -81,7 +81,6 @@
 ### Python
 - 优先：`uv run python` 或 `python3`（系统 python3 在 `/usr/bin/python3`）
 - 包管理：`uv pip install` 或 `pip3 install`
-- 训练相关：`openclaw_substrate` 模块在 `~/longClaw/openclaw_substrate/`
 
 ### Node / npm
 - 默认 Node：`~/.longclaw/node20/current/bin/node`，`node --version` 当前观测为 v20.20.2

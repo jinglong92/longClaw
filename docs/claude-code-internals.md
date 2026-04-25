@@ -390,7 +390,7 @@ Anthropic 在设计 Claude Code 时做的五个非显而易见的选择：
 
 | Claude Code 设计 | 参考价值 |
 |-----------------|---------|
-| AsyncGenerator Loop | openclaw_substrate 的 trace 收集可以用 generator 重写 |
+| AsyncGenerator Loop | 预留优化闭环的 trace 收集可以用 generator 重写 |
 | 4-Layer Compression | longClaw Layer A/B 是其子集，可以补 Layer 1 和 Layer 3 |
 | Discriminated Union 终止原因 | code-agent 的失败处理可以用类似的类型化终止原因 |
 

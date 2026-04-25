@@ -28,7 +28,7 @@ DOMAIN_MARKERS = {
 DOMAIN_HINTS = {
     "JOB": ["面试", "offer", "岗位", "投递", "简历", "JD", "薪资", "招聘"],
     "LEARN": ["论文", "paper", "学习", "GRPO", "SFT", "RAG", "教程", "技能"],
-    "ENGINEER": ["代码", "部署", "架构", "openclaw", "substrate", "API", "Bug"],
+    "ENGINEER": ["代码", "部署", "架构", "openclaw", "优化闭环", "API", "Bug"],
     "WORK": ["绩效", "OKR", "汇报", "职场", "晋升", "上级", "组织"],
     "MONEY": ["理财", "投资", "股票", "基金", "预算"],
     "LIFE": ["Tesla", "健康", "出行", "日程", "设备", "医疗"],

@@ -107,7 +107,7 @@ LLM 驱动启发式函数进化，替代固定启发式
 | 多模型协同 | CTRL + 10 专职 + A2A + Subagent | ⭐⭐⭐⭐⭐ |
 | 幻觉/工具调用失败风险识别 | Harness 层执行完整性，幻觉声明率接近零 | ⭐⭐⭐⭐⭐ |
 | Agent 框架（LangChain/ADK） | LangGraph 诊断工作流（线上 PoC） | ⭐⭐⭐⭐ |
-| LLM 评测体系 | openclaw_substrate Judge 模块 + 三层 Dense Reward | ⭐⭐⭐⭐ |
+| LLM 评测体系 | 预留评测模块 + 三层 Dense Reward | ⭐⭐⭐⭐ |
 | 任务规划/状态追踪/上下文管理 | code-agent + session-state.json + DEV LOG | ⭐⭐⭐⭐ |
 | 个人助理类 AI 产品落地（加分） | longClaw 24/7 生产运行，WhatsApp/Telegram 交互 | ⭐⭐⭐⭐⭐ |
 | ADK 框架经验 | 无直接经验，但 LangGraph 架构理念高度一致 | ⭐⭐⭐ |
@@ -172,7 +172,7 @@ Coding Agent 正是这个演进的具体实现：
 **Q4：你的 SFT+GRPO 训练效果怎么验证的？**
 > "两个维度：
 > 1. 离线指标：格式合规率（SFT 后接近 100%），工具路径匹配率（GRPO 后 60%+）
-> 2. 在线验证：通过 openclaw_substrate 的 shadow_eval 做 baseline vs candidate 回放对比
+> 2. 在线验证：通过预留回放评测流程做 baseline vs candidate 对比
 > 我设计了三层 Dense Reward：格式（0-0.2）/ 工具路径（0-0.4）/ 证据引用（0-0.4），
 > 这个设计直接来自美团换电诊断 Agent 的训练经验。"
 

@@ -179,7 +179,7 @@ SWE-bench 是 coding agent 的标准评测集，包含 2294 个真实 GitHub iss
 
 这个基准对你有两个用途：
 1. 理解问题的难度（大多数 issue 需要跨 3-5 个文件的修改）
-2. 未来可以用 openclaw_substrate 在小规模版本上评估 longClaw 的 coding agent 效果
+2. 未来可以用预留优化闭环在小规模版本上评估 longClaw 的 coding agent 效果
 
 #### 必读：Aider（最实用的开源实现）
 
@@ -308,7 +308,7 @@ git worktree remove .worktrees/task-xxx
 
 ### 阶段三：评估与优化（持续）
 
-#### 用 openclaw_substrate 评估 coding agent 效果
+#### 用预留优化闭环评估 coding agent 效果
 
 你已经有完整的 Trace → Judge → Dataset 流水线，可以这样用：
 
@@ -398,5 +398,5 @@ docs/
 | M1（已完成） | repo-explorer + code-agent 基础版 | 能自主探索 longClaw 自身的 codebase 并修改                 |
 | M2（2周）  | repo-map 工具（tree-sitter）       | repo-explorer 能生成 500 token 内的代码地图              |
 | M3（4周）  | git worktree 隔离                | code-agent 任务在独立分支执行，失败可安全丢弃                    |
-| M4（6周）  | openclaw_substrate 评估接入        | 能跑 10 个 SWE-bench-lite issue，有 resolved rate 数据 |
+| M4（6周）  | 预留优化闭环评估接入        | 能跑 10 个 SWE-bench-lite issue，有 resolved rate 数据 |
 | M5（持续）  | 迭代优化                           | resolved rate 持续提升                              |
