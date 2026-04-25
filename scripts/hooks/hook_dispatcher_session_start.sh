@@ -10,6 +10,7 @@ echo "$(date '+%F %T') [hook] SessionStart bridge invoked" >> memory/sidecar-hoo
 # 保留原有协议注入语义（含 DEV_LOG 模板约束说明）
 if [ -n "${CLAUDE_ENV_FILE:-}" ] && [ -f CTRL_PROTOCOLS.md ] && [ -f DEV_LOG.md ]; then
   printf '\n[SessionStart: injecting critical protocols]\n[IMPORTANT] DEV LOG must use the 9-field template defined in DEV_LOG.md — do NOT output the built-in session-state.json serialization format (routing:/session_id:/round: etc.)\n' >> "$CLAUDE_ENV_FILE"
+  printf '[IMPORTANT] Before writing DEV LOG Session ctx, call session_status() in this turn and use its runtime ctx/cache values. If session_status is unavailable, fall back to [ctx-preflight].\n' >> "$CLAUDE_ENV_FILE"
   printf '[IMPORTANT] DEV LOG ctx field must come from [ctx-preflight] in this turn. If preflight is unavailable, write ctx=unavailable/200k. Do NOT estimate.\n' >> "$CLAUDE_ENV_FILE"
   cat CTRL_PROTOCOLS.md DEV_LOG.md >> "$CLAUDE_ENV_FILE"
 fi
