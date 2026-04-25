@@ -81,6 +81,11 @@ longClaw 存在两种 session 形态，压缩策略不同：
 
 session 形态由 `memory/session-state.json` 的 `session_type` 字段标识（`persistent` / `ephemeral`，默认 `persistent`）。
 
+> 兼容说明（渠道会话）：
+> 在部分 openclaw-weixin / 第三方渠道会话中，UserPromptSubmit hook 可能未触发，
+> 导致 `tool_events` / `trim_events` 注入缺失。此时 DEV LOG 按 `DEV_LOG.md` 降级为
+> `tool_events=0 | trim_events=0 | source=hook-offline`，不要写 `ephemeral`。
+
 ### Layer 1：Trim（工具输出实时截断）（借鉴 Claude Code Tool Result Budgeting）
 
 **触发**：任意一条工具输出 > 500 字符，当轮立即执行，无需等待轮数累积。
