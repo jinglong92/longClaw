@@ -5,6 +5,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.8.2] — 2026-04-25
+
+### Added
+
+- **补丁资产目录 `patches/`**：新增 `patches/README.md` 与 `patches/openclaw-deepseek-thinking.patch`
+  - 记录 openclaw 升级后一键回灌方式（`patch -p0`）
+  - 固化 DeepSeek V4 的 non-thinking 默认行为（默认 `thinking.disabled`）
+  - 约束 assistant replay 不再回灌 `reasoning_content`，避免触发 DeepSeek thinking-state 契约冲突
+
+### Changed
+
+- **`hook_dispatcher_session_start.sh`**：
+  - 新增 runtime `ctx` fallback 注入：优先按 `session_id/session_key` 从 OpenClaw sessions store 读取 `ctx_tokens`，匹配失败回退最近活跃会话
+  - 新增 `ctx-preflight` 硬闸门信号：本轮 DEV LOG 的 `ctx` 必须来源于 `[ctx-preflight]`；不可读时显式注入 `ctx=unavailable/200k`，禁止估算
+  - sidecar ledger 写入前改为优先对齐 `memory/session-state.json.session_id`，降低 runtime UUID 与逻辑会话 ID 失配概率
+
+---
+
 ## [v0.8.1] — 2026-04-25
 
 ### Fixed — fix/compression-chain 分支四处回归修复
