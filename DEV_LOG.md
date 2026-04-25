@@ -67,10 +67,10 @@
 
 ### 📂 Session
 ```
-📂 Session 第 <N> 轮 | recent_turns=<n/20> | ctx=<current/200k> | <未触发自动压缩|已自动压缩@200k>
+📂 Session 第 <N> 轮 | tool_events=<n> | trim_events=<n> | <未触发压缩|Layer 2 已触发>
 ```
 - `第 <N> 轮` 指本次 session 内的轮次（ephemeral，不跨 session 累积）
-- `recent_turns=<n/20>` 表示**当前轮次进度 / Layer 2 触发阈值**；阈值变化时，这里的分母也必须同步更新
+- `tool_events` / `trim_events` 对应 Layer 2 实际触发阈值（>30 / >10），数值来自 sidecar ledger 或写 `ephemeral`
 - 若 session-state.json 不存在或未写入，写 `ephemeral session`（不写 unavailable）
 - 跨 session 统计由 heartbeat-agent 负责，不在此字段体现
 - `ctx=<current/200k>` 记录**当前上下文占用 / 200k 自动压缩阈值**；数值必须来自 runtime 或工具返回，禁止估算
@@ -133,7 +133,7 @@
 🛠️ 工具 Edit(AGENTS.md) → 插入 Immutable Rules 节，+18行 | status=ok
         Bash(git commit) → hash=f951b9a | status=ok
 🧠 Memory (SYSTEM)+[ENGINEER] | ~210 tokens | 节省 72%
-📂 Session 第 15 轮 | recent_turns=15/20 | ctx=84k/200k | 未触发自动压缩
+📂 Session 第 15 轮 | tool_events=12 | trim_events=2 | 未触发压缩
 🔍 检索 scope=ENGINEER | level=同域近期 | 召回 2 条 | top=[0.91, 0.78]
 🏷️ 实体 检测到新实体: AGENTS_version=v2（2026-04-14）→ 已更新 [ENGINEER]
 ```
@@ -147,7 +147,7 @@
 🧩 Skill 命中: public-evidence-fetch | trigger=公开网页证据抓取 | loaded=yes | step=2/4
 🛠️ 工具 WebFetch(arxiv.org) → 403 Forbidden | status=blocked(missing_tool)
 🧠 Memory (SYSTEM) | ~80 tokens
-📂 Session 第 20 轮 | recent_turns=20/20 | ctx=unavailable/200k | 已自动压缩@200k
+📂 Session 第 20 轮 | tool_events=35 | trim_events=12 | Layer 2 已触发
 🔍 检索 scope=LEARN | level=同域近期 | 召回 0 条
 ```
 

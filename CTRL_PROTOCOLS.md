@@ -254,9 +254,9 @@ python3 tools/model_mode.py get
 3. DEV LOG 字段值优先取 runtime / tool returns / current turn context；尚未持久化到 `session-state.json` 的字段按 `DEV_LOG.md` 规则写 `ephemeral` 或 `unavailable`
 4. CTRL 草拟完回复后、发给用户前，再写入 `memory/session-state.json.dev_mode = true`
 
-若第 1-4 步任一未满足，则不得口头确认“已开启 dev mode”；正确状态是 `blocked: dev_mode_activation_failed`
+若第 1-4 步任一未满足，则不得口头确认"已开启 dev mode"；正确状态是 `blocked: dev_mode_activation_failed`
 
-### Dev Mode 展示硬规则（新增，强制）
+### Dev Mode 展示硬规则（强制）
 
 若 `dev_mode_effective == true`，则本轮回复**必须**包含一个真实的 `[DEV LOG]` 块，不得省略，不得仅保留内部状态，不得因为“正文简洁”或“避免打扰”而跳过。
 
@@ -272,7 +272,7 @@ python3 tools/model_mode.py get
 - 值从哪里来？→ runtime / tools / session-state
 - 开启 dev mode 的当轮能不能等下轮再套模板？→ 不能
 - 当前输出像不像 `DEV_LOG.md` 示例？→ 若否，禁止发送
-- `dev_mode=true` 时能不能不显示 DEV LOG？→ 不能
+- `dev_mode_effective=true` 时能不能不显示 DEV LOG？→ 不能
 
 ## Session 状态管理
 
