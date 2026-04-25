@@ -58,6 +58,24 @@ PY
   fi
 fi
 
+# 新 session 检测：若 session_id 与 session-state.json 不符，重置 round=0
+# CTRL 第一轮 +1 → 从 1 开始，不会从上个 session 的轮次继续累加
+NEW_SID="${CLAUDE_SESSION_ID:-${SESSION_ID:-${OPENCLAW_SESSION_ID:-}}}"
+if [ -n "$NEW_SID" ] && [ -f memory/session-state.json ]; then
+  python3 - <<PY 2>/dev/null || true
+import json, pathlib
+p = pathlib.Path("memory/session-state.json")
+try:
+    d = json.loads(p.read_text())
+    if d.get("session_id") != "$NEW_SID":
+        d["session_id"] = "$NEW_SID"
+        d["round"] = 0
+        p.write_text(json.dumps(d, ensure_ascii=False, indent=2))
+except Exception:
+    pass
+PY
+fi
+
 # sidecar ledger 旁路记录
 python3 - <<'PY' | python3 -m runtime_sidecar.hook_dispatcher SessionStart >/dev/null 2>> memory/sidecar-hooks.log || true
 import json
