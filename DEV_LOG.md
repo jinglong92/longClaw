@@ -6,7 +6,7 @@
 
 ---
 
-## 字段顺序（10 个）
+## 字段顺序（9 个）
 
 ```
 [DEV LOG]
@@ -67,9 +67,10 @@
 
 ### 📂 Session
 ```
-📂 Session 第 <N> 轮 | recent_turns=<n/8> | <未触发压缩|Layer 2 已触发>
+📂 Session 第 <N> 轮 | tool_events=<n> | trim_events=<n> | <未触发压缩|Layer 2 已触发>
 ```
 - `第 <N> 轮` 指本次 session 内的轮次（ephemeral，不跨 session 累积）
+- `tool_events` / `trim_events` 对应 Layer 2 实际触发阈值（>30 / >10），数值来自 sidecar ledger 或写 `ephemeral`
 - 若 session-state.json 不存在或未写入，写 `ephemeral session`（不写 unavailable）
 - 跨 session 统计由 heartbeat-agent 负责，不在此字段体现
 
@@ -103,12 +104,18 @@
 
 ## Dev Mode 不可省略规则
 
-当 `memory/session-state.json.dev_mode = true` 时：
+当 `dev_mode_effective = true` 时：
 
 - 每条用户可见回复都必须包含一个真实的 `[DEV LOG]`
 - 不允许因为“简洁输出”“正文隐藏 routing”“减少打扰”而省略
 - `routing_visibility=devlog_only` 只表示把路由放进 DEV LOG，不表示可以不展示 DEV LOG
 - 只有用户明确要求关闭 dev mode 后，才允许停止输出 `[DEV LOG]`
+
+其中：
+- `dev_mode_effective = (memory/session-state.json.dev_mode == true) OR (本轮用户明确说出 "开启 dev mode" / "打开开发者模式")`
+- 这条规则是为了兼容 `AGENTS.md` 里"session-state 在回复草拟后、发送前写入"的时序；**开启 dev mode 的当轮就必须切到本模板，不得等下一轮**
+- 激活回合若某些 session 字段尚未持久化，按本文件字段规范写 `ephemeral` 或 `unavailable`
+- 不得单独回复"已开启 dev mode"却不附带 `[DEV LOG]`
 
 ---
 
@@ -122,7 +129,7 @@
 🛠️ 工具 Edit(AGENTS.md) → 插入 Immutable Rules 节，+18行 | status=ok
         Bash(git commit) → hash=f951b9a | status=ok
 🧠 Memory (SYSTEM)+[ENGINEER] | ~210 tokens | 节省 72%
-📂 Session 第 15 轮 | recent_turns=7/8 | 未触发压缩
+📂 Session 第 15 轮 | tool_events=12 | trim_events=2 | 未触发压缩
 🔍 检索 scope=ENGINEER | level=同域近期 | 召回 2 条 | top=[0.91, 0.78]
 🏷️ 实体 检测到新实体: AGENTS_version=v2（2026-04-14）→ 已更新 [ENGINEER]
 ```
@@ -136,7 +143,7 @@
 🧩 Skill 命中: public-evidence-fetch | trigger=公开网页证据抓取 | loaded=yes | step=2/4
 🛠️ 工具 WebFetch(arxiv.org) → 403 Forbidden | status=blocked(missing_tool)
 🧠 Memory (SYSTEM) | ~80 tokens
-📂 Session 第 8 轮 | recent_turns=8/8 | 未触发压缩
+📂 Session 第 8 轮 | tool_events=5 | trim_events=0 | 未触发压缩
 🔍 检索 scope=LEARN | level=同域近期 | 召回 0 条
 ```
 
@@ -147,7 +154,7 @@
 - **强制项**（不得省略）：`🔀 路由`、`🧩 Skill`、`🛠️ 工具`、`📂 Session`
 - `🤖 模型` 为可选项：仅在用户追问模型、模型切换、fallback 命中、或模型信息对排障有直接价值时输出；若输出，只写“本轮用了啥模型 + 当前 effort”
 - `⚖️ 置信度` 为可选项：仅在存在证据冲突、不确定性较高、用户质疑结论、或需要显式标注判断依据时输出
-- 至少输出 10 个字段中的 4 个
+- 至少输出 9 个字段中的 4 个
 - 有文件改动或校验时，`🔍 检索` 不得省略
 - `🤝 A2A` 仅在发生跨代理通信时输出
 - `🏷️ 实体` 仅在检测到新实体或实体更新时输出
@@ -166,7 +173,7 @@ DEV LOG 每轮必须输出，以下情况下不得省略或缩减：
 
 **禁止使用内置 session-state.json 序列化格式**：
 
-无论何种触发场景（包括 dev mode 开启、/new 新会话第一轮、系统事件触发），DEV LOG **必须**使用本文件定义的 10 字段模板，不得输出如下内置格式：
+无论何种触发场景（包括 dev mode 开启、/new 新会话第一轮、系统事件触发），DEV LOG **必须**使用本文件定义的 9 字段模板，不得输出如下内置格式：
 
 ```
 # ❌ 禁止输出这种格式

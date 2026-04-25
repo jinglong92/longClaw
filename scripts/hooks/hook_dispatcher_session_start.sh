@@ -9,7 +9,7 @@ echo "$(date '+%F %T') [hook] SessionStart bridge invoked" >> memory/sidecar-hoo
 
 # 保留原有协议注入语义（含 DEV_LOG 模板约束说明）
 if [ -n "${CLAUDE_ENV_FILE:-}" ] && [ -f CTRL_PROTOCOLS.md ] && [ -f DEV_LOG.md ]; then
-  printf '\n[SessionStart: injecting critical protocols]\n[IMPORTANT] DEV LOG must use the 10-field template defined in DEV_LOG.md — do NOT output the built-in session-state.json serialization format (routing:/session_id:/round: etc.)\n' >> "$CLAUDE_ENV_FILE"
+  printf '\n[SessionStart: injecting critical protocols]\n[IMPORTANT] DEV LOG must use the 9-field template defined in DEV_LOG.md — do NOT output the built-in session-state.json serialization format (routing:/session_id:/round: etc.)\n' >> "$CLAUDE_ENV_FILE"
   cat CTRL_PROTOCOLS.md DEV_LOG.md >> "$CLAUDE_ENV_FILE"
 fi
 

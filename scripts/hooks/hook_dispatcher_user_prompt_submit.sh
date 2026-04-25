@@ -35,7 +35,7 @@ MARKER="memory/.user_prompt_submit.injected.${SAFE_KEY}"
 
 if [ ! -f "$MARKER" ]; then
   if [ -n "${CLAUDE_ENV_FILE:-}" ] && [ -f CTRL_PROTOCOLS.md ] && [ -f DEV_LOG.md ]; then
-    printf '\n[UserPromptSubmit: injecting critical protocols]\n[IMPORTANT] DEV LOG must use the 10-field template defined in DEV_LOG.md — do NOT output the built-in session-state.json serialization format (routing:/session_id:/round: etc.)\n' >> "$CLAUDE_ENV_FILE"
+    printf '\n[UserPromptSubmit: injecting critical protocols]\n[IMPORTANT] DEV LOG must use the 9-field template defined in DEV_LOG.md — do NOT output the built-in session-state.json serialization format (routing:/session_id:/round: etc.)\n' >> "$CLAUDE_ENV_FILE"
     cat CTRL_PROTOCOLS.md DEV_LOG.md >> "$CLAUDE_ENV_FILE"
   else
     echo "[UserPromptSubmit] 请在本轮遵循 CTRL_PROTOCOLS.md 与 DEV_LOG.md。"

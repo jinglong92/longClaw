@@ -21,16 +21,25 @@ HANDLED_EVENTS = [HookEventType.SESSION_START.value]
 
 
 def _load_heartbeat() -> str:
-    """Inspect heartbeat-state.json and return a message if P0/P1 exist."""
+    """Inspect heartbeat-state.json and return a message if P0/P1 items exist.
+
+    Reads the format written by heartbeat-agent:
+      { "has_pending": bool, "pending_items": [{"priority": "P0"|"P1", ...}] }
+    """
     heartbeat_path = os.path.join(os.getcwd(), "memory", "heartbeat-state.json")
     if not os.path.exists(heartbeat_path):
         return ""
     try:
         with open(heartbeat_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        pending = [k for k, v in data.items() if k in ("P0", "P1") and v]
-        if pending:
-            return f"Pending critical heartbeat alerts: {', '.join(pending)}."
+        if data.get("has_pending") and any(
+            i.get("priority") in ("P0", "P1") and not i.get("shown")
+            for i in data.get("pending_items", [])
+        ):
+            return (
+                "[heartbeat] 有待处理事项，请在本轮回复开头读取 "
+                "memory/heartbeat-state.json 并呈现 P0/P1 pending_items"
+            )
     except Exception as exc:
         logger.warning("Failed to parse heartbeat-state.json: %s", exc)
     return ""
