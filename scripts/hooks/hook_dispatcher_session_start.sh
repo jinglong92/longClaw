@@ -181,6 +181,42 @@ PY
   if [ -n "$CTX_HINT" ]; then
     printf '%s\n' "$CTX_HINT" >> "$CLAUDE_ENV_FILE"
   fi
+
+  # Sidecar counter fallback for channels where UserPromptSubmit is not fired.
+  SIDECAR_COUNTER_HINT=$(python3 - <<'PY' 2>/dev/null || true
+import json
+from pathlib import Path
+
+try:
+    from runtime_sidecar.state import readers  # type: ignore
+except Exception:
+    print("")
+    raise SystemExit(0)
+
+session_id = None
+try:
+    data = json.loads(Path("memory/session-state.json").read_text(encoding="utf-8"))
+    session_id = data.get("session_id")
+except Exception:
+    session_id = None
+
+if not session_id:
+    print("")
+    raise SystemExit(0)
+
+try:
+    tool_events = readers.count_session_tool_events(session_id)
+    trim_events = readers.count_session_trim_events(session_id)
+except Exception:
+    print("")
+    raise SystemExit(0)
+
+print(f"[sidecar] tool_events={tool_events} trim_events={trim_events} source=sessionstart-fallback")
+PY
+)
+  if [ -n "$SIDECAR_COUNTER_HINT" ]; then
+    printf '%s\n' "$SIDECAR_COUNTER_HINT" >> "$CLAUDE_ENV_FILE"
+  fi
 fi
 
 # sidecar ledger 旁路记录
