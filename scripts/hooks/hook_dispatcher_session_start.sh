@@ -58,6 +58,10 @@ PY
   fi
 fi
 
+# Clean up legacy per-process markers from older logic.
+# Keep only the stable marker file `memory/.session_round_reset`.
+rm -f memory/.session_round_reset.proc-* 2>/dev/null || true
+
 # 物理 session 重置：marker 文件不存在时重置 round=0
 # /new 命令会清除 marker（见 user_prompt_submit.sh），开启新一轮重置
 RESET_MARKER="memory/.session_round_reset"
@@ -73,6 +77,108 @@ except Exception:
     pass
 PY
   touch "$RESET_MARKER"
+fi
+
+# Inject a best-effort runtime ctx token snapshot for DEV LOG rendering.
+# This is a fallback path when per-turn hooks (e.g. UserPromptSubmit) are not fired.
+if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+  CTX_HINT=$(python3 - <<'PY' 2>/dev/null || true
+import json, os
+from pathlib import Path
+
+def read_json(path: Path):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+def pick(*keys):
+    for k in keys:
+        v = os.environ.get(k)
+        if v:
+            return v
+    return None
+
+target_session_key = pick("CLAUDE_SESSION_KEY", "SESSION_KEY", "OPENCLAW_SESSION_KEY")
+target_session_id = pick("CLAUDE_SESSION_ID", "SESSION_ID", "OPENCLAW_SESSION_ID")
+cfg_path = Path(os.environ.get("OPENCLAW_CONFIG_PATH", Path.home() / ".openclaw" / "openclaw.json"))
+cfg = read_json(cfg_path) or {}
+
+stores = []
+agents_cfg = cfg.get("agents", {}) if isinstance(cfg, dict) else {}
+agents_list = agents_cfg.get("list", []) if isinstance(agents_cfg, dict) else []
+
+default_agent = "main"
+if isinstance(agents_list, list):
+    for item in agents_list:
+        if isinstance(item, dict) and item.get("id"):
+            default_agent = item["id"]
+            break
+
+stores.append(Path.home() / ".openclaw" / "agents" / default_agent / "sessions" / "sessions.json")
+if isinstance(agents_list, list):
+    for item in agents_list:
+        if not isinstance(item, dict):
+            continue
+        aid = item.get("id")
+        if not aid:
+            continue
+        adir = item.get("agentDir")
+        if isinstance(adir, str) and adir.strip():
+            stores.append(Path(adir).expanduser().resolve().parent / "sessions" / "sessions.json")
+        stores.append(Path.home() / ".openclaw" / "agents" / aid / "sessions" / "sessions.json")
+
+seen = set()
+unique_stores = []
+for s in stores:
+    key = str(s)
+    if key in seen:
+        continue
+    seen.add(key)
+    unique_stores.append(s)
+
+best = None
+best_key_match = None
+best_id_match = None
+for store in unique_stores:
+    data = read_json(store)
+    if not isinstance(data, dict):
+        continue
+    for session_key, row in data.items():
+        if not isinstance(row, dict):
+            continue
+        updated_at = row.get("updatedAt")
+        total = row.get("totalTokens")
+        limit = row.get("contextTokens")
+        if not isinstance(updated_at, (int, float)):
+            continue
+        if total is None or limit is None:
+            continue
+        rec = (int(updated_at), str(session_key), str(row.get("sessionId") or ""), int(total), int(limit))
+        if best is None or rec[0] > best[0]:
+            best = rec
+        if target_session_key and str(session_key) == target_session_key:
+            if best_key_match is None or rec[0] > best_key_match[0]:
+                best_key_match = rec
+        if target_session_id and str(row.get("sessionId") or "") == target_session_id:
+            if best_id_match is None or rec[0] > best_id_match[0]:
+                best_id_match = rec
+
+final = best_id_match or best_key_match or best
+if not final:
+    print("")
+    raise SystemExit(0)
+
+_, session_key, session_id, total_tokens, context_tokens = final
+trace = f"session_key={session_key}"
+if session_id:
+    trace += f" session_id={session_id}"
+print(f"[runtime] ctx_tokens={total_tokens}/{context_tokens} source=sessions-store {trace}")
+PY
+)
+  if [ -n "$CTX_HINT" ]; then
+    printf '%s\n' "$CTX_HINT" >> "$CLAUDE_ENV_FILE"
+  fi
 fi
 
 # sidecar ledger 旁路记录
