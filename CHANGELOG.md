@@ -5,6 +5,35 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.8.1] — 2026-04-25
+
+### Fixed — fix/compression-chain 分支四处回归修复
+
+- **`session_start.py` heartbeat 解析格式修正**：
+  - 原分支查找不存在的顶层 `P0`/`P1` key，导致 heartbeat 告警永远不触发
+  - 恢复正确格式：`has_pending + pending_items[].priority`（与 heartbeat-agent 实际写入格式对齐）
+  - 补充 `shown=true` 过滤：已展示的 P0/P1 不重复提醒
+
+- **`DEV_LOG.md` 字段数与 Session 格式修正**：
+  - 字段数标注 `10 个` → `9 个`（实际字段从未增加到 10 个）
+  - `📂 Session` 字段格式从 `recent_turns=<n/8>` 改为 `tool_events=<n> | trim_events=<n>`，对齐 v0.8.0 的 Layer 2 实际触发阈值（工具事件 >30 / trim >10），移除无来源的 `/8` 分母
+  - 最低合格线恢复"至少输出 9 个字段中的 4 个"
+  - 示例更新：Example B 示例改为展示 Layer 2 已触发状态
+
+- **hook 脚本注入提示修正**：
+  - `hook_dispatcher_session_start.sh` / `hook_dispatcher_user_prompt_submit.sh`：`10-field template` → `9-field template`
+
+- **`dev_mode_effective` 激活回合绑定恢复**：
+  - 分支删除了 `dev_mode_effective` 概念，改为只检查 `session-state.json`
+  - 这导致用户说"开启 dev mode"当轮读不到文件（文件在回复后才写入），DEV LOG 不出现，与 `AGENTS.md` 冲突
+  - `CTRL_PROTOCOLS.md` 与 `DEV_LOG.md` 均恢复：`dev_mode_effective = file_state OR current_turn_intent`
+
+### Changed
+
+- **`CTRL_PROTOCOLS.md`**：`Dev Mode 展示硬规则` 标题去掉"新增"（功能已稳定）
+
+---
+
 ## [v0.8.0] — 2026-04-22
 
 ### Fixed — 压缩执行链三处断裂
