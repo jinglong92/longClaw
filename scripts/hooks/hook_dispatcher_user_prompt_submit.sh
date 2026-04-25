@@ -11,7 +11,8 @@ MSG=$(echo "${CLAUDE_USER_PROMPT:-}" | tr -d '\n' | xargs)
 if [ "$MSG" = "/new" ]; then
   rm -f memory/.user_prompt_submit.injected.* \
     memory/.user_prompt_last_claude_session_id \
-    memory/.user_prompt_init_no_claude_session_id
+    memory/.user_prompt_init_no_claude_session_id \
+    memory/.session_round_reset
   openclaw gateway restart
   exit 0
 fi
@@ -118,6 +119,12 @@ prompt = (
 )
 
 sid = pick('CLAUDE_SESSION_ID', 'SESSION_ID', 'OPENCLAW_SESSION_ID')
+if not sid:
+    try:
+        import pathlib
+        sid = json.loads(pathlib.Path('memory/session-state.json').read_text()).get('session_id')
+    except Exception:
+        sid = None
 if not sid:
     sid = 'sidecar-host-unknown'
 

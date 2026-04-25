@@ -43,11 +43,18 @@ if not isinstance(output, str):
     output = json.dumps(output, ensure_ascii=False)
 output_len = len(output)
 
+sid = pick('CLAUDE_SESSION_ID', 'SESSION_ID', 'OPENCLAW_SESSION_ID')
+if not sid:
+    try:
+        import pathlib
+        sid = json.loads(pathlib.Path('memory/session-state.json').read_text()).get('session_id')
+    except Exception:
+        sid = None
 ctx = {
-    'session_id':    pick('CLAUDE_SESSION_ID', 'SESSION_ID', 'OPENCLAW_SESSION_ID'),
+    'session_id':    sid or 'sidecar-host-unknown',
     'tool_name':     tool_name,
     'output_length': output_len,
-    'output':        '',   # do not store full output in ledger
+    'output':        '',
 }
 print(json.dumps(ctx, ensure_ascii=False))
 " | python3 -m runtime_sidecar.hook_dispatcher PostToolUse >/dev/null 2>> memory/sidecar-hooks.log || true

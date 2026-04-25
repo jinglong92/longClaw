@@ -19,3 +19,9 @@ artifacts/
 .claude/settings.local.json
 .claude/todos.json
 openclaw_substrate/configs/local.runtime.json
+
+# Hook markers
+memory/.session_round_reset
+memory/.user_prompt_submit.injected.*
+memory/.user_prompt_last_claude_session_id
+memory/.user_prompt_init_no_claude_session_id

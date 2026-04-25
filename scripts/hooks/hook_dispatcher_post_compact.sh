@@ -33,8 +33,16 @@ try:
 except (TypeError, ValueError):
     turn_count = None
 
+sid = pick("CLAUDE_SESSION_ID", "SESSION_ID", "OPENCLAW_SESSION_ID")
+if not sid:
+    try:
+        import pathlib
+        sid = json.loads(pathlib.Path("memory/session-state.json").read_text()).get("session_id")
+    except Exception:
+        sid = None
+
 ctx = {
-    "session_id": pick("CLAUDE_SESSION_ID", "SESSION_ID", "OPENCLAW_SESSION_ID"),
+    "session_id": sid,
     "turn_count_before": turn_count,
     "trigger_source": os.environ.get("COMPACT_TRIGGER_SOURCE", "native_compaction"),
     "summary_hint": os.environ.get("COMPACT_SUMMARY_HINT"),

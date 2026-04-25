@@ -58,28 +58,28 @@ PY
   fi
 fi
 
-# 新 session 检测：若 session_id 与 session-state.json 不符，重置 round=0
-# CTRL 第一轮 +1 → 从 1 开始，不会从上个 session 的轮次继续累加
-NEW_SID="${CLAUDE_SESSION_ID:-${SESSION_ID:-${OPENCLAW_SESSION_ID:-}}}"
-if [ -n "$NEW_SID" ] && [ -f memory/session-state.json ]; then
-  python3 - <<PY 2>/dev/null || true
+# 物理 session 重置：marker 文件不存在时重置 round=0
+# /new 命令会清除 marker（见 user_prompt_submit.sh），开启新一轮重置
+RESET_MARKER="memory/.session_round_reset"
+if [ ! -f "$RESET_MARKER" ] && [ -f memory/session-state.json ]; then
+  python3 - <<'PY' 2>/dev/null || true
 import json, pathlib
 p = pathlib.Path("memory/session-state.json")
 try:
     d = json.loads(p.read_text())
-    if d.get("session_id") != "$NEW_SID":
-        d["session_id"] = "$NEW_SID"
-        d["round"] = 0
-        p.write_text(json.dumps(d, ensure_ascii=False, indent=2))
+    d["round"] = 0
+    p.write_text(json.dumps(d, ensure_ascii=False, indent=2))
 except Exception:
     pass
 PY
+  touch "$RESET_MARKER"
 fi
 
 # sidecar ledger 旁路记录
+# 关键：sidecar session_id 优先用 session-state.json 的逻辑 ID（CTRL 维护），
+# 让所有 hook 写入/查询都 keyed by 同一个 ID，避免 sidecar-{uuid} 失配
 python3 - <<'PY' | python3 -m runtime_sidecar.hook_dispatcher SessionStart >/dev/null 2>> memory/sidecar-hooks.log || true
-import json
-import os
+import json, os, pathlib
 
 def pick(*keys):
     for k in keys:
@@ -88,8 +88,16 @@ def pick(*keys):
             return v
     return None
 
+# Prefer logical session_id from session-state.json over runtime UUID
+sid = pick("CLAUDE_SESSION_ID", "SESSION_ID", "OPENCLAW_SESSION_ID")
+if not sid:
+    try:
+        sid = json.loads(pathlib.Path("memory/session-state.json").read_text()).get("session_id")
+    except Exception:
+        sid = None
+
 ctx = {
-    "session_id": pick("CLAUDE_SESSION_ID", "SESSION_ID", "OPENCLAW_SESSION_ID"),
+    "session_id": sid,
     "parent_session_id": pick("CLAUDE_PARENT_SESSION_ID", "PARENT_SESSION_ID", "OPENCLAW_PARENT_SESSION_ID"),
     "platform": pick("OPENCLAW_PLATFORM", "PLATFORM", "HOSTNAME"),
     "profile": pick("CLAUDE_PROFILE", "PROFILE"),
