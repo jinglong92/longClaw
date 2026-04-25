@@ -70,7 +70,7 @@
 📂 Session 第 <N> 轮 | tool_events=<n> | trim_events=<n> | <未触发压缩|Layer 2 已触发>
 ```
 - `第 <N> 轮` 指本次 session 内的轮次（ephemeral，不跨 session 累积）
-- `tool_events` / `trim_events` 对应 Layer 2 实际触发阈值（>30 / >10），数值来自 sidecar ledger 或写 `ephemeral`
+- `tool_events` / `trim_events` 由 UserPromptSubmit hook 注入到 context（`[sidecar] tool_events=N trim_events=N`），直接读取即可；hook 不可用时写 `ephemeral`
 - 若 session-state.json 不存在或未写入，写 `ephemeral session`（不写 unavailable）
 - 跨 session 统计由 heartbeat-agent 负责，不在此字段体现
 - `ctx=<current/200k>` 记录**当前上下文占用 / 200k 自动压缩阈值**；数值必须来自 runtime 或工具返回，禁止估算

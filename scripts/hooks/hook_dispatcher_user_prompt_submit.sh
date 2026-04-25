@@ -89,7 +89,9 @@ fi
 
 INPUT="$(cat || true)"
 export INPUT CLAUDE_USER_PROMPT
-printf '%s' "$INPUT" | python3 -c "
+
+# Run sidecar ledger update and capture output to inject sidecar metrics
+SIDECAR_OUT=$(printf '%s' "$INPUT" | python3 -c "
 import json, os, sys
 
 raw_txt = sys.stdin.read()
@@ -128,4 +130,29 @@ ctx = {
     'prompt_preview': prompt[:500] if isinstance(prompt, str) else '',
 }
 print(json.dumps(ctx, ensure_ascii=False))
-" | python3 -m runtime_sidecar.hook_dispatcher UserPromptSubmit >/dev/null 2>> memory/sidecar-hooks.log || true
+" | python3 -m runtime_sidecar.hook_dispatcher UserPromptSubmit 2>> memory/sidecar-hooks.log || true)
+
+# Inject tool_events / trim_events into CLAUDE_ENV_FILE so CTRL can show real counts in DEV LOG
+if [ -n "$SIDECAR_OUT" ] && [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+  SIDECAR_INJECT=$(SIDECAR_JSON="$SIDECAR_OUT" python3 -c "
+import json, os
+try:
+    results = json.loads(os.environ['SIDECAR_JSON'])
+    if isinstance(results, list) and results:
+        r = results[0]
+        te = r.get('tool_events')
+        tr = r.get('trim_events')
+        l2 = r.get('layer2_summarize', '')
+        parts = []
+        if te is not None:
+            parts.append(f'[sidecar] tool_events={te} trim_events={tr}')
+        if l2:
+            parts.append(l2)
+        print('\n'.join(parts))
+except Exception:
+    pass
+" 2>/dev/null || true)
+  if [ -n "$SIDECAR_INJECT" ]; then
+    printf '%s\n' "$SIDECAR_INJECT" >> "$CLAUDE_ENV_FILE"
+  fi
+fi

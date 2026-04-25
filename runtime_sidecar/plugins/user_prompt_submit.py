@@ -124,9 +124,14 @@ def handle_event(context: Dict[str, Any]) -> Dict[str, Any]:
     if layer2_hint:
         logger.info("Layer 2 Summarize hint injected for session %s", session_id)
 
+    tool_events = readers.count_session_tool_events(session_id)
+    trim_events = readers.count_session_trim_events(session_id)
+
     return {
         "message": "UserPromptSubmit recorded.",
         "heartbeat": _load_heartbeat_message(),
         "layer2_summarize": layer2_hint,
         "session_id": session_id,
+        "tool_events": tool_events,
+        "trim_events": trim_events,
     }
