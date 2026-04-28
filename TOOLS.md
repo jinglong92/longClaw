@@ -33,7 +33,7 @@
 ### longclaw-checkup
 - 触发路由：ENGINEER
 - 依赖工具：本地文件读取、shell 命令执行
-- 工作路径：`~/longClaw/`（当前 workspace 根目录）
+- 工作路径：`/Users/jinglong/.openclaw/workspace`
 - 核心入口：`scripts/longclaw-doctor` / `scripts/longclaw-status`
 - 深挖文件：`.claude/settings.json` / `runtime_sidecar/**` / `memory/state.db` / `AGENTS.md` / `CTRL_PROTOCOLS.md`
 
@@ -97,7 +97,7 @@
 - Ollama：若已安装，`ollama serve` 启动，模型 `nomic-embed-text`
 
 ### 文件系统
-- workspace 根：`~/longClaw/`（即 `/Users/daijinglong/longClaw/` 或安装位置）
+- workspace 根：`/Users/jinglong/.openclaw/workspace`
 - memory 目录：`memory/`（相对 workspace 根）
 - session state：`memory/session-state.json`
 - skill 目录：`skills/`

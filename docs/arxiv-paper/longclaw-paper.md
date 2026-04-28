@@ -248,7 +248,7 @@ Six rules that cannot be overridden by any skill, user instruction, or session s
 3. No force-push to main/master (warn and stop even if requested)
 4. Deny > Ask > Allow precedence is fixed
 5. SOUL.md persona applies to all specialists (no skill can override)
-6. DEV LOG must be output every turn (cannot be suppressed)
+6. DEV LOG, when active or required, cannot be suppressed
 
 ### 5.4 Anti-Stall Constraint
 

@@ -76,6 +76,8 @@
 - 跨 session 统计由 heartbeat-agent 负责，不在此字段体现
 - `ctx=<current/200k>` 记录**当前上下文占用 / 200k 自动压缩阈值**；数值必须来自 runtime 或工具返回，禁止估算
 - `ctx` 单位优先使用 runtime 原生单位；若为 token budget，推荐写法如 `ctx=84k/200k`
+- 渲染 DEV LOG 前必须调用 `session_status()` 获取本轮 runtime ctx/cache；若 `session_status()` 不可用，才可使用 hook 注入的 `[ctx-preflight]`
+- 禁止沿用上一轮 ctx 值；没有本轮 runtime/tool/hook 来源时只能写 `ctx=unavailable/200k`
 - 若当前上下文占用暂不可读取，写 `ctx=unavailable/200k`
 - 本文件只定义 DEV LOG 的展示格式；真正的自动压缩执行逻辑仍以 `CTRL_PROTOCOLS.md` 为准
 
@@ -167,14 +169,16 @@
 
 ---
 
-## 强制输出规则（Immutable，来自 AGENTS.md）
+## 强制输出规则（来自 AGENTS.md）
 
-DEV LOG 每轮必须输出，以下情况下不得省略或缩减：
+DEV LOG 不是所有普通回复的默认尾巴；只有以下情况下必须输出，且不得省略或缩减：
 
 1. Skill 执行期间（每一轮）
 2. 复杂任务执行中（涉及多步/文件修改/工具调用）
 3. 用户质疑"是不是没执行"或"为什么没做"
 4. 发生阻塞、证据缺失、需要补救
+5. `dev_mode_effective = true`
+6. 用户明确要求显示 DEV LOG
 
 **禁止使用内置 session-state.json 序列化格式**：
 
