@@ -13,23 +13,7 @@ OpenClaw 运行时原生支持 Progressive Disclosure：会话启动时扫描 `s
 
 ### Skill Index（当前 15 个）
 
-```
-paper-deep-dive              | LEARN    | 论文深度解读
-jd-analysis                  | JOB      | 分析岗位 JD，匹配度评级
-longclaw-checkup             | ENGINEER | longClaw 运行时体检/诊断
-research-build               | ENGINEER | 需求→实现闭环
-research-execution-protocol  | ENGINEER | 复杂排障/修 bug
-fact-check-latest            | SEARCH   | 核查最新信息
-public-evidence-fetch        | SEARCH   | 公开网页证据摘录
-skill-safety-audit           | META     | 外部 skill 接入审计
-session-compression-flow     | META     | 会话压缩归档
-multi-agent-bootstrap        | META     | 多代理架构初始化
-paperbanana                  | LEARN    | 学术论文配图自动生成（需本地安装）
-deep-research                | SEARCH   | 并发多源深度调研（spawn SearchAgent×2-3）
-code-agent                   | ENGINEER | Coding Agent 完整工作流（spawn repo-explorer→执行→验证）
-memory-companion             | BRO/SIS  | 记忆增强陪伴（自动注入近期记忆，BRO/SIS路由时触发）
-proactive-heartbeat          | META     | 主动心跳巡检（cron触发+SessionStart呈现）
-```
+完整清单移至 `skills/INDEX.md`。本节只保留运行协议，避免索引与协议双份维护导致漂移。
 
 ### 依赖检查（命中前必须通过）
 
@@ -235,53 +219,26 @@ python3 tools/model_mode.py get
 
 ## DEV LOG 渲染前置校验
 
-在输出任何 DEV LOG 前，CTRL 必须先完成以下校验：
+DEV LOG 的字段模板、强制输出场景、`dev_mode_effective` 判定、激活回合规则，均以 `DEV_LOG.md` 为唯一权威来源。本文件只保留执行侧约束，避免双份规则漂移。
 
-1. `format_source = DEV_LOG.md`
+需要输出 DEV LOG 时，CTRL 仅做以下校验：
+
+1. `format_source = DEV_LOG.md`（未读取 `DEV_LOG.md` 不得渲染）
 2. `value_source = runtime/tools/session-state.json/tool returns/current turn context`
-3. 不得用 `session-state.json` 推导、替代、覆盖 `DEV_LOG.md` 的字段顺序、字段名称、展示格式
-4. 若本轮尚未读取 `DEV_LOG.md`，不得输出 DEV LOG
-5. 若候选输出命中 `session_id:`、`round:`、`dev_mode:` 这类内置裸字段块，而非 `DEV_LOG.md` 定义的模板字段，则视为格式错误，必须回退并重渲染
+3. 不得输出 `session_id:` / `round:` / `dev_mode:` 这类内置裸字段块，必须按 `DEV_LOG.md` 模板渲染
+4. `📂 Session.ctx` 必须来自本轮 `session_status()`；不可用时才使用 `[ctx-preflight]`；两者都不可用写 `ctx=unavailable/200k`
 
-### Dev Mode 激活回合绑定（强制）
-
-为避免与 `AGENTS.md` 的 session-state 写入时机冲突，DEV LOG 的展示判定必须使用：
-
-`dev_mode_effective = (session-state.json.dev_mode == true) OR (current_turn_activation_intent == true)`
-
-其中 `current_turn_activation_intent` 仅在本轮用户明确说出以下指令时成立：
-- `开启 dev mode`
-- `打开开发者模式`
-
-激活回合（用户本轮刚说开启 dev mode）必须按以下顺序执行，不得等下一轮：
-1. 立即将 `DEV_LOG.md` 视为唯一 `format_source`
-2. 本轮回复必须直接输出一个真实的 `[DEV LOG]` 块
-3. DEV LOG 字段值优先取 runtime / tool returns / current turn context；尚未持久化到 `session-state.json` 的字段按 `DEV_LOG.md` 规则写 `ephemeral` 或 `unavailable`
-4. CTRL 草拟完回复后、发给用户前，再写入 `memory/session-state.json.dev_mode = true`
-
-若第 1-4 步任一未满足，则不得口头确认"已开启 dev mode"；正确状态是 `blocked: dev_mode_activation_failed`
-
-### Dev Mode 展示硬规则（强制）
-
-若 `dev_mode_effective == true`，则本轮回复**必须**包含一个真实的 `[DEV LOG]` 块，不得省略，不得仅保留内部状态，不得因为“正文简洁”或“避免打扰”而跳过。
-
-补充约束：
-- `routing_visibility=devlog_only` 的含义是“路由与调试信息收纳进 DEV LOG”，**不是**“可以不显示 DEV LOG”。
-- 当 `dev_mode_effective=true` 时，`[DEV LOG]` 是回复协议的一部分，而不是可选附录。
-- 若本轮未能生成合格 DEV LOG，则整条回复视为未满足协议，必须先补齐 DEV LOG 再发送。
-- 只有用户明确说出“关闭 dev mode / 关闭开发者模式”后，才允许停止在回复中显示 DEV LOG。
-
-快速检查口令：
-
-- 模板从哪里来？→ `DEV_LOG.md`
-- 值从哪里来？→ runtime / tools / session-state
-- 开启 dev mode 的当轮能不能等下轮再套模板？→ 不能
-- 当前输出像不像 `DEV_LOG.md` 示例？→ 若否，禁止发送
-- `dev_mode_effective=true` 时能不能不显示 DEV LOG？→ 不能
+若以上任一失败，先回退并重渲染，再发送回复。
 
 ## Session 状态管理
 
 session_id 命名：`openclaw_{domain}_{YYYY-MM-DD}`（如 `openclaw_job_2026-04-14`）
+
+`memory/session-state.json` 最小字段：
+
+`session_id`, `round`, `dev_mode`, `routing_visibility`, `active_domain`, `current_topic`, `model_mode`, `last_retrieval_scope`, `last_retrieval_query_variants`, `pending_confirmation`, `read_only_web_authorized`, `authorized_scopes`, `compression_count`, `last_compression_at`, `updated_at`
+
+写入时机：CTRL 草拟回复后、输出给用户前更新；不要在生成回复前读写导致循环依赖。
 
 三层状态：
 - Layer 1（短期）：recent_turns，工具事件数 > 30 或 trim_event > 10 时触发 Layer 2（仅 persistent session）
