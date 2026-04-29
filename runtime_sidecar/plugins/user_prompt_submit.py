@@ -73,6 +73,28 @@ def _load_session_type(session_id: str) -> str:
         return "persistent"
 
 
+def _load_model_hint() -> str:
+    """Return a model status hint if fallback is active, else ''."""
+    config_path = os.path.join(os.getcwd(), "memory", "model-config.json")
+    if not os.path.exists(config_path):
+        return ""
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            cfg = json.load(f)
+        if cfg.get("fallback_active"):
+            model = cfg.get("current_model", "unknown")
+            reason = cfg.get("fallback_reason", "unknown")
+            failures = cfg.get("consecutive_failures", 0)
+            return (
+                f"[model] 当前使用兜底模型 {model}（原因：{reason}，"
+                f"主模型连续失败 {failures} 次）。"
+                "如需切回主模型：python3 tools/model_config.py use primary"
+            )
+    except Exception as exc:
+        logger.warning("Failed to read model-config.json: %s", exc)
+    return ""
+
+
 def _build_layer2_hint(session_id: str) -> str:
     """Return a Layer 2 Summarize hint string if conditions are met, else ''.
 
@@ -127,10 +149,13 @@ def handle_event(context: Dict[str, Any]) -> Dict[str, Any]:
     tool_events = readers.count_session_tool_events(session_id)
     trim_events = readers.count_session_trim_events(session_id)
 
+    model_hint = _load_model_hint()
+
     return {
         "message": "UserPromptSubmit recorded.",
         "heartbeat": _load_heartbeat_message(),
         "layer2_summarize": layer2_hint,
+        "model_status": model_hint,
         "session_id": session_id,
         "tool_events": tool_events,
         "trim_events": trim_events,
