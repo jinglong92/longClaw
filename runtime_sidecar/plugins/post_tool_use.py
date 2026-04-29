@@ -1,16 +1,22 @@
 """
-Plugin for handling the PostToolUse hook.
+Plugin for handling the PostToolUse hook — Layer 1 Trim.
 
-Two responsibilities:
-1. Layer 1 Trim: record trim_event when output > 500 chars.
-2. Model failure detection: scan output for API error signals and call
-   model_config.py mark-failure / mark-success accordingly.
+When a tool result exceeds TRIM_THRESHOLD characters, this plugin records a
+structured trim_event note in the ledger.  The actual truncation in the
+conversation is performed by the hook bridge script (which can inject
+hookSpecificOutput); this plugin's job is to make the event observable and
+persistent in the sidecar ledger.
+
+Layer 1 Trim contract (from CTRL_PROTOCOLS.md):
+- Trigger: any tool output > 500 characters, applied immediately this turn
+- Action: keep first 500 chars, append truncation footnote
+- Silent: does NOT increment compression_count, does NOT touch session-state.json
+
+Model failover is handled natively by OpenClaw via the `fallbacks` field in
+openclaw.json — no need to detect failures here.
 """
 
-import subprocess
-import sys
-import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from ..hook_events import HookEventType
 from ..logging.logger import get_logger
@@ -79,67 +85,9 @@ def handle_event(context: Dict[str, Any]) -> Dict[str, Any]:
             session_id,
         )
 
-    # ── Model failure detection ───────────────────────────────────────────────
-    failure_signal = _detect_failure(output)
-    model_action: Optional[str] = None
-
-    if failure_signal:
-        writers.insert_note(
-            conn,
-            session_id=session_id,
-            kind="model_failure",
-            content=f"tool={tool_name} signal={failure_signal!r} turn={turn_id}",
-        )
-        model_action = _run_model_config("mark-failure", f"--reason", failure_signal)
-        logger.info(
-            "Model failure detected: tool=%s signal=%r session=%s action=%s",
-            tool_name, failure_signal, session_id, model_action,
-        )
-    elif output and not trimmed:
-        # Non-empty, non-truncated output with no error signal → success hint
-        # Only call mark-success for the tool most likely to surface API errors
-        if tool_name in ("WebFetch", "WebSearch", "Bash"):
-            _run_model_config("mark-success")
-
     return {
         "trimmed": trimmed,
         "output_length": output_length,
         "trim_threshold": TRIM_THRESHOLD,
         "session_id": session_id,
-        "model_failure_detected": bool(failure_signal),
-        "model_action": model_action,
     }
-
-
-def _detect_failure(output: str) -> Optional[str]:
-    """Import and use model_config.detect_failure_in_output without subprocess."""
-    if not output:
-        return None
-    try:
-        repo_root = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "..")
-        )
-        if repo_root not in sys.path:
-            sys.path.insert(0, repo_root)
-        from tools.model_config import detect_failure_in_output  # type: ignore
-        return detect_failure_in_output(output)
-    except Exception as exc:
-        logger.debug("model_config import failed: %s", exc)
-        return None
-
-
-def _run_model_config(*args: str) -> Optional[str]:
-    """Fire model_config.py as a subprocess (fire-and-forget)."""
-    try:
-        repo_root = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "..")
-        )
-        script = os.path.join(repo_root, "tools", "model_config.py")
-        result = subprocess.run(
-            [sys.executable, script, *args],
-            capture_output=True, text=True, timeout=5,
-        )
-        return result.stdout.strip() or None
-    except Exception as exc:
-        logger.debug("model_config call failed: %s", exc)
-        return None
