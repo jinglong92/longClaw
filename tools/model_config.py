@@ -29,10 +29,10 @@ ROOT = Path(__file__).resolve().parent.parent
 CONFIG_PATH = ROOT / "memory" / "model-config.json"
 
 DEFAULTS: dict[str, Any] = {
-    "primary_model": "openai/gpt-4o",
-    "fallback_model": "deepseek/deepseek-chat",
+    "primary_model": "openai-codex/gpt-5.4",
+    "fallback_model": "DS-V4-Pro",
     "fallback_enabled": True,
-    "current_model": "openai/gpt-4o",
+    "current_model": "openai-codex/gpt-5.4",
     "fallback_active": False,
     "fallback_reason": None,
     "consecutive_failures": 0,
