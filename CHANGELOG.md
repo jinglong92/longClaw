@@ -9,7 +9,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added — recap 层引入（Session Recap as Lossy State Cache）
 
-**设计决策**：recap 定位为会话压缩与 agent handoff 的中间状态，不是日志层、审计层或 memory 本体。四层结构严格分离：
+**借鉴来源：Claude Code Tool Result Budgeting + Summarizer Subagent**
+
+Claude Code 在上下文管理上有两个值得借鉴的设计：
+
+1. **Tool Result Budgeting**：工具输出不直接塞满上下文，而是按预算截断，同时保留原始结果的可追溯路径。longClaw 的 L1 Trim 已借鉴这一思路（> 500 字符截断 + 尾注）。
+
+2. **Summarizer Subagent**：Claude Code 在 context 接近上限时，用专用 summarizer 压缩中间历史，压缩产物作为后续轮次的上下文种子，而不是简单丢弃。关键点在于：**压缩产物（摘要）和原始事件日志是分开存的，摘要永远不覆盖事件日志**。
+
+longClaw 之前的 L2 Summarize 只做了"替换中间历史"这一步，缺少结构化压缩产物的持久化和层级约束——recap 层正是补上这块。
+
+**为什么要借鉴（问题来源）**：
+
+longClaw 是 workspace 型 agent runtime，不是普通聊天 bot。每个 session 会持续读写 DEV_LOG、MEMORY.md、session-state、heartbeat-state、多 agent 状态等，上下文积累速度远快于普通对话。没有结构化压缩产物的后果是：
+
+- L3 原生 compaction 后 CTRL "失忆"，不知道之前做了什么、失败过什么
+- 多 agent handoff 时只能传完整历史，token 消耗高且容易注入噪声
+- 调试问题（如 `tool_events=0`）时摘要和事件混在一起，无法区分"摘要说工具正常"和"工具真的正常"
+
+**借鉴后的好处**：
+
+- **压缩连续性**：L3 Compact 触发前有 recap 作为种子，不从零重建，减少"失忆重来"
+- **handoff 轻量化**：agent 间只传结构化 recap（objective / confirmed_facts / next_steps），不传完整对话历史
+- **可审计性**：raw_events 表独立存储，recap 的 `authoritative=false` 硬约束确保调试时不被摘要误导
+- **失败路径保留**：`failed_attempts` 字段强制记录已踩过的坑，防止多轮迭代中反复走死路
+
+**设计决策**：recap 由 CTRL / Layer 2 Summarize 生成，不引入独立 recap-agent（MVP 阶段）。定位严格限定为压缩中间状态，不是日志层、审计层或 memory 本体。四层结构严格分离：
 
 ```
 raw_events（事实源）→ session-state（当前状态）→ recap（模型压缩上下文）→ MEMORY.md（长期记忆）
