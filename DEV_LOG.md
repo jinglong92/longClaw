@@ -1,205 +1,101 @@
 # DEV_LOG.md — DEV LOG 格式规范
 
-> 本文件管：**DEV LOG 的字段、格式、示例、强制规则**。
-> 它是展示协议，不是执行证据。
-> 全局安全约束 → `AGENTS.md` | 专职定义 → `MULTI_AGENTS.md` | CTRL 协议 → `CTRL_PROTOCOLS.md`
+> 展示协议，不是执行证据。安全约束 → `AGENTS.md` | 专职 → `MULTI_AGENTS.md` | CTRL → `CTRL_PROTOCOLS.md`
 
----
+## 全局规则
 
-## 字段顺序（9 个）
+- **数据来源**：所有字段值必须来自本轮 `session_status()` / runtime / tool returns / hook 注入；禁止沿用上一轮缓存或编造。
+- **不可读时**：整行写 `unavailable`（或字段内 `unavailable` / `none` / `ephemeral`，按下方规范），但**不得省略强制项**。
+- **渲染前**：必须调用 `session_status()` 取本轮 ctx / tokens / cache / compactions / queue / runtime / think / fallbacks / auth；ctx 不可用才回退 `[ctx-preflight]` hook。
+- **禁止内置裸格式**：不得输出 `session_id:` / `round:` / `dev_mode:` 这类 JSON 风格裸字段块，必须按下方模板渲染。
+
+## 字段模板（11 个，按此顺序）
 
 ```
 [DEV LOG]
-🔀 路由     <routing decision>
-🤖 模型     <actual model/mode used>
-🧩 Skill    <skill match result>
-🛠️ 工具     <tool call results — PostToolUse>
-🧠 Memory   <domain injected + token savings>
-📂 Session  <round + compression state>
-🔍 检索     <retrieval scope + recall>
-🤝 A2A      <cross-agent communication>
-🏷️ 实体     <new/updated entities>
+🔀 路由     <ROLE> | 触发: "<keyword>" | 模式: <normal debug|blocked/fix-now> / <单专职|双并行>
+🤖 模型     <provider/model|none> | auth=<oauth|apikey|local|unavailable> | fallbacks=<list|none> | effort=<low|medium|high|adaptive>
+🧮 Tokens   in=<N> | out=<N> | cache=<X%> hit | cached=<N> | new=<N>
+⚙️ Execution mode=<direct|proxy|sandboxed> | runtime=<name> | think=<low|medium|high|adaptive> | elevated=<yes|no>
+🧩 Skill    命中: <name> | trigger=<reason> | loaded=yes | step=<N/total|completed>   # 或: 命中: none | 原因: <why>
+🛠️ 工具     <tool>(<target>) → <summary> | status=<ok|failed|blocked>                # 多次调用各占一行；无调用写 "无"
+🧠 Memory   <domains> | ~<N> tokens | 节省 <X>%                                       # 未加载 MEMORY.md 写 "(SYSTEM) only"
+📂 Session  第 <N> 轮 | ctx=<cur>/200k (<P%>) | compactions=<n> | queue=<state>(depth <n>) | tool_events=<n> | trim_events=<n> | <未触发压缩|Layer 2 已触发>
+🔍 检索     scope=<DOMAIN> | level=<同域近期|同域归档|跨域> | 召回 <N> 条 | top=[<scores>]   # 未触发: scope=context | level=L1 | 无需工具
+🤝 A2A      <FROM> → <TO> <task> | confidence=<X.XX> | needs_ctrl=<true|false>        # 仅跨代理通信时输出
+🏷️ 实体     检测到新实体: <entity>=<value>（<date>）→ 已更新 [<DOMAIN>]                # 仅有新实体时输出
 ```
 
----
+## 字段补充约定
 
-## 字段规范
-
-### 🔀 路由
-```
-🔀 路由 <ROLE> | 触发: "<keyword>" | 模式: <normal debug|blocked/fix-now> / <单专职|双并行>
-```
-
-### 🤖 模型
-```
-🤖 模型 <provider/model|alias|none> | effort=<low|adaptive|high|unavailable>
-```
-- 写本轮实际用于产出内容的模型，以及当前会话的 effort / Think 档位
-- 默认保持简短，不再展开 `session/mode/actual` 这类冗余字段
-- 若本轮没有需要单独说明的模型切换或排障价值，可省略该字段
-- 若本轮未实际调用需要区分的模型，写 `none`
-- `effort` 优先取 `session_status` 的 Think 档位；无法核实时写 `unavailable`
-- 若无法核实模型，写 `unavailable`
-
-### 🧩 Skill
-```
-🧩 Skill 命中: <name> | trigger=<reason> | loaded=yes | step=<N/total|completed>
-🧩 Skill 命中: none | 原因: <why>
-```
-- 执行期间每步更新 step 字段
-- 执行完写 `completed | output=<摘要>`
-
-### 🛠️ 工具（PostToolUse 注入）
-```
-🛠️ 工具 <tool>(<target>) → <result_summary> | status=<ok|failed|blocked>
-```
-- 多次工具调用各占一行
-- `status=failed`：附失败原因
-- `status=blocked`：附原因（missing_tool / deny_rule / need_auth）
-- 无工具调用：`🛠️ 工具 无`
-
-### 🧠 Memory
-```
-🧠 Memory <domains> | ~<N> tokens | 节省 <X>%
-```
-- 若 MEMORY.md 未加载（SEARCH 域等），写 `🧠 Memory (SYSTEM) only`
-- 若 token 数未知，写 `~ephemeral`（不写 unavailable）
-
-### 📂 Session
-```
-📂 Session 第 <N> 轮 | tool_events=<n> | trim_events=<n> | <未触发压缩|Layer 2 已触发>
-```
-- `第 <N> 轮` 指本次 session 内的轮次（ephemeral，不跨 session 累积）
-- `tool_events` / `trim_events` 由 UserPromptSubmit hook 注入到 context（`[sidecar] tool_events=N trim_events=N`），直接读取即可
-- 若 hook 当轮未触发或注入缺失，写 `tool_events=0 | trim_events=0 | source=hook-offline`（不要写 `ephemeral`）
-- 若 session-state.json 不存在或未写入，写 `ephemeral session`（不写 unavailable）
-- 跨 session 统计由 heartbeat-agent 负责，不在此字段体现
-- `ctx=<current/200k>` 记录**当前上下文占用 / 200k 自动压缩阈值**；数值必须来自 runtime 或工具返回，禁止估算
-- `ctx` 单位优先使用 runtime 原生单位；若为 token budget，推荐写法如 `ctx=84k/200k`
-- 渲染 DEV LOG 前必须调用 `session_status()` 获取本轮 runtime ctx/cache；若 `session_status()` 不可用，才可使用 hook 注入的 `[ctx-preflight]`
-- 禁止沿用上一轮 ctx 值；没有本轮 runtime/tool/hook 来源时只能写 `ctx=unavailable/200k`
-- 若当前上下文占用暂不可读取，写 `ctx=unavailable/200k`
-- 本文件只定义 DEV LOG 的展示格式；真正的自动压缩执行逻辑仍以 `CTRL_PROTOCOLS.md` 为准
-- 若本轮生成了 recap，可在 Session 字段末尾附加 `recap=memory/recap.json`，但 tool_events 仍以 `raw_events` 表为准，recap 不可作为工具调用的审计证据
-- `source=hook-offline` 时，recap 内任何 tool 相关字段均视为不可信，不得引用
-
-### 🔍 检索
-```
-🔍 检索 scope=<DOMAIN> | level=<同域近期|同域归档|跨域> | 召回 <N> 条 | top=[<scores>]
-```
-- 若未触发检索工具（Level 1 context 已足够），写 `🔍 检索 scope=context | level=L1 | 无需工具`
-- 若分数未知，写 `top=ephemeral`（不写 unavailable）
-
-### 🤝 A2A
-```
-🤝 A2A <FROM> → <TO> <task> | confidence=<X.XX> | needs_ctrl=<true|false>
-```
-- 仅在发生跨代理通信时输出
-
-### 🏷️ 实体
-```
-🏷️ 实体 检测到新实体: <entity>=<value>（<date>）→ 已更新 [<DOMAIN>]
-```
-- 仅在检测到新实体或实体更新时输出
-
----
+- **🤖 模型**：`auth` 取 banner 🔑（如 `oauth (openai-codex:default)`）；`fallbacks` 取 🔄；`effort` 取 Think 档位。本轮无模型差异写 `none`。
+- **🧮 Tokens**：单位与 banner 一致（`7.2k` / `570` / `13k`），不二次换算。session_status 不可用时整行写 `🧮 Tokens unavailable`。极短首轮可写 `in=0 | out=ephemeral`。
+- **⚙️ Execution**：`runtime` 保留完整名称含空格；`elevated=yes` 当且仅当 banner 出现 `elevated` 字样。
+- **🧩 Skill**：执行期每步刷新 step；完成写 `step=completed | output=<摘要>`。
+- **📂 Session**：
+  - `第 N 轮` 为本 session 内轮次（不跨 session 累积）。
+  - `tool_events` / `trim_events` 取自 UserPromptSubmit hook 的 `[sidecar]` 注入；hook 缺失写 `tool_events=0 | trim_events=0 | source=hook-offline`。
+  - session-state.json 不存在写 `ephemeral session`。
+  - 可附 `recap=memory/recap.json`；但 `source=hook-offline` 时 recap 内 tool 字段不可信。
+- **🔍 检索**：分数未知写 `top=ephemeral`。
 
 ## 输出分档
 
-| 档位 | 使用场景 |
-|------|---------|
-| `normal debug` | 普通执行、检索、审查、改写、读回、非阻塞推进 |
-| `blocked/fix-now` | 卡住、证据缺失、用户质疑"是不是没执行"、需要立即补救 |
+| 档位 | 场景 |
+|------|------|
+| `normal debug` | 普通执行、检索、改写、读回、非阻塞推进 |
+| `blocked/fix-now` | 卡住、证据缺失、用户质疑"是不是没执行"、需立即补救 |
 
-## Dev Mode 不可省略规则
-
-当 `dev_mode_effective = true` 时：
-
-- 每条用户可见回复都必须包含一个真实的 `[DEV LOG]`
-- 不允许因为“简洁输出”“正文隐藏 routing”“减少打扰”而省略
-- `routing_visibility=devlog_only` 只表示把路由放进 DEV LOG，不表示可以不展示 DEV LOG
-- 只有用户明确要求关闭 dev mode 后，才允许停止输出 `[DEV LOG]`
-
-其中：
-- `dev_mode_effective = (memory/session-state.json.dev_mode == true) OR (本轮用户明确说出 "开启 dev mode" / "打开开发者模式")`
-- 这条规则是为了兼容 `AGENTS.md` 里“session-state 在回复草拟后、发送前写入”的时序；**开启 dev mode 的当轮就必须切到本模板，不得等下一轮**
-- 激活回合若某些 session 字段尚未持久化，按本文件字段规范写 `ephemeral` 或 `unavailable`
-- 不得单独回复“已开启 dev mode”却不附带 `[DEV LOG]`
-
----
-
-## 示例 A：normal debug
-
-```
-[DEV LOG]
-🔀 路由 ENGINEER | 触发: "改配置" | 模式: normal debug / 单专职
-🤖 模型 openai/gpt-5.4 | effort=adaptive
-🧩 Skill 命中: longclaw-checkup | trigger=体检 workspace 运行状态 | loaded=yes | step=completed
-🛠️ 工具 Edit(AGENTS.md) → 插入 Immutable Rules 节，+18行 | status=ok
-        Bash(git commit) → hash=f951b9a | status=ok
-🧠 Memory (SYSTEM)+[ENGINEER] | ~210 tokens | 节省 72%
-📂 Session 第 15 轮 | tool_events=12 | trim_events=2 | 未触发压缩
-🔍 检索 scope=ENGINEER | level=同域近期 | 召回 2 条 | top=[0.91, 0.78]
-🏷️ 实体 检测到新实体: AGENTS_version=v2（2026-04-14）→ 已更新 [ENGINEER]
-```
-
-## 示例 B：blocked/fix-now
-
-```
-[DEV LOG]
-🔀 路由 SEARCH | 触发: "查最新论文" | 模式: blocked/fix-now / 单专职
-🤖 模型 none | effort=adaptive
-🧩 Skill 命中: public-evidence-fetch | trigger=公开网页证据抓取 | loaded=yes | step=2/4
-🛠️ 工具 WebFetch(arxiv.org) → 403 Forbidden | status=blocked(missing_tool)
-🧠 Memory (SYSTEM) | ~80 tokens
-📂 Session 第 20 轮 | tool_events=35 | trim_events=12 | Layer 2 已触发
-🔍 检索 scope=LEARN | level=同域近期 | 召回 0 条
-```
-
----
-
-## 最低合格线
-
-- **强制项**（不得省略）：`🔀 路由`、`🧩 Skill`、`🛠️ 工具`、`📂 Session`
-- `🤖 模型` 为可选项：仅在用户追问模型、模型切换、fallback 命中、或模型信息对排障有直接价值时输出；若输出，只写“本轮用了啥模型 + 当前 effort”
-- `⚖️ 置信度` 为可选项：仅在存在证据冲突、不确定性较高、用户质疑结论、或需要显式标注判断依据时输出
-- 至少输出 9 个字段中的 4 个
-- 有文件改动或校验时，`🔍 检索` 不得省略
-- `🤝 A2A` 仅在发生跨代理通信时输出
-- `🏷️ 实体` 仅在检测到新实体或实体更新时输出
-- 无工具调用时必须写 `🛠️ 工具 无`
-
----
-
-## 强制输出规则（来自 AGENTS.md）
-
-DEV LOG 不是所有普通回复的默认尾巴；只有以下情况下必须输出，且不得省略或缩减：
+## 强制输出场景（满足任一即必须输出，不得省略或缩减）
 
 1. Skill 执行期间（每一轮）
-2. 复杂任务执行中（涉及多步/文件修改/工具调用）
+2. 复杂任务（多步 / 文件修改 / 工具调用）
 3. 用户质疑"是不是没执行"或"为什么没做"
 4. 发生阻塞、证据缺失、需要补救
 5. `dev_mode_effective = true`
 6. 用户明确要求显示 DEV LOG
 
-**禁止使用内置 session-state.json 序列化格式**：
+`dev_mode_effective = (session-state.json.dev_mode == true) OR (本轮明确说"开启 dev mode" / "打开开发者模式")`。
+开启的当轮就必须切到本模板，不得等下一轮；尚未持久化的字段按"全局规则"写 `ephemeral` / `unavailable`。
 
-无论何种触发场景（包括 dev mode 开启、/new 新会话第一轮、系统事件触发），DEV LOG **必须**使用本文件定义的 9 字段模板，不得输出如下内置格式：
+## 最低合格线
+
+- **强制项**（不可省略）：`🔀 路由` `🤖 模型` `🧮 Tokens` `⚙️ Execution` `🧩 Skill` `🛠️ 工具` `📂 Session`
+- 至少输出 11 个字段中的 7 个
+- 有文件改动或校验时，`🔍 检索` 不得省略
+- 无工具调用必须写 `🛠️ 工具 无`
+- `🤝 A2A` / `🏷️ 实体` 仅按各自触发条件输出
+- `⚖️ 置信度` 可选：证据冲突、不确定性高、用户质疑结论时才加
+
+## 禁止
+
+- 以"输出太长" / "Skill 已执行完" / "简洁输出"为由省略
+- 只输出 🔀 路由 一行跳过其他字段
+- 写入计划、意图、猜测（必须 runtime-produced / tool-returned）
+- 字段无真实来源时编造数据（应写 `unavailable`）
+- 输出内置 JSON 裸块（`session_id:` / `round:` / `dev_mode:` 等）
+
+## 示例：normal debug
 
 ```
-# ❌ 禁止输出这种格式
-routing: User -> CTRL -> ...
-session_id: openclaw_meta_...
-round: 46
-dev_mode: true
-...
+[DEV LOG]
+🔀 路由 ENGINEER | 触发: "改配置" | 模式: normal debug / 单专职
+🤖 模型 openai-codex/gpt-5.4 | auth=oauth (openai-codex:default) | fallbacks=deepseek/deepseek-v4-flash | effort=medium
+🧮 Tokens in=7.2k | out=570 | cache=65% hit | cached=13k | new=0
+⚙️ Execution mode=direct | runtime=OpenClaw Pi Default | think=medium | elevated=yes
+🧩 Skill 命中: longclaw-checkup | trigger=体检 workspace | loaded=yes | step=completed
+🛠️ 工具 Edit(AGENTS.md) → 插入 Immutable Rules，+18行 | status=ok
+        Bash(git commit) → hash=f951b9a | status=ok
+🧠 Memory (SYSTEM)+[ENGINEER] | ~210 tokens | 节省 72%
+📂 Session 第 15 轮 | ctx=21k/200k (10%) | compactions=0 | queue=collect(depth 0) | tool_events=12 | trim_events=2 | 未触发压缩
+🔍 检索 scope=ENGINEER | level=同域近期 | 召回 2 条 | top=[0.91, 0.78]
+🏷️ 实体 检测到新实体: AGENTS_version=v2（2026-04-14）→ 已更新 [ENGINEER]
 ```
 
-正确做法是读取 DEV_LOG.md 中的字段规范和示例，按模板输出。
+## 示例：blocked/fix-now（仅展示差异行）
 
-**禁止**：
-- 以"输出太长"为由省略
-- 以"Skill 已执行完"为由省略
-- 只输出 Routing 行跳过其他字段
-- 把计划、意图、猜测写入字段（必须是 runtime-produced 或 tool-returned 值）
-- 字段无真实来源时，写 `unavailable`，不得编造
+```
+🔀 路由 SEARCH | 触发: "查最新论文" | 模式: blocked/fix-now / 单专职
+🛠️ 工具 WebFetch(arxiv.org) → 403 Forbidden | status=blocked(missing_tool)
+📂 Session 第 20 轮 | ctx=84k/200k (42%) | compactions=2 | queue=collect(depth 0) | tool_events=35 | trim_events=12 | Layer 2 已触发
+```

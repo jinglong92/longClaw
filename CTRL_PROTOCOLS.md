@@ -304,7 +304,10 @@ DEV LOG 的字段模板、强制输出场景、`dev_mode_effective` 判定、激
 1. `format_source = DEV_LOG.md`（未读取 `DEV_LOG.md` 不得渲染）
 2. `value_source = runtime/tools/session-state.json/tool returns/current turn context`
 3. 不得输出 `session_id:` / `round:` / `dev_mode:` 这类内置裸字段块，必须按 `DEV_LOG.md` 模板渲染
-4. `📂 Session.ctx` 必须来自本轮 `session_status()`；不可用时才使用 `[ctx-preflight]`；两者都不可用写 `ctx=unavailable/200k`
+4. `📂 Session.ctx` / `compactions` / `queue` 必须来自本轮 `session_status()`；ctx 不可用时才回退到 `[ctx-preflight]` hook；其余字段不可用时一律写对应 `unavailable`，禁止沿用上一轮值
+5. `🤖 模型.auth` / `🤖 模型.fallbacks` / `🤖 模型.effort` 必须取自本轮 `session_status()` banner（🔑 / 🔄 / Think 字段）；不可读各自写 `unavailable` / `none` / `unavailable`
+6. `🧮 Tokens` 必须取自本轮 `session_status()` 的 🧮 Tokens / 🗄️ Cache 字段；session_status 不可用时整行写 `🧮 Tokens unavailable`，禁止估算
+7. `⚙️ Execution.mode` / `runtime` / `think` / `elevated` 必须取自本轮 banner；不可读整行写 `⚙️ Execution unavailable`
 
 若以上任一失败，先回退并重渲染，再发送回复。
 
