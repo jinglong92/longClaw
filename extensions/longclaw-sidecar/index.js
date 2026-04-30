@@ -1,11 +1,12 @@
-import { t as definePluginEntry } from "../../plugin-entry-DyZc6JGI.js";
+import { t as definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
 import { execFile } from "node:child_process";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-// Resolve longClaw root: extensions/longclaw-sidecar/ -> ../../
+// Plugin is installed at ~/.openclaw/extensions/longclaw-sidecar/
+// longClaw workspace is at ~/.openclaw/workspace/
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const LONGCLAW_ROOT = resolve(__dirname, "../..");
+const LONGCLAW_ROOT = resolve(__dirname, "../../workspace");
 const DISPATCHER = resolve(LONGCLAW_ROOT, "scripts/hooks/hook_dispatcher_post_tool_use.sh");
 
 function dispatchToSidecar(event, ctx) {
