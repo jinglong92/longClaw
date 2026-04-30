@@ -5,6 +5,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.8.3] — 2026-04-30
+
+### Fixed — tool_events 追踪链路双修
+
+- **`runtime_sidecar/plugins/post_tool_use.py`**：`handle_event()` 补充 `writers.insert_tool_event()` 调用
+  - 根因：plugin 只写 `trim_event` note，从未写入 `tool_events` 表，导致 `count_session_tool_events()` 恒返回 0，DEV LOG `tool_events` 恒为 0
+  - 修复：每次 PostToolUse 触发均向 `tool_events` 表写入一条记录（`tool_name` / `session_id` / `turn_id`）
+
+- **`extensions/longclaw-sidecar/`**（新增 OpenClaw plugin）：
+  - 根因：2026-04-25 宿主从 Claude Code 切换至 OpenClaw 后，`.claude/settings.json` 的 hook 配置不再生效，PostToolUse hook 完全断链（`sidecar-hooks.log` 最后一条 PostToolUse 停在 04-25 09:07）
+  - OpenClaw 的工具生命周期事件只能通过 plugin SDK（`api.on("after_tool_call")`）注册，不接受外部 shell 命令 hook
+  - 新增 `extensions/longclaw-sidecar/` plugin，监听 `after_tool_call` 事件，pipe payload 到 `hook_dispatcher_post_tool_use.sh`，恢复完整链路：`after_tool_call` → shell dispatcher → python sidecar → `tool_events` 表
+
+---
+
 ## [v0.8.2] — 2026-04-25
 
 ### Changed
