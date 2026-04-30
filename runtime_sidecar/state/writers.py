@@ -108,6 +108,66 @@ def insert_note(
         logger.error("Failed to insert note: %s", exc)
 
 
+def insert_raw_event(
+    conn: sqlite3.Connection,
+    session_id: str,
+    turn_id: Optional[int],
+    tool_name: Optional[str],
+    args_json: Optional[str],
+    result_snippet: Optional[str],
+    duration_ms: Optional[int] = None,
+    error: Optional[str] = None,
+) -> None:
+    """Append one raw tool event. This table is the authoritative event source."""
+    sql = """
+    INSERT INTO raw_events
+        (session_id, turn_id, tool_name, args_json, result_snippet, duration_ms, error)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    """
+    try:
+        conn.execute(sql, (session_id, turn_id, tool_name, args_json, result_snippet, duration_ms, error))
+        conn.commit()
+    except Exception as exc:
+        logger.error("Failed to insert raw_event for %s: %s", session_id, exc)
+
+
+def insert_session_recap(
+    conn: sqlite3.Connection,
+    session_id: str,
+    trigger: str,
+    objective: Optional[str] = None,
+    source_turn_start: Optional[int] = None,
+    source_turn_end: Optional[int] = None,
+    confirmed_facts_json: Optional[str] = None,
+    actions_taken_json: Optional[str] = None,
+    files_touched_json: Optional[str] = None,
+    open_issues_json: Optional[str] = None,
+    next_steps_json: Optional[str] = None,
+    uncertainty_json: Optional[str] = None,
+    failed_attempts_json: Optional[str] = None,
+) -> int:
+    """Insert a structured session recap. authoritative is always 0."""
+    sql = """
+    INSERT INTO session_recaps
+        (session_id, trigger, objective, source_turn_start, source_turn_end,
+         confirmed_facts_json, actions_taken_json, files_touched_json,
+         open_issues_json, next_steps_json, uncertainty_json, failed_attempts_json,
+         authoritative)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+    """
+    try:
+        cur = conn.execute(sql, (
+            session_id, trigger, objective, source_turn_start, source_turn_end,
+            confirmed_facts_json, actions_taken_json, files_touched_json,
+            open_issues_json, next_steps_json, uncertainty_json, failed_attempts_json,
+        ))
+        conn.commit()
+        return cur.lastrowid or 0
+    except Exception as exc:
+        logger.error("Failed to insert session_recap for %s: %s", session_id, exc)
+        return 0
+
+
 def insert_compact_event(
     conn: sqlite3.Connection,
     session_id: str,

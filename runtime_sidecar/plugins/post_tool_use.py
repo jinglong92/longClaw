@@ -66,6 +66,8 @@ def handle_event(context: Dict[str, Any]) -> Dict[str, Any]:
     turn_id = context.get("turn_id")
 
     trimmed = output_length > TRIM_THRESHOLD
+    error = context.get("error")
+    duration_ms = context.get("duration_ms")
 
     writers.insert_tool_event(
         conn,
@@ -74,8 +76,20 @@ def handle_event(context: Dict[str, Any]) -> Dict[str, Any]:
         tool_name=tool_name,
         args_json=None,
         result_ref=None,
-        ok=1,
-        latency_ms=None,
+        ok=0 if error else 1,
+        latency_ms=duration_ms,
+    )
+
+    # raw_events is the authoritative fact source; recap must never replace it
+    writers.insert_raw_event(
+        conn,
+        session_id=session_id,
+        turn_id=turn_id,
+        tool_name=tool_name,
+        args_json=None,
+        result_snippet=output[:500] if output else None,
+        duration_ms=duration_ms,
+        error=error,
     )
 
     if trimmed:

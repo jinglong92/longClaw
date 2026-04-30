@@ -170,6 +170,84 @@ DEV LOG 显示：检索级别 / query 变体 / 召回数 / 是否触发跨域 / 
 
 ---
 
+## Session Recap（结构化会话压缩层）
+
+> recap = 会话压缩与 agent handoff 的中间状态，不是日志层、审计层或 memory 本体。
+
+### 四层结构（层级职责严格不可互换）
+
+```
+raw_events 表 / raw-events.jsonl  →  工具调用事实源（不可篡改）
+session-state.json                →  当前 session 结构化状态
+memory/recap.json                 →  模型压缩上下文（lossy，给模型看）
+MEMORY.md                         →  长期稳定记忆（跨 session）
+```
+
+**DEV_LOG.md** 是人类研发日志，可引用 recap，但不被 recap 替代。
+
+### 硬约束（不可违反）
+
+1. `authoritative` 字段**永远为 `false`**：recap 不是事实源，不得用于审计
+2. **工具调用验证必须查 `raw_events` 表**，不得以 recap 内容代替（如 `tool_events=0` 问题必须看原始 hook log）
+3. **recap 不得直接写入 `MEMORY.md`**：路径为 `recap → memory candidate → 人工/CTRL 确认 → MEMORY.md`
+4. 假设不得写成已确认事实，必须放入 `uncertainty` 字段
+5. 失败路径必须写入 `failed_attempts`，不得只保留成功路径
+
+### 触发时机（满足任一）
+
+- Layer 2 Summarize 触发时（自动，同步生成）
+- 原生 compaction 触发前（pre_compaction）
+- agent handoff 前（handoff）
+- 用户发送 `/recap`（manual）
+
+不建议每轮生成，过高频率造成摘要漂移且消耗 token。
+
+### recap.json schema（必填字段）
+
+```json
+{
+  "type": "session_recap",
+  "version": "0.1",
+  "authoritative": false,
+  "trigger": "layer2 | pre_compaction | handoff | manual",
+  "created_at": "<ISO 8601>",
+  "source_turn_range": [<start>, <end>],
+  "objective": "<当前会话目标>",
+  "confirmed_facts": ["<已确认事实>"],
+  "actions_taken": [{"type": "<code_change|config|analysis>", "target": "<文件或模块>", "result": "<结果>"}],
+  "files_touched": ["<路径>"],
+  "open_issues": ["<未解决问题>"],
+  "next_steps": ["<下一步行动>"],
+  "uncertainty": ["<假设或不确定项>"],
+  "failed_attempts": [{"attempt": "<尝试>", "result": "<结果>", "remaining_problem": "<遗留问题>"}]
+}
+```
+
+写入位置：`memory/recap.json`（覆盖，只保留最新一份）；同时调用 `writers.insert_session_recap()` 写入 SQLite。
+
+### debug 模式下降权
+
+排查 hook、tool_events、session 状态等问题时，recap 不可作为参考依据：
+
+- 必须查 `raw_events` 表或 `memory/sidecar-hooks.log`
+- recap 中如有"工具调用正常"等表述，视为无效，不得引用
+- DEV LOG 中如存在 `source=hook-offline`，recap 的 tool 相关字段均不可信
+
+### agent handoff 协议
+
+CTRL 向子 agent 传递任务时，只传结构化 recap，不传完整对话历史：
+
+```yaml
+objective: <当前目标>
+confirmed_facts: [<已确认事实>]
+files_touched: [<相关文件>]
+open_issues: [<未解决问题>]
+next_steps: [<下一步>]
+risk_flags: [<风险与不确定性>]
+```
+
+---
+
 ## Proactive Skill Creation（技能提议系统）
 
 检测到可复用工作流时，在回复末尾附加提议（不打断正文）。必须用户确认后才创建文件。

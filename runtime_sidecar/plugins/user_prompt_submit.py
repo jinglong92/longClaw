@@ -85,10 +85,23 @@ def _build_layer2_hint(session_id: str) -> str:
         return ""
     return (
         f"[layer2-summarize] 上下文压力触发（{reason}）。"
-        "请在本轮回复前执行 Layer 2 Summarize："
-        "生成摘要块替换中间历史，保护 system prompt + 前3条 + 后8条，"
-        "格式：目标/进展/决策/下一步/关键实体，"
-        "完成后写入 session-state.json（compression_count += 1, last_compression_at）。"
+        "请在本轮回复前执行 Layer 2 Summarize + 生成结构化 recap：\n"
+        "1. 生成摘要块替换中间历史，保护 system prompt + 前3条 + 后8条\n"
+        "2. 写入 session-state.json（compression_count += 1, last_compression_at）\n"
+        "3. 生成结构化 recap 并写入 memory/recap.json，schema 要求：\n"
+        "   - type: session_recap\n"
+        "   - authoritative: false  ← 必须为 false，recap 不是事实源\n"
+        "   - objective: 当前会话目标\n"
+        "   - confirmed_facts: [] 已确认事实列表\n"
+        "   - actions_taken: [] 已执行操作（含 target/result）\n"
+        "   - files_touched: [] 修改过的文件\n"
+        "   - open_issues: [] 未解决问题\n"
+        "   - next_steps: [] 下一步行动\n"
+        "   - uncertainty: [] 不确定项（假设不可写成事实）\n"
+        "   - failed_attempts: [] 失败路径（防止重复踩坑）\n"
+        "   - trigger: layer2\n"
+        "4. 同时调用 writers.insert_session_recap() 写入 SQLite session_recaps 表\n"
+        "注意：raw_events 表是工具调用的事实源，recap 不能替代它用于审计。"
     )
 
 

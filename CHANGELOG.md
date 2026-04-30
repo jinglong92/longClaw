@@ -5,6 +5,38 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.9.0] — 2026-04-30
+
+### Added — recap 层引入（Session Recap as Lossy State Cache）
+
+**设计决策**：recap 定位为会话压缩与 agent handoff 的中间状态，不是日志层、审计层或 memory 本体。四层结构严格分离：
+
+```
+raw_events（事实源）→ session-state（当前状态）→ recap（模型压缩上下文）→ MEMORY.md（长期记忆）
+```
+
+- **`runtime_sidecar/state/schema.sql`**：新增两张表
+  - `raw_events`：append-only 原始工具调用日志，authoritative 事实源，recap 不得替代
+  - `session_recaps`：结构化 recap 存储，`authoritative` 列硬编码为 0，永远不是事实源
+
+- **`runtime_sidecar/state/writers.py`**：新增
+  - `insert_raw_event()`：写入 raw_events 表
+  - `insert_session_recap()`：写入 session_recaps 表，强制 authoritative=0
+
+- **`runtime_sidecar/state/readers.py`**：新增
+  - `get_latest_recap()`：读取最新 recap（附注：不可用于审计）
+  - `count_session_raw_events()`：从 raw_events 表统计真实工具调用数
+
+- **`runtime_sidecar/plugins/post_tool_use.py`**：每次 PostToolUse 同步写入 `raw_events` 表（result_snippet 截取前 500 字符），保证原始事件不依赖 recap 可查
+
+- **`runtime_sidecar/plugins/user_prompt_submit.py`**：Layer 2 hint 升级为结构化 recap 指令，要求 CTRL 生成包含 `authoritative:false` / `confirmed_facts` / `uncertainty` / `failed_attempts` 等字段的 `memory/recap.json`，并同步写入 SQLite
+
+- **`CTRL_PROTOCOLS.md`**：新增"Session Recap"章节，定义四层结构、5 条硬约束、触发时机、recap.json schema、debug 模式降权规则、agent handoff 协议（只传 recap 不传完整历史）
+
+- **`DEV_LOG.md`**：Session 字段补充 recap 引用规范：可附加 `recap=memory/recap.json`，但 tool_events 以 raw_events 为准；`source=hook-offline` 时 recap tool 字段不可信
+
+---
+
 ## [v0.8.3] — 2026-04-30
 
 ### Fixed — tool_events 追踪链路双修

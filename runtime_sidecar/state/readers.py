@@ -86,6 +86,29 @@ def should_trigger_layer2_summarize(
     return ""
 
 
+def get_latest_recap(session_id: str) -> Optional[Dict[str, Any]]:
+    """Return the most recent session_recap for a session, or None.
+
+    Important: recap.authoritative is always 0.
+    Use raw_events table for audit/verification, not this.
+    """
+    sql = """
+    SELECT * FROM session_recaps
+    WHERE session_id = ?
+    ORDER BY created_at DESC
+    LIMIT 1
+    """
+    rows = _fetch_all(sql, [session_id])
+    return dict(rows[0]) if rows else None
+
+
+def count_session_raw_events(session_id: str) -> int:
+    """Return raw_events count for a session (authoritative tool call count)."""
+    sql = "SELECT COUNT(*) as cnt FROM raw_events WHERE session_id = ?"
+    rows = _fetch_all(sql, [session_id])
+    return int(rows[0]["cnt"]) if rows else 0
+
+
 def get_latest_compact_event(session_id: str) -> Optional[Dict[str, Any]]:
     """Return the most recent compact_event for a session, or None."""
     sql = """

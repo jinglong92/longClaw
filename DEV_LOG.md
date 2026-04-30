@@ -80,6 +80,8 @@
 - 禁止沿用上一轮 ctx 值；没有本轮 runtime/tool/hook 来源时只能写 `ctx=unavailable/200k`
 - 若当前上下文占用暂不可读取，写 `ctx=unavailable/200k`
 - 本文件只定义 DEV LOG 的展示格式；真正的自动压缩执行逻辑仍以 `CTRL_PROTOCOLS.md` 为准
+- 若本轮生成了 recap，可在 Session 字段末尾附加 `recap=memory/recap.json`，但 tool_events 仍以 `raw_events` 表为准，recap 不可作为工具调用的审计证据
+- `source=hook-offline` 时，recap 内任何 tool 相关字段均视为不可信，不得引用
 
 ### 🔍 检索
 ```
