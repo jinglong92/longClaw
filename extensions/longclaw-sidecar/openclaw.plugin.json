@@ -1,0 +1,11 @@
+{
+  "id": "longclaw-sidecar",
+  "name": "longClaw Sidecar",
+  "description": "Bridges OpenClaw after_tool_call events to the longClaw sidecar ledger (tool_events table).",
+  "activation": { "onStartup": true },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

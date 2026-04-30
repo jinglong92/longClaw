@@ -67,6 +67,17 @@ def handle_event(context: Dict[str, Any]) -> Dict[str, Any]:
 
     trimmed = output_length > TRIM_THRESHOLD
 
+    writers.insert_tool_event(
+        conn,
+        session_id=session_id,
+        turn_id=turn_id,
+        tool_name=tool_name,
+        args_json=None,
+        result_ref=None,
+        ok=1,
+        latency_ms=None,
+    )
+
     if trimmed:
         note_content = (
             f"tool={tool_name} output_length={output_length} "
